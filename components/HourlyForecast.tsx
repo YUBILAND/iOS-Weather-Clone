@@ -5,26 +5,22 @@ import {
   ScrollView,
   ImageSourcePropType,
 } from "react-native";
-import React, { MutableRefObject, useEffect, useRef, useState } from "react";
-import { CalendarDaysIcon } from "react-native-heroicons/solid";
+import React, { useEffect, useState } from "react";
 import { WeatherType } from "@/constants/constants";
 import { weatherPNG } from "@/utils/exampleForecast";
 import { colors } from "@/assets/colors/colors";
-import { Forecast } from "@/app";
+import { Forecast, Location } from "@/app";
 import DefaultText from "./DefaultText";
 import RoundedTemperature from "./RoundedTemperature";
 
 interface WeekForecastProps {
   forecast?: Forecast;
-  getDate: (dateString: string) => string;
+  location?: Location;
 }
 
-const HourlyForecast = ({ forecast, getDate }: WeekForecastProps) => {
-  const currentHourRef = useRef<number | null>(null);
-
+const HourlyForecast = ({ forecast, location }: WeekForecastProps) => {
   const [dailyArr, setDailyArr] = useState<DailyStats[]>([]);
-
-  const [americanTime, setAmericanTime] = useState(false);
+  const [americanTime, setAmericanTime] = useState(true);
 
   type DailyStats = {
     time: string;
@@ -35,18 +31,23 @@ const HourlyForecast = ({ forecast, getDate }: WeekForecastProps) => {
 
   useEffect(() => {
     const now = new Date();
-
-    const currentHour = now.getHours();
-
-    currentHourRef.current = currentHour;
-
-    const timeFormat: Intl.DateTimeFormatOptions = {
+    const timeZone = location?.tz_id;
+    const tzs = new Intl.DateTimeFormat("en-US", {
+      timeZone: timeZone,
       hour: "numeric",
       minute: "numeric",
-      hour12: americanTime,
-    };
+    });
+    const tmz = tzs.format(now);
 
-    function changeTo24Hour(timeString: string) {
+    const currentHour = militaryHour(tmz);
+
+    const timeFormat = (includeMinutes = true): Intl.DateTimeFormatOptions => ({
+      hour: "numeric",
+      minute: includeMinutes ? "numeric" : undefined, // Ternary operator
+      hour12: americanTime,
+    });
+
+    function militaryHour(timeString: string) {
       if (timeString.includes("PM")) {
         // 24 hr
         return 12 + parseInt(timeString.split(":")[0]);
@@ -61,12 +62,12 @@ const HourlyForecast = ({ forecast, getDate }: WeekForecastProps) => {
       return timeString;
     }
 
-    function createDate(timeString: string) {
+    function stringToDate(timeString: string) {
       const minutes = timeString.split(":")[1].split(" ")[0];
       const date = new Date();
-      date.setHours(changeTo24Hour(timeString));
+      date.setHours(militaryHour(timeString));
       date.setMinutes(parseInt(minutes));
-      return date.toLocaleTimeString("en-US", timeFormat);
+      return date.toLocaleTimeString("en-US", timeFormat());
     }
 
     function getHourlyForecast(lengthInDays: number) {
@@ -80,8 +81,8 @@ const HourlyForecast = ({ forecast, getDate }: WeekForecastProps) => {
           forecast?.forecastday[i].astro.sunset!
         );
 
-        const sunriseDate = createDate(sunriseTime);
-        const sunsetDate = createDate(sunsetTime);
+        const sunriseDate = stringToDate(sunriseTime);
+        const sunsetDate = stringToDate(sunsetTime);
 
         forecast?.forecastday[i].hour.filter((hour, index) => {
           const firstIndex = i === 0;
@@ -99,9 +100,10 @@ const HourlyForecast = ({ forecast, getDate }: WeekForecastProps) => {
           ) {
             newArr.push({
               time: removeZeroFromTimeString(
-                new Date(hour.time)
-                  .toLocaleTimeString("en-US", timeFormat)
-                  .split(":")[0]
+                new Date(hour.time).toLocaleTimeString(
+                  "en-US",
+                  timeFormat(false)
+                )
               ),
               celsius: parseInt(hour.temp_c),
               condition: hour.condition.text,
@@ -110,10 +112,10 @@ const HourlyForecast = ({ forecast, getDate }: WeekForecastProps) => {
           }
 
           const sunriseGreaterThanCurrentHour =
-            changeTo24Hour(sunriseTime) >= currentHour;
+            militaryHour(sunriseTime) >= currentHour;
           const sunriseLessThanCurrentHour =
-            changeTo24Hour(sunriseTime) <= currentHour;
-          const sunriseIndex = index === changeTo24Hour(sunriseTime);
+            militaryHour(sunriseTime) <= currentHour;
+          const sunriseIndex = index === militaryHour(sunriseTime);
 
           if (
             firstIndex && sunriseIndex
@@ -133,10 +135,10 @@ const HourlyForecast = ({ forecast, getDate }: WeekForecastProps) => {
           }
 
           const sunsetGreaterThanCurrentHour =
-            changeTo24Hour(sunsetTime) >= currentHour;
+            militaryHour(sunsetTime) >= currentHour;
           const sunsetLessThanCurrentHour =
-            changeTo24Hour(sunsetTime) <= currentHour;
-          const sunsetIndex = index === changeTo24Hour(sunsetTime);
+            militaryHour(sunsetTime) <= currentHour;
+          const sunsetIndex = index === militaryHour(sunsetTime);
 
           if (
             firstIndex && sunsetIndex

@@ -13,7 +13,7 @@ export interface WeatherAtLocationProps {
   handleTextDebounce: (value: string) => void;
   showSearch: boolean;
   toggleSearch: (textInputRef: RefObject<TextInput>) => void;
-  locations: Location[];
+  searchResultLocations: Location[];
   handleLocation: (location: Location) => void;
   location?: Location;
   current?: Current;
@@ -25,7 +25,7 @@ const WeatherAtLocation = ({
   handleTextDebounce,
   showSearch,
   toggleSearch,
-  locations,
+  searchResultLocations,
   location,
   handleLocation,
   current,
@@ -40,7 +40,7 @@ const WeatherAtLocation = ({
           handleTextDebounce={handleTextDebounce}
           showSearch={showSearch}
           toggleSearch={toggleSearch}
-          locations={locations}
+          searchResultLocations={searchResultLocations}
           handleLocation={handleLocation}
         />
       </View>
@@ -76,10 +76,14 @@ const WeatherAtLocation = ({
 
         {/* Hourly Forecast */}
         <View className="flex-row justify-center">
-          <HourlyForecast forecast={forecast} getDate={getDate} />
+          <HourlyForecast forecast={forecast} location={location} />
         </View>
 
-        <DailyForecast forecast={forecast} getDate={getDate} />
+        <DailyForecast
+          forecast={forecast}
+          getDate={getDate}
+          current={current}
+        />
       </View>
     </ScrollView>
   );

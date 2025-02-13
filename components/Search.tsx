@@ -16,7 +16,7 @@ interface SearchProps {
   handleTextDebounce: (value: string) => void;
   showSearch: boolean;
   toggleSearch: (textInputRef: RefObject<TextInput>) => void;
-  locations: Location[];
+  searchResultLocations: Location[];
   handleLocation: (location: Location) => void;
 }
 
@@ -24,7 +24,7 @@ const Search: React.FC<SearchProps> = ({
   handleTextDebounce,
   showSearch,
   toggleSearch,
-  locations,
+  searchResultLocations,
   handleLocation,
 }) => {
   const textInputRef = useRef<TextInput>(null);
@@ -58,10 +58,10 @@ const Search: React.FC<SearchProps> = ({
           <MagnifyingGlassIcon size={25} color={"white"} />
         </TouchableOpacity>
       </View>
-      {locations.length > 0 && showSearch ? (
+      {searchResultLocations.length > 0 && showSearch ? (
         <View className="absolute w-full bg-gray-300 top-16 mt-2 rounded-3xl">
-          {locations.map((location, index) => {
-            let showBorder = index + 1 !== locations.length;
+          {searchResultLocations.map((location, index) => {
+            let showBorder = index + 1 !== searchResultLocations.length;
             let borderClass = showBorder
               ? "border-b-2 border-b-gray-400"
               : "mb-0";

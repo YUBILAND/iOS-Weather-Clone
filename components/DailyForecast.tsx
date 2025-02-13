@@ -10,7 +10,7 @@ import { CalendarDaysIcon } from "react-native-heroicons/solid";
 import { WeatherType } from "@/constants/constants";
 import { weatherPNG } from "@/utils/exampleForecast";
 import { colors } from "@/assets/colors/colors";
-import { Forecast, ForecastObject } from "@/app";
+import { Current, Forecast, ForecastObject } from "@/app";
 import DefaultText from "./DefaultText";
 import RoundedTemperature from "./RoundedTemperature";
 import ProgressBar from "./ProgressBar";
@@ -18,9 +18,14 @@ import ProgressBar from "./ProgressBar";
 interface DailyForecastProps {
   forecast?: Forecast;
   getDate: (dateString: string) => string;
+  current?: Current;
 }
 
-const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
+const DailyForecast: React.FC<DailyForecastProps> = ({
+  forecast,
+  getDate,
+  current,
+}) => {
   const shortDate = (date: string) => {
     return date.slice(0, 3);
   };
@@ -75,6 +80,7 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
             key={item?.date}
             className="flex-row items-center w-full py-2 mr-4 gap-x-8"
           >
+            {/* Day + Weather Image */}
             <View
               className="flex-row justify-between items-center "
               style={{ flex: 40 }}
@@ -94,10 +100,12 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
               />
             </View>
 
+            {/* High and Low + Progress Bar */}
             <View
               className="flex-row justify-center items-center gap-x-4"
               style={{ flex: 60 }}
             >
+              {/* Daily Low */}
               <View className=" " style={{ flex: 20 }}>
                 <RoundedTemperature
                   className="text-xl font-semibold "
@@ -106,6 +114,7 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
                 />
               </View>
 
+              {/* Temperature Bar */}
               <View style={{ flex: 50 }}>
                 <ProgressBar
                   weekHigh={weekHighRef.current ?? undefined}
@@ -116,9 +125,12 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
                   dailyLow={
                     Math.round(parseInt(item.day.mintemp_c)) ?? undefined
                   }
+                  currentTemperature={Math.round(parseInt(current?.temp_c!))}
+                  index={index}
                 />
               </View>
 
+              {/* Daily High */}
               <View style={{ flex: 15 }}>
                 <RoundedTemperature
                   className="text-xl font-semibold "

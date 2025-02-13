@@ -20,26 +20,11 @@ import {
 } from "react-native";
 
 import { WeatherType } from "@/constants/constants";
-
 import { debounce } from "lodash";
 import { fetchLocations, fetchWeatherForecast } from "@/api/weather";
-
 import { getData, storeData } from "@/utils/asyncStorage";
-import Search from "@/components/Search";
-import LocationName from "@/components/LocationName";
-import WeatherImage from "@/components/WeatherImage";
-import Temperature from "@/components/Temperature";
-import WeatherName from "@/components/WeatherName";
-import WindSpeed from "@/components/WindSpeed";
-import Humidity from "@/components/Humidity";
-import Sunrise from "@/components/Sunrise";
-import WeekForecast from "@/components/WeekForecast";
 import Spinner from "@/components/Spinner";
-import HighsAndLows from "@/components/HighsAndLows";
 import "../global.css";
-import HourlyForecast from "@/components/HourlyForecast";
-import DailyForecast from "@/components/DailyForecast";
-import RoundedTemperature from "@/components/RoundedTemperature";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome6 } from "@expo/vector-icons";
 
@@ -72,6 +57,7 @@ export type Location = {
   country: string;
   id: number;
   name: string;
+  tz_id: string; // region / city
 };
 
 export type Forecast = {
@@ -99,7 +85,9 @@ type HourObject = WeatherData["current"] & {
 
 export default function Index() {
   const [showSearch, setShowSearch] = useState(false);
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [searchResultLocations, setSearchResultLocations] = useState<
+    Location[]
+  >([]);
   const [weather, setWeather] = useState<WeatherData>({});
   const [loading, setLoading] = useState(true);
 
@@ -109,7 +97,7 @@ export default function Index() {
 
   const handleLocation = (location: Location) => {
     setShowSearch(false);
-    setLocations([]);
+    setSearchResultLocations([]);
     setLoading(true);
     fetchWeatherForecast(location.name, forecastDays).then((data) => {
       console.log("got forecast: ", data);
@@ -124,7 +112,7 @@ export default function Index() {
     let autoCompleteMinimumLength = 2;
     if (value.length > autoCompleteMinimumLength) {
       fetchLocations(value).then((data) => {
-        setLocations(data);
+        setSearchResultLocations(data);
         console.log(data);
       });
     }
@@ -165,7 +153,7 @@ export default function Index() {
     handleTextDebounce,
     showSearch,
     toggleSearch,
-    locations,
+    searchResultLocations,
     location,
     handleLocation,
     current,
