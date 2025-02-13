@@ -3,19 +3,21 @@ import React from "react";
 import DefaultText from "./DefaultText";
 
 type RoundedTemperatureProps = {
-  temperatureString: string;
+  temperature: number | string;
   className?: string;
   style?: TextStyle;
 };
 
 const RoundedTemperature = ({
-  temperatureString,
+  temperature,
   className,
   style,
 }: RoundedTemperatureProps) => {
   return (
     <DefaultText className={className} style={style}>
-      {Math.round(parseInt(temperatureString))}&#176;
+      {typeof temperature === "number"
+        ? Math.round(temperature) + "°"
+        : temperature}
     </DefaultText>
   );
 };

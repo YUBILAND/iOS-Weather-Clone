@@ -88,6 +88,7 @@ export type ForecastObject = {
   date: string;
   astro: {
     sunrise: string;
+    sunset: string;
   };
   hour: HourObject[];
 };

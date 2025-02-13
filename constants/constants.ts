@@ -38,6 +38,9 @@ export const apiKey = "7295bc21a1cd4c43a94220808250802";
 // };
 
 export const weatherImages = {
+  [require("../assets/images/sunrise.png")]: ["sunrise"],
+  [require("../assets/images/sunset.png")]: ["sunset"],
+
   [require("../assets/images/partlycloudy.png")]: ["partly cloudy"],
 
   [require("../assets/images/drizzle.png")]: [

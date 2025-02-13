@@ -101,7 +101,7 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
               <View className=" " style={{ flex: 20 }}>
                 <RoundedTemperature
                   className="text-xl font-semibold "
-                  temperatureString={item?.day.mintemp_c}
+                  temperature={parseInt(item?.day.mintemp_c)}
                   style={{ alignSelf: "flex-end", paddingRight: 5 }}
                 />
               </View>
@@ -122,7 +122,7 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
               <View style={{ flex: 15 }}>
                 <RoundedTemperature
                   className="text-xl font-semibold "
-                  temperatureString={item?.day.maxtemp_c}
+                  temperature={parseInt(item?.day.maxtemp_c)}
                   style={{ alignSelf: "flex-end" }}
                 />
               </View>

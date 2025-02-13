@@ -51,7 +51,7 @@ const WeatherAtLocation = ({
           <LocationName location={location} className="text-center text-5xl" />
 
           <RoundedTemperature
-            temperatureString={current?.temp_c ?? "undefined"}
+            temperature={parseInt(current?.temp_c!)}
             className="text-center pl-5"
             style={{
               // remove bottom padding due to line height
