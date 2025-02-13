@@ -1,4 +1,10 @@
-import { View, Text, Image, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  ImageSourcePropType,
+} from "react-native";
 import React, { useMemo, useRef } from "react";
 import { CalendarDaysIcon } from "react-native-heroicons/solid";
 import { WeatherType } from "@/constants/constants";
@@ -38,8 +44,8 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
     weekLowRef.current = Math.min(...(minTempsArr ?? []));
   }, [forecast]);
 
-  console.log(weekHighRef.current);
-  console.log(weekLowRef.current);
+  // console.log(weekHighRef.current);
+  // console.log(weekLowRef.current);
 
   return (
     <View
@@ -78,10 +84,12 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
               </DefaultText>
 
               <Image
-                source={weatherPNG(
-                  (item?.day.condition.text.toLowerCase() as WeatherType) ??
-                    "Sunny"
-                )}
+                source={
+                  weatherPNG(
+                    (item?.day.condition.text.toLowerCase() as WeatherType) ??
+                      "Sunny"
+                  ) as ImageSourcePropType
+                }
                 className="h-11 w-11"
               />
             </View>
@@ -99,7 +107,16 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ forecast, getDate }) => {
               </View>
 
               <View style={{ flex: 50 }}>
-                <ProgressBar />
+                <ProgressBar
+                  weekHigh={weekHighRef.current ?? undefined}
+                  weekLow={weekLowRef.current ?? undefined}
+                  dailyHigh={
+                    Math.round(parseInt(item.day.maxtemp_c)) ?? undefined
+                  }
+                  dailyLow={
+                    Math.round(parseInt(item.day.mintemp_c)) ?? undefined
+                  }
+                />
               </View>
 
               <View style={{ flex: 15 }}>

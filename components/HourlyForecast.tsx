@@ -1,4 +1,10 @@
-import { View, Text, Image, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  ScrollView,
+  ImageSourcePropType,
+} from "react-native";
 import React, { MutableRefObject, useEffect, useRef, useState } from "react";
 import { CalendarDaysIcon } from "react-native-heroicons/solid";
 import { WeatherType } from "@/constants/constants";
@@ -117,9 +123,11 @@ const HourlyForecast = ({ forecast, getDate }: WeekForecastProps) => {
             </DefaultText>
 
             <Image
-              source={weatherPNG(
-                (hour?.condition.toLowerCase() as WeatherType) ?? "Sunny"
-              )}
+              source={
+                weatherPNG(
+                  (hour?.condition.toLowerCase() as WeatherType) ?? "Sunny"
+                ) as ImageSourcePropType
+              }
               className="h-11 w-11 "
             />
 

@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TextInput } from "react-native";
+import { View, Text, ScrollView, TextInput, Image } from "react-native";
 import React, { RefObject } from "react";
 import Search from "./Search";
 import LocationName from "./LocationName";
@@ -74,41 +74,12 @@ const WeatherAtLocation = ({
           />
         </View>
 
-        {/* weather image */}
-        {/* <View className="flex-row justify-center">
-              <WeatherImage
-                weatherName={current?.condition?.text.toLowerCase()}
-                className={"w-52 h-52"}
-              />
-            </View> */}
-
         {/* Hourly Forecast */}
         <View className="flex-row justify-center">
           <HourlyForecast forecast={forecast} getDate={getDate} />
         </View>
 
         <DailyForecast forecast={forecast} getDate={getDate} />
-
-        {/* other stats */}
-        {/* <View className="flex-row justify-between mx-4">
-                <WindSpeed
-                  windSpeed={current?.wind_kph}
-                  className="flex-row gap-x-2 items-center"
-                />
-
-                <Humidity
-                  humidity={current?.humidity}
-                  className="text-white font-semibold text-base"
-                />
-
-                <Sunrise
-                  sunrise={forecast?.forecastday[0]?.astro?.sunrise}
-                  className="text-white font-semibold text-base"
-                />
-              </View> */}
-
-        {/* forecast for next days */}
-        {/* <WeekForecast forecast={forecast} getDate={getDate} /> */}
       </View>
     </ScrollView>
   );

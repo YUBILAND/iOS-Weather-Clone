@@ -194,18 +194,11 @@ export default function Index() {
       [{ nativeEvent: { contentOffset: { x: scrollX } } }],
       { useNativeDriver: false }
     ),
-    data: data,
-    keyExtractor: (item: { id: string }) => item.id,
-    renderItem: ({ item }: { item: flatlistType }) => {
-      const { id, ...restProps } = item; // Remove the `id` key
-      return <WeatherAtLocation {...restProps} />; // Pass the rest of the props
-    },
   };
 
   const expandingDotProps = {
-    data: data, // Replace `data` with your actual data
     expandingDotWidth: 10,
-    scrollX: scrollX, // Replace `scrollX` with your actual scrollX value
+    scrollX: scrollX,
     inActiveDotOpacity: 0.6,
     activeDotColor: colors.bgWhite(0.8),
     inActiveDotColor: colors.bgWhite(0.5),
@@ -236,6 +229,7 @@ export default function Index() {
       ) : (
         <SafeAreaView className="flex flex-1 ">
           <View className="relative pb-10">
+            {/* Bottom Footer */}
             <ImageBackground
               className="w-full h-10 absolute bottom-0 right-0 "
               source={require("../assets/images/bg.png")}
@@ -245,13 +239,22 @@ export default function Index() {
               <View className="mx-4 mt-3 flex-row justify-between">
                 <Ionicons name="map-outline" size={25} color={"white"} />
 
-                <ExpandingDot {...expandingDotProps} />
+                <ExpandingDot {...expandingDotProps} data={data} />
 
                 <FontAwesome6 name="list-ul" size={20} color={"white"} />
               </View>
             </ImageBackground>
 
-            <FlatList {...flatlistProps} />
+            {/* Weather at location */}
+            <FlatList
+              {...flatlistProps}
+              data={data}
+              keyExtractor={(item: { id: string }) => item.id}
+              renderItem={({ item }: { item: flatlistType }) => {
+                const { id, ...restProps } = item;
+                return <WeatherAtLocation {...restProps} />;
+              }}
+            />
           </View>
         </SafeAreaView>
       )}
