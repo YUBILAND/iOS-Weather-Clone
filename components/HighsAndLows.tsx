@@ -1,6 +1,7 @@
 import { View, Text } from "react-native";
 import React from "react";
 import DefaultText from "./DefaultText";
+import RoundedTemperature from "./RoundedTemperature";
 
 const HighsAndLows = ({
   high,
@@ -15,8 +16,14 @@ const HighsAndLows = ({
 }) => {
   return (
     <View className={className}>
-      <DefaultText className={textClasses}>H:{high}&#176;</DefaultText>
-      <DefaultText className={textClasses}>L:{low}&#176;</DefaultText>
+      <DefaultText className={textClasses}>
+        H:
+        <RoundedTemperature temperature={high} />
+      </DefaultText>
+      <DefaultText className={textClasses}>
+        L:
+        <RoundedTemperature temperature={low} />
+      </DefaultText>
     </View>
   );
 };
