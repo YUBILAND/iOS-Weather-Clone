@@ -1,24 +1,26 @@
 import {
   View,
-  Text,
   Image,
   ScrollView,
   ImageSourcePropType,
+  Pressable,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import { WeatherType } from "@/constants/constants";
 import { weatherPNG } from "@/utils/exampleForecast";
 import { colors } from "@/assets/colors/colors";
-import { Forecast, Location } from "@/app";
+import { Current, Forecast, Location } from "@/app";
 import DefaultText from "./DefaultText";
 import RoundedTemperature from "./RoundedTemperature";
+import ConditionModal from "./ConditionModal";
 
 interface WeekForecastProps {
   forecast?: Forecast;
   location?: Location;
+  current?: Current;
 }
 
-const HourlyForecast = ({ forecast, location }: WeekForecastProps) => {
+const HourlyForecast = ({ forecast, location, current }: WeekForecastProps) => {
   const [dailyArr, setDailyArr] = useState<DailyStats[]>([]);
   const [americanTime, setAmericanTime] = useState(true);
 
@@ -70,6 +72,13 @@ const HourlyForecast = ({ forecast, location }: WeekForecastProps) => {
       return date.toLocaleTimeString("en-US", timeFormat());
     }
 
+    function addWhiteSpace(weatherString: string) {
+      if (weatherString[weatherString.length - 1] !== " ") {
+        return weatherString + " ";
+      }
+      return weatherString;
+    }
+
     function getHourlyForecast(lengthInDays: number) {
       let newArr: DailyStats[] = [];
 
@@ -91,6 +100,7 @@ const HourlyForecast = ({ forecast, location }: WeekForecastProps) => {
           const lastIndex = i === lengthInDays * 2 - 1;
           const lessThanCurrentHour = index <= currentHour;
 
+          // Insert hourly info
           if (
             firstIndex
               ? greaterThanCurrentHour
@@ -106,11 +116,14 @@ const HourlyForecast = ({ forecast, location }: WeekForecastProps) => {
                 )
               ),
               celsius: parseInt(hour.temp_c),
-              condition: hour.condition.text,
+              condition: hour?.is_day
+                ? hour.condition.text
+                : addWhiteSpace(hour.condition.text) + "night",
               fullDate: hour.time,
             });
           }
 
+          // Insert Sunrise Time
           const sunriseGreaterThanCurrentHour =
             militaryHour(sunriseTime) >= currentHour;
           const sunriseLessThanCurrentHour =
@@ -134,6 +147,7 @@ const HourlyForecast = ({ forecast, location }: WeekForecastProps) => {
             });
           }
 
+          // Insert Sunset Time
           const sunsetGreaterThanCurrentHour =
             militaryHour(sunsetTime) >= currentHour;
           const sunsetLessThanCurrentHour =
@@ -165,28 +179,46 @@ const HourlyForecast = ({ forecast, location }: WeekForecastProps) => {
     setDailyArr(newDailyArr);
   }, []);
 
+  const [modalVisible, setModalVisible] = useState(false);
+
+  const toggleVisible = () => setModalVisible(!modalVisible);
+
   return (
-    <View
-      className="mb-2 gap-y-3 rounded-xl pt-4 w-full px-4"
+    <Pressable
+      className="mb-2 gap-y-3 rounded-xl pt-4 w-full relative"
       style={{ backgroundColor: colors.bgWhite(0.15) }}
+      onPress={() => setModalVisible(true)}
     >
-      <View className="flex-row items-center ml-2">
-        <DefaultText>Sunny conditions will continue all day</DefaultText>
+      <ConditionModal
+        modalVisible={modalVisible}
+        toggleVisible={toggleVisible}
+      />
+
+      <View className="flex-row ml-2 px-4">
+        <DefaultText>Random text related to today's weather</DefaultText>
       </View>
 
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{
-          gap: 20,
           borderTopWidth: 1,
           borderTopColor: colors.bgWhite(0.2),
+          paddingRight: 16,
+          marginHorizontal: 16,
         }}
       >
         {dailyArr.map((hour, index) => (
-          <View
+          <Pressable
+            onPress={() => setModalVisible(true)}
+            onStartShouldSetResponder={() => true}
             key={hour?.fullDate}
-            className="flex justify-center items-center w-fit rounded-3xl py-3 gap-y-2 "
+            className="flex justify-center items-center w-fit rounded-3xl py-3"
+            style={{
+              rowGap: 2,
+              paddingLeft: index === 0 ? 0 : 10,
+              paddingRight: index === dailyArr.length - 1 ? 0 : 10,
+            }}
           >
             <DefaultText className="font-semibold">
               {index === 0 ? "Now" : hour?.time.split(" ").join("")}
@@ -205,10 +237,10 @@ const HourlyForecast = ({ forecast, location }: WeekForecastProps) => {
               temperature={hour?.celsius}
               className="text-2xl font-semibold"
             />
-          </View>
+          </Pressable>
         ))}
       </ScrollView>
-    </View>
+    </Pressable>
   );
 };
 

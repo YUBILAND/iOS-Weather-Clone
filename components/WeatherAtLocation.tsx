@@ -76,7 +76,11 @@ const WeatherAtLocation = ({
 
         {/* Hourly Forecast */}
         <View className="flex-row justify-center">
-          <HourlyForecast forecast={forecast} location={location} />
+          <HourlyForecast
+            forecast={forecast}
+            location={location}
+            current={current}
+          />
         </View>
 
         <DailyForecast

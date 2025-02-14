@@ -69,6 +69,19 @@ export const weatherImages = {
     "blizzard",
   ],
 
+  [require("../assets/images/clear-night.png")]: ["sunny night", "clear night"],
+
+  [require("../assets/images/partlycloudy-night.png")]: [
+    "overcast night",
+    "cloudy night",
+    "partly cloudy night",
+  ],
+
+  [require("../assets/images/drizzle-night.png")]: [
+    "mist night",
+    "fog night, moderate rain night",
+  ],
+
   [require("../assets/images/sun.png")]: ["sunny", "clear"],
 
   [require("../assets/images/cloudy.png")]: ["overcast", "cloudy"],

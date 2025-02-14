@@ -47,6 +47,7 @@ export type Current = {
   wind_kph: string;
   humidity: string;
   condition: Condition;
+  is_day: boolean;
 };
 
 type Condition = {
