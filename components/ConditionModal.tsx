@@ -5,22 +5,19 @@ import ModalHeader from "./ModalHeader";
 import DefaultText from "./DefaultText";
 import { days } from "@/utils/exampleForecast";
 import CalendarScrollView from "./CalendarScrollView";
+import Chart from "./Chart";
 
 type ConditionModalProps = {
   modalVisible: boolean;
   toggleVisible: () => void;
+  cityName: string;
 };
 
 const ConditionModal = ({
   modalVisible,
   toggleVisible,
+  cityName,
 }: ConditionModalProps) => {
-  //   const exampleArray = [...Array(15).keys()];
-
-  //   const daysLetter = days.map((day) => day[0]);
-
-  //   const currentIndex = 0;
-
   return (
     <Modal animationType="slide" transparent={true} visible={modalVisible}>
       <SafeAreaView className="">
@@ -33,12 +30,14 @@ const ConditionModal = ({
               <ModalHeader toggleVisible={toggleVisible} />
             </View>
 
-            <CalendarScrollView />
+            <CalendarScrollView cityName={cityName} />
 
-            <Text
+            <Text // Horizontal line
               style={{ borderTopWidth: 1, borderTopColor: colors.bgWhite(0.2) }}
             />
           </View>
+
+          <Chart cityName={cityName} />
         </View>
       </SafeAreaView>
     </Modal>

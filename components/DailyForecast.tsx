@@ -1,42 +1,40 @@
-import {
-  View,
-  Text,
-  Image,
-  ScrollView,
-  ImageSourcePropType,
-} from "react-native";
+import { View, Image, ScrollView, ImageSourcePropType } from "react-native";
 import React, { useMemo, useRef } from "react";
 import { CalendarDaysIcon } from "react-native-heroicons/solid";
 import { WeatherType } from "@/constants/constants";
 import { weatherPNG } from "@/utils/exampleForecast";
 import { colors } from "@/assets/colors/colors";
-import { Current, Forecast, ForecastObject } from "@/app";
 import DefaultText from "./DefaultText";
 import RoundedTemperature from "./RoundedTemperature";
 import ProgressBar from "./ProgressBar";
+import { RootState } from "@/state/store";
+import { useSelector } from "react-redux";
 
 interface DailyForecastProps {
-  forecast?: Forecast;
+  cityName: string;
   getDate: (dateString: string) => string;
-  current?: Current;
 }
 
-const DailyForecast: React.FC<DailyForecastProps> = ({
-  forecast,
-  getDate,
-  current,
-}) => {
+const DailyForecast: React.FC<DailyForecastProps> = ({ cityName, getDate }) => {
+  const { data, loading, error } = useSelector(
+    (state: RootState) => state.weather
+  );
+
   const shortDate = (date: string) => {
     return date.slice(0, 3);
   };
 
   const weekHighRef = useRef<number | null>(null);
   const weekLowRef = useRef<number | null>(null);
+  //   high: string;
+  //   low: string;
+  // };
 
-  type highOrLowProps = {
-    high: string;
-    low: string;
-  };
+  if (!cityName) {
+    return;
+  }
+
+  const { forecast, current } = data[cityName];
 
   const getWeekHighandLow = useMemo(() => {
     const maxTempsArr = forecast?.forecastday.map((day) =>
@@ -46,11 +44,11 @@ const DailyForecast: React.FC<DailyForecastProps> = ({
       Math.round(parseInt(day.day.mintemp_c))
     );
     weekHighRef.current = Math.max(...(maxTempsArr ?? []));
-    weekLowRef.current = Math.min(...(minTempsArr ?? []));
+    weekLowRef.current = Math.min(
+      ...(minTempsArr ?? []),
+      parseInt(current?.temp_c)
+    );
   }, [forecast]);
-
-  // console.log(weekHighRef.current);
-  // console.log(weekLowRef.current);
 
   return (
     <View
@@ -86,7 +84,9 @@ const DailyForecast: React.FC<DailyForecastProps> = ({
               style={{ flex: 40 }}
             >
               <DefaultText className="font-bold text-xl">
-                {index === 0 ? "Today" : shortDate(getDate(item?.date))}
+                {index === 0
+                  ? "Today"
+                  : shortDate(getDate(item?.date + "T00:00:00"))}
               </DefaultText>
 
               <Image
@@ -106,7 +106,7 @@ const DailyForecast: React.FC<DailyForecastProps> = ({
               style={{ flex: 60 }}
             >
               {/* Daily Low */}
-              <View className=" " style={{ flex: 20 }}>
+              <View className=" " style={{ flex: 25 }}>
                 <RoundedTemperature
                   className="text-xl font-semibold "
                   temperature={parseInt(item?.day.mintemp_c)}
@@ -119,19 +119,15 @@ const DailyForecast: React.FC<DailyForecastProps> = ({
                 <ProgressBar
                   weekHigh={weekHighRef.current ?? undefined}
                   weekLow={weekLowRef.current ?? undefined}
-                  dailyHigh={
-                    Math.round(parseInt(item.day.maxtemp_c)) ?? undefined
-                  }
-                  dailyLow={
-                    Math.round(parseInt(item.day.mintemp_c)) ?? undefined
-                  }
-                  currentTemperature={Math.round(parseInt(current?.temp_c!))}
+                  dailyHigh={parseInt(item.day.maxtemp_c) ?? undefined}
+                  dailyLow={parseInt(item.day.mintemp_c) ?? undefined}
+                  currentTemperature={parseInt(current?.temp_c!)}
                   index={index}
                 />
               </View>
 
               {/* Daily High */}
-              <View style={{ flex: 15 }}>
+              <View style={{ flex: 20 }}>
                 <RoundedTemperature
                   className="text-xl font-semibold "
                   temperature={parseInt(item?.day.maxtemp_c)}

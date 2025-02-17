@@ -50,6 +50,7 @@ export const weatherImages = {
     "light rain",
     "light freezing rain",
     "moderate rain at times",
+    "patchy light drizzle",
   ],
 
   [require("../assets/images/heavyrain.png")]: [
@@ -67,6 +68,12 @@ export const weatherImages = {
     "blowing snow",
     "moderate or heavy snow showers",
     "blizzard",
+    "patchy light snow night",
+    "light sleet night",
+    "patchy light snow",
+    "patchy snow nearby night",
+    "patchy moderate snow night",
+    "blowing snow night",
   ],
 
   [require("../assets/images/clear-night.png")]: ["sunny night", "clear night"],
@@ -79,7 +86,10 @@ export const weatherImages = {
 
   [require("../assets/images/drizzle-night.png")]: [
     "mist night",
-    "fog night, moderate rain night",
+    "fog night",
+    "moderate rain night",
+    "patchy rain nearby night",
+    "heavy rain night",
   ],
 
   [require("../assets/images/sun.png")]: ["sunny", "clear"],
@@ -113,3 +123,51 @@ export type WeatherType =
   | "cloudy"
   | "mist"
   | "fog";
+
+export type WeatherData = {
+  current: Current;
+  location: Location;
+  forecast: Forecast;
+};
+
+export type Current = {
+  temp_c: string;
+  wind_kph: string;
+  humidity: string;
+  condition: Condition;
+  is_day: boolean;
+};
+
+export type Condition = {
+  text: WeatherType;
+};
+
+export type Location = {
+  country: string;
+  id: number;
+  name: string;
+  tz_id: string; // region / city
+};
+
+export type Forecast = {
+  forecastday: ForecastObject[];
+};
+
+export type ForecastObject = {
+  day: {
+    maxtemp_c: string;
+    mintemp_c: string;
+    avgtemp_c: string;
+    condition: Condition;
+  };
+  date: string;
+  astro: {
+    sunrise: string;
+    sunset: string;
+  };
+  hour: HourObject[];
+};
+
+export type HourObject = WeatherData["current"] & {
+  time: string;
+};

@@ -7,7 +7,9 @@ import WeatherName from "./WeatherName";
 import HighsAndLows from "./HighsAndLows";
 import HourlyForecast from "./HourlyForecast";
 import DailyForecast from "./DailyForecast";
-import { Current, Forecast, Location } from "@/app";
+import { Current, Forecast, Location } from "@/constants/constants";
+import { useSelector } from "react-redux";
+import { RootState } from "@/state/store";
 
 export interface WeatherAtLocationProps {
   handleTextDebounce: (value: string) => void;
@@ -15,10 +17,8 @@ export interface WeatherAtLocationProps {
   toggleSearch: (textInputRef: RefObject<TextInput>) => void;
   searchResultLocations: Location[];
   handleLocation: (location: Location) => void;
-  location?: Location;
-  current?: Current;
-  forecast?: Forecast;
   getDate: (dateString: string) => string;
+  cityName: string;
 }
 
 const WeatherAtLocation = ({
@@ -26,12 +26,16 @@ const WeatherAtLocation = ({
   showSearch,
   toggleSearch,
   searchResultLocations,
-  location,
   handleLocation,
-  current,
-  forecast,
   getDate,
+  cityName,
 }: WeatherAtLocationProps) => {
+  const { data, loading, error } = useSelector(
+    (state: RootState) => state.weather
+  );
+
+  const { location, forecast, current } = data[cityName];
+
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="w-screen">
       {/* Search Section */}
@@ -76,18 +80,10 @@ const WeatherAtLocation = ({
 
         {/* Hourly Forecast */}
         <View className="flex-row justify-center">
-          <HourlyForecast
-            forecast={forecast}
-            location={location}
-            current={current}
-          />
+          <HourlyForecast cityName={cityName} />
         </View>
 
-        <DailyForecast
-          forecast={forecast}
-          getDate={getDate}
-          current={current}
-        />
+        <DailyForecast cityName={cityName} getDate={getDate} />
       </View>
     </ScrollView>
   );
