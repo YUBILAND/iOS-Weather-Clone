@@ -136,6 +136,11 @@ export type Current = {
   humidity: string;
   condition: Condition;
   is_day: boolean;
+  air_quality: {
+    o3: number;
+    pm2_5: number;
+  };
+  uv: number;
 };
 
 export type Condition = {

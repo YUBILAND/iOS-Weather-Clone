@@ -2,7 +2,7 @@ import axios from "axios";
 import { apiKey } from "@/constants/constants";
 
 const forecastEndpoint = (city: string, days: number) =>
-  `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=${days}&aqi=no&alerts=no`;
+  `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=${days}&aqi=yes&alerts=no`;
 
 const locationsEndpoint = (city: string) =>
   `https://api.weatherapi.com/v1/search.json?key=${apiKey}&q=${city}`;

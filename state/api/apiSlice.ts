@@ -25,17 +25,7 @@ const initialState: ApiState = {
 const weatherSlice = createSlice({
   name: "weather",
   initialState,
-  reducers: {
-    // setLocation: (state, action: PayloadAction<Location>) => {
-    //   state.location = action.payload;
-    // },
-    // setForecast: (state, action: PayloadAction<Forecast>) => {
-    //   state.forecast = action.payload;
-    // },
-    // setCurrent: (state, action: PayloadAction<Current>) => {
-    //   state.current = action.payload;
-    // },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchWeatherData.pending, (state) => {

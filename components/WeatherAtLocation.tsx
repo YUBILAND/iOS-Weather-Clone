@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, TextInput, Image } from "react-native";
-import React, { RefObject } from "react";
+import React, { RefObject, useState } from "react";
 import Search from "./Search";
 import LocationName from "./LocationName";
 import RoundedTemperature from "./RoundedTemperature";
@@ -10,6 +10,15 @@ import DailyForecast from "./DailyForecast";
 import { Current, Forecast, Location } from "@/constants/constants";
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
+import AirQualityCard from "./AirQualityCard";
+import UVIndexCard from "./UVIndexCard";
+import SunPhase from "./SunPhaseCard";
+import SunPhaseTest from "./SunPhaseGraph";
+import SunPhaseModal from "./SunPhaseModal";
+import SunPhaseCard from "./SunPhaseCard";
+import ModalContainer from "./ModalContainer";
+
+export type SelectModal = "hourly" | "sunphase";
 
 export interface WeatherAtLocationProps {
   handleTextDebounce: (value: string) => void;
@@ -36,6 +45,8 @@ const WeatherAtLocation = ({
 
   const { location, forecast, current } = data[cityName];
 
+  const [modalVisible, setModalVisible] = useState<SelectModal | null>(null);
+
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="w-screen">
       {/* Search Section */}
@@ -50,7 +61,7 @@ const WeatherAtLocation = ({
       </View>
 
       {/* Forecast section */}
-      <View className="mx-4 flex justify-around flex-1 mb-2 ">
+      <View className="mx-4 flex justify-around flex-1 mb-2">
         <View className="mb-8">
           <LocationName location={location} className="text-center text-5xl" />
 
@@ -79,11 +90,31 @@ const WeatherAtLocation = ({
         </View>
 
         {/* Hourly Forecast */}
-        <View className="flex-row justify-center">
-          <HourlyForecast cityName={cityName} />
-        </View>
+        <HourlyForecast
+          cityName={cityName}
+          modalVisible={modalVisible === "hourly"}
+          setModalVisible={setModalVisible}
+          modalID={"hourly"}
+        />
 
-        <DailyForecast cityName={cityName} getDate={getDate} />
+        {/* <DailyForecast cityName={cityName} getDate={getDate} />
+
+        <AirQualityCard cityName={cityName} /> */}
+
+        <View className="flex-row gap-x-2">
+          <View className="flex-[0.5]">
+            <UVIndexCard cityName={cityName} />
+          </View>
+          <View className="flex-[0.5]">
+            <SunPhaseCard
+              graphHeight={60}
+              cityName={cityName}
+              modalVisible={modalVisible === "sunphase"}
+              setModalVisible={setModalVisible}
+              modalID={"sunphase"}
+            />
+          </View>
+        </View>
       </View>
     </ScrollView>
   );

@@ -1,42 +1,39 @@
 import { View } from "react-native";
-import React, { useEffect, useState } from "react";
-import {
-  Area,
-  CartesianChart,
-  Line,
-  PointsArray,
-  useChartPressState,
-  useLinePath,
-} from "victory-native";
+import React from "react";
+import { Area, CartesianChart, ChartPressState, Line } from "victory-native";
 import { useDerivedValue, type SharedValue } from "react-native-reanimated";
 import {
   Circle,
   DashPathEffect,
   useFont,
-  Line as SkiaLine,
   vec,
   Rect,
-  Text,
-  AnimatedProp,
   LinearGradient,
 } from "@shopify/react-native-skia";
 import SpaceMono from "../assets/fonts/SpaceMono-Regular.ttf";
-import { AppDispatch, RootState } from "@/state/store";
-import { useDispatch, useSelector } from "react-redux";
-import { getCurrentHour, getDate } from "@/hooks/hooks";
+import { RootState } from "@/state/store";
+import { useSelector } from "react-redux";
+import { getCurrentHour } from "@/hooks/hooks";
+import { colors } from "@/assets/colors/colors";
 
-const Chart = ({ cityName }: { cityName: string }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { data, loading, error } = useSelector(
-    (state: RootState) => state.weather
-  );
-  const { location, forecast, current } = data[cityName];
+const Chart = ({
+  cityName,
+  state,
+  isActive,
+}: {
+  cityName: string;
+  state: ChartPressState<{
+    x: number;
+    y: {
+      celsius: number;
+    };
+  }>;
+  isActive: boolean;
+}) => {
+  const { data } = useSelector((state: RootState) => state.weather);
+  const { location, forecast } = data[cityName];
 
   const font = useFont(SpaceMono, 12);
-
-  const { state, isActive } = useChartPressState({ x: 0, y: { celsius: 0 } });
-
-  //   console.log(forecast?.forecastday[0].)
 
   const hourlyTempData = forecast?.forecastday[0].hour.map((hour, index) => ({
     hour: index,
@@ -51,18 +48,20 @@ const Chart = ({ cityName }: { cityName: string }) => {
   const cutoff = getCurrentHour(location!.tz_id);
 
   return (
-    <View style={{ height: 300, paddingHorizontal: 20 }}>
+    <View style={{ height: 300 }}>
       <CartesianChart
         data={hourlyTempData!}
         xKey="hour"
         yKeys={["celsius"]}
+        padding={{ left: 20, right: 20 }} // doesn't affect position outside
         axisOptions={{
           font,
           labelColor: "white",
-          lineColor: "white",
+          lineWidth: 2,
+          lineColor: colors.mediumGray,
           axisSide: { x: "bottom", y: "right" },
-          labelOffset: 10,
-          //   tickCount: { x: 4, y: 4 },
+          // labelOffset: 10,
+          tickCount: { x: 4, y: 8 },
         }}
         xAxis={{
           font: font,
@@ -132,11 +131,6 @@ const Chart = ({ cityName }: { cityName: string }) => {
   );
 };
 
-const DATA = Array.from({ length: 31 }, (_, i) => ({
-  day: i,
-  highTmp: 40 + 5 * Math.random(),
-}));
-
 function ToolTip({ x, y }: { x: SharedValue<number>; y: SharedValue<number> }) {
   const font = useFont(SpaceMono, 12);
   const width = 1;
@@ -152,17 +146,20 @@ function ToolTip({ x, y }: { x: SharedValue<number>; y: SharedValue<number> }) {
   const textX = useDerivedValue(
     () => x.value - (textWidth ? textWidth / 2 : 0)
   ); // offset to center line
-  const textY = 10; // offset to center line
+
+  // const textY = 20; // offset to center line
+
+  // const textString = useSharedValue<string>(textX.value.toString());
 
   return (
     <>
-      <Text
+      {/* <SkiaText
         x={textX}
         y={textY} // Slightly above the circle for positioning
         font={font}
         color="white"
-        text={text}
-      />
+        text={textString.value}
+      /> */}
 
       <Rect x={rectX} y={0} width={width} height={500} color="white" />
 

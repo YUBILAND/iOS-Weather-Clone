@@ -9,6 +9,7 @@ import RoundedTemperature from "./RoundedTemperature";
 import ProgressBar from "./ProgressBar";
 import { RootState } from "@/state/store";
 import { useSelector } from "react-redux";
+import OpacityCard from "./OpacityCard";
 
 interface DailyForecastProps {
   cityName: string;
@@ -36,6 +37,7 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ cityName, getDate }) => {
 
   const { forecast, current } = data[cityName];
 
+  // THIS IS NECESSARY FOR INSTANT REF UPDATE FOR PROGRESS BAR
   const getWeekHighandLow = useMemo(() => {
     const maxTempsArr = forecast?.forecastday.map((day) =>
       Math.round(parseInt(day.day.maxtemp_c))
@@ -51,11 +53,8 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ cityName, getDate }) => {
   }, [forecast]);
 
   return (
-    <View
-      className="mb-2 gap-y-3 pt-4 rounded-xl"
-      style={{ backgroundColor: colors.bgWhite(0.15) }}
-    >
-      <View className="flex-row items-center mx-5 gap-x-2 opacity-40">
+    <OpacityCard>
+      <View className="flex-row items-center mx-5 gap-x-2 opacity-40 mb-2">
         <CalendarDaysIcon size={22} color={"white"} />
         <DefaultText className="text-base uppercase font-semibold">
           10-Day Forecast
@@ -138,7 +137,7 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ cityName, getDate }) => {
           </View>
         ))}
       </ScrollView>
-    </View>
+    </OpacityCard>
   );
 };
 

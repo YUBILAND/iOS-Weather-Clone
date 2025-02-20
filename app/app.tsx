@@ -1,27 +1,19 @@
 import { StatusBar } from "expo-status-bar";
-import React, {
-  RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { RefObject, useCallback, useEffect, useState } from "react";
 import {
   Text,
   View,
   Image,
   SafeAreaView,
   TextInput,
-  Button,
-  ScrollView,
   ImageBackground,
   FlatList,
   Animated,
 } from "react-native";
 
 import { debounce } from "lodash";
-import { fetchLocations, fetchWeatherForecast } from "@/api/weather";
-import { getData, storeData } from "@/utils/asyncStorage";
+import { fetchLocations } from "@/api/weather";
+import { getData } from "@/utils/asyncStorage";
 import Spinner from "@/components/Spinner";
 import "../global.css";
 import { Ionicons } from "@expo/vector-icons";
@@ -38,7 +30,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/state/store";
 import { fetchWeatherData } from "@/state/api/apiSlice";
 import { getDate } from "@/hooks/hooks";
-import { Location, Current, Forecast } from "@/constants/constants";
+import { Location } from "@/constants/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const App = () => {
@@ -135,8 +127,6 @@ const App = () => {
     );
   }
 
-  const { location, forecast, current } = data[currentCity];
-
   const props = {
     handleTextDebounce,
     showSearch,
@@ -195,7 +185,7 @@ const App = () => {
       />
 
       <SafeAreaView className="flex flex-1 ">
-        <View className="relative pb-10">
+        <View className="relative pb-10 h-full">
           {/* Bottom Footer */}
           <ImageBackground
             className="w-full h-10 absolute bottom-0 right-0 "

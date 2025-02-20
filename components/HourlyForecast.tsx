@@ -12,12 +12,27 @@ import { colors } from "@/assets/colors/colors";
 import { Current, Forecast, Location } from "@/constants/constants";
 import DefaultText from "./DefaultText";
 import RoundedTemperature from "./RoundedTemperature";
-import ConditionModal from "./ConditionModal";
 import { getCurrentHour, militaryHour } from "@/hooks/hooks";
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
+import OpacityCard from "./OpacityCard";
+import ModalContainer from "./ModalContainer";
+import HourlyModal from "./HourlyModal";
+import { SelectModal } from "./WeatherAtLocation";
 
-const HourlyForecast = ({ cityName }: { cityName: string }) => {
+interface HourlyForecastProps {
+  cityName: string;
+  modalVisible: boolean;
+  setModalVisible: React.Dispatch<React.SetStateAction<SelectModal | null>>;
+  modalID: SelectModal;
+}
+
+const HourlyForecast = ({
+  cityName,
+  modalVisible,
+  setModalVisible,
+  modalID,
+}: HourlyForecastProps) => {
   const [dailyArr, setDailyArr] = useState<DailyStats[]>([]);
   const [americanTime, setAmericanTime] = useState(true);
 
@@ -174,69 +189,67 @@ const HourlyForecast = ({ cityName }: { cityName: string }) => {
     }
   }, []);
 
-  const [modalVisible, setModalVisible] = useState(false);
-
-  const toggleVisible = () => setModalVisible(!modalVisible);
-
   return (
-    <Pressable
-      className="mb-2 gap-y-3 rounded-xl pt-4 w-full relative"
-      style={{ backgroundColor: colors.bgWhite(0.15) }}
-      onPress={() => setModalVisible(true)}
-    >
-      <ConditionModal
-        modalVisible={modalVisible}
-        toggleVisible={toggleVisible}
-        cityName={cityName}
-      />
+    <OpacityCard>
+      <Pressable className="gap-y-3 " onPress={() => setModalVisible(modalID)}>
+        <ModalContainer
+          modalVisible={modalVisible}
+          setModalVisible={setModalVisible}
+          cityName={cityName}
+          title={"Conditions"}
+          iconName="cloud"
+        >
+          <HourlyModal cityName={cityName} />
+        </ModalContainer>
 
-      <View className="flex-row ml-2 px-4">
-        <DefaultText>Random text related to today's weather</DefaultText>
-      </View>
+        <View className="flex-row ml-2 px-4">
+          <DefaultText>Random text related to today's weather</DefaultText>
+        </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          borderTopWidth: 1,
-          borderTopColor: colors.bgWhite(0.2),
-          paddingRight: 16,
-          marginHorizontal: 16,
-        }}
-      >
-        {dailyArr.map((hour, index) => (
-          <Pressable
-            onPress={() => setModalVisible(true)}
-            onStartShouldSetResponder={() => true}
-            key={hour?.fullDate}
-            className="flex justify-center items-center w-fit rounded-3xl py-3"
-            style={{
-              rowGap: 2,
-              paddingLeft: index === 0 ? 0 : 10,
-              paddingRight: index === dailyArr.length - 1 ? 0 : 10,
-            }}
-          >
-            <DefaultText className="font-semibold">
-              {index === 0 ? "Now" : hour?.time.split(" ").join("")}
-            </DefaultText>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            borderTopWidth: 1,
+            borderTopColor: colors.bgWhite(0.2),
+            paddingRight: 16,
+            marginHorizontal: 16,
+          }}
+        >
+          {dailyArr.map((hour, index) => (
+            <Pressable
+              onPress={() => setModalVisible(modalID)}
+              onStartShouldSetResponder={() => true}
+              key={hour?.fullDate}
+              className="flex justify-center items-center w-fit rounded-3xl pt-3 "
+              style={{
+                rowGap: 2,
+                paddingLeft: index === 0 ? 0 : 10,
+                paddingRight: index === dailyArr.length - 1 ? 0 : 10,
+              }}
+            >
+              <DefaultText className="font-semibold">
+                {index === 0 ? "Now" : hour?.time.split(" ").join("")}
+              </DefaultText>
 
-            <Image
-              source={
-                weatherPNG(
-                  (hour?.condition.toLowerCase() as WeatherType) ?? "Sunny"
-                ) as ImageSourcePropType
-              }
-              className="h-11 w-11"
-            />
+              <Image
+                source={
+                  weatherPNG(
+                    (hour?.condition.toLowerCase() as WeatherType) ?? "Sunny"
+                  ) as ImageSourcePropType
+                }
+                className="h-11 w-11"
+              />
 
-            <RoundedTemperature
-              temperature={hour?.celsius}
-              className="text-2xl font-semibold"
-            />
-          </Pressable>
-        ))}
-      </ScrollView>
-    </Pressable>
+              <RoundedTemperature
+                temperature={hour?.celsius}
+                className="text-2xl font-semibold"
+              />
+            </Pressable>
+          ))}
+        </ScrollView>
+      </Pressable>
+    </OpacityCard>
   );
 };
 

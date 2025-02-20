@@ -3,21 +3,26 @@ import React from "react";
 import CloseButton from "./CloseButton";
 import DefaultText from "./DefaultText";
 
-const ModalHeader = ({ toggleVisible }: { toggleVisible: () => void }) => {
+interface ModalHeaderProps {
+  closeModal: () => void;
+  title: string;
+  children: React.ReactNode;
+}
+
+const ModalHeader = ({ closeModal, title, children }: ModalHeaderProps) => {
   return (
     <>
       <View className="opacity-0">
         <CloseButton diameter={35} size={25} />
       </View>
-      <View className="flex-row items-center gap-x-4">
-        <Image
-          source={require("../assets/images/partlycloudy-night.png")}
-          className="w-8 h-8"
-        />
-        <DefaultText className="font-semibold text-xl">Conditions</DefaultText>
+      <View className="flex-row items-center gap-x-2">
+        {/* Put image here */}
+        {children}
+
+        <DefaultText className="font-semibold text-xl">{title}</DefaultText>
       </View>
 
-      <TouchableOpacity onPress={toggleVisible}>
+      <TouchableOpacity onPress={closeModal}>
         <CloseButton diameter={35} size={25} />
       </TouchableOpacity>
     </>
