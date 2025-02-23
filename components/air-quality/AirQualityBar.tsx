@@ -2,7 +2,7 @@ import { View, Text } from "react-native";
 import React from "react";
 import { colors } from "@/assets/colors/colors";
 import { LinearGradient } from "expo-linear-gradient";
-import DefaultText from "./DefaultText";
+import DefaultText from "../atoms/DefaultText";
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 

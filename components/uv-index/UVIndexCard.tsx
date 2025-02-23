@@ -1,37 +1,35 @@
 import { View, Text } from "react-native";
 import React from "react";
 import { colors } from "@/assets/colors/colors";
-import DefaultText from "./DefaultText";
-import AirQualityBar from "./AirQualityBar";
+import DefaultText from "../atoms/DefaultText";
+import AirQualityBar from "../air-quality/AirQualityBar";
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 import { CalendarDaysIcon } from "react-native-heroicons/outline";
-import OpacityCard from "./OpacityCard";
+import OpacityCard from "../atoms/OpacityCard";
 
-const AirQualityCard = ({ cityName }: { cityName: string }) => {
-  const { data, loading, error } = useSelector(
-    (state: RootState) => state.weather
-  );
+const UVIndexCard = ({ cityName }: { cityName: string }) => {
+  const { data } = useSelector((state: RootState) => state.weather);
 
-  const { location, forecast, current } = data[cityName];
+  const { current } = data[cityName];
 
-  const AQI = Math.max(current?.air_quality.o3, current?.air_quality.pm2_5);
+  const UV = Math.round(current?.uv);
   return (
-    <OpacityCard className="px-4 gap-y-2">
+    <OpacityCard className="px-4 gap-y-3">
       <View className="flex-row items-center  gap-x-2 opacity-40">
         <CalendarDaysIcon size={22} color={"white"} />
         <DefaultText className="text-base uppercase font-semibold">
-          Air Quality
+          UV Index
         </DefaultText>
       </View>
-      <DefaultText className="text-4xl font-semibold">{AQI}</DefaultText>
+      <DefaultText className="text-4xl font-semibold">{UV}</DefaultText>
       <DefaultText className="text-xl font-semibold">Good</DefaultText>
 
-      <AirQualityBar cityName={cityName} index={AQI} label={"AQI"} />
+      <AirQualityBar cityName={cityName} index={UV} label={"UV"} />
 
       <DefaultText>Yeah its good trust me</DefaultText>
     </OpacityCard>
   );
 };
 
-export default AirQualityCard;
+export default UVIndexCard;

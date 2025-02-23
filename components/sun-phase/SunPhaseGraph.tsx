@@ -1,7 +1,7 @@
 import { View, Text, Animated, TextInput } from "react-native";
 import React, { useCallback, useMemo } from "react";
 import { colors } from "@/assets/colors/colors";
-import DefaultText from "./DefaultText";
+import DefaultText from "../atoms/DefaultText";
 import { CalendarDaysIcon } from "react-native-heroicons/outline";
 import {
   Area,
@@ -21,7 +21,7 @@ import {
   LinearGradient,
   vec,
 } from "@shopify/react-native-skia";
-import SpaceMono from "../assets/fonts/SpaceMono-Regular.ttf";
+import SpaceMono from "../../assets/fonts/SpaceMono-Regular.ttf";
 import {
   SharedValue,
   useDerivedValue,
@@ -29,8 +29,8 @@ import {
 } from "react-native-reanimated";
 import { RootState } from "@/state/store";
 import { useSelector } from "react-redux";
-import OpacityCard from "./OpacityCard";
-import { getCurrentTime, militaryHour } from "@/hooks/hooks";
+import OpacityCard from "../atoms/OpacityCard";
+import { getChordLength, getCurrentTime, militaryHour } from "@/hooks/hooks";
 
 const SunPhaseGraph = ({
   cityName,
@@ -67,29 +67,6 @@ const SunPhaseGraph = ({
   const sunsetTime = forecast?.forecastday[0].astro.sunset;
 
   const xTicks = 1440; // 1440 ticks as that is how many minutes in a day
-
-  function getChordLength(sunriseTime: string, sunsetTime: string) {
-    const hourDifference = Math.abs(
-      militaryHour(sunsetTime) - militaryHour(sunriseTime)
-    );
-    const sunriseMinutePortion = parseInt(
-      sunriseTime.split(":")[1].split(" ")[0]
-    );
-    const sunsetMinutePortion = parseInt(
-      sunsetTime.split(":")[1].split(" ")[0]
-    );
-    const minuteDifference = Math.abs(
-      sunsetMinutePortion - sunriseMinutePortion
-    );
-
-    let chordLength = hourDifference;
-    if (sunsetMinutePortion > sunriseMinutePortion) {
-      chordLength += minuteDifference / 60;
-    } else {
-      chordLength -= minuteDifference / 60;
-    }
-    return chordLength;
-  }
 
   // Get the chord length between sunrise and sunset
   const chordLength = getChordLength(sunriseTime, sunsetTime);
@@ -163,6 +140,22 @@ const SunPhaseGraph = ({
   //   console.log(regularTimeOnXAxis(currentTime));
   //   console.log(hourToWaveCoord(regularTimeOnXAxis(currentTime) * 60) - yShift);
 
+  const sunPaths = DATA.map((item) => item.sunPath); // Extract all sunPath values
+  const maxSunPath = Math.max(...sunPaths); // Get the maximum value
+  const minSunPath = Math.min(...sunPaths); // Get the minimum value
+
+  // console.log(maxSunPath);
+  // console.log(minSunPath);
+
+  const sunPosition = DATA.map((item) => item.sunPosition); // Extract all sunPosition values
+  const sunIsHere = sunPosition.filter((pos) => pos)[0];
+  // console.log(sunIsHere);
+
+  const sunPathRange = Math.abs(maxSunPath - minSunPath);
+  const sunPathPercentage = (sunIsHere! + Math.abs(minSunPath)) / sunPathRange;
+  // console.log(sunPathPercentage);
+  // if (maxSunPath)
+
   return (
     <>
       {/* Chart */}
@@ -179,19 +172,22 @@ const SunPhaseGraph = ({
           axisOptions={{
             lineColor: addLines
               ? {
-                  grid: { x: "transparent" as Color, y: "white" as Color },
+                  grid: { x: "white" as Color, y: "white" as Color },
                   frame: "white",
                 }
               : "transparent",
-
-            // font: font,
-            labelColor: "transparent",
+          }}
+          xAxis={{
+            font: addLines ? font : null,
+            labelColor: addLines ? colors.lightGray : "transparent",
+            lineColor: addLines ? "white" : "transparent",
           }}
           frame={{
             lineColor: "transparent",
           }}
-          // domainPadding={10}
+          domain={{ y: [-1400, 1400] }}
           chartPressState={state}
+          padding={{ bottom: addLines ? 10 : 0 }}
         >
           {({ points, chartBounds }) => {
             const nightTime1 = points.sunPath.filter(
@@ -215,23 +211,6 @@ const SunPhaseGraph = ({
             return (
               <>
                 <>
-                  {/* Sun Position */}
-                  <Scatter
-                    points={points.sunPosition}
-                    shape="circle"
-                    radius={strokeWidth + 2}
-                    style="fill"
-                    color="white"
-                  />
-
-                  {/* Phase Line */}
-                  <Line
-                    points={points.phaseLine}
-                    color={colors.bgWhite(0.5)}
-                    strokeWidth={strokeWidth - 3}
-                    curveType="natural"
-                  />
-
                   {addBackground && (
                     <>
                       <Area
@@ -241,11 +220,11 @@ const SunPhaseGraph = ({
                         curveType="natural"
                       >
                         <LinearGradient
-                          start={vec(chartBounds.bottom, 150)}
-                          end={vec(chartBounds.bottom, chartBounds.bottom)}
+                          start={vec(chartBounds.top, 150)}
+                          end={vec(chartBounds.top, chartBounds.top)}
                           colors={[
-                            "rgba(124,197,227,0.6)",
-                            "rgba(124,197,227,0.4)",
+                            `rgba(124,197,227,${sunPathPercentage})`,
+                            `rgba(124,197,227,${sunPathPercentage / 2})`,
                           ]}
                         />
                       </Area>
@@ -261,35 +240,55 @@ const SunPhaseGraph = ({
                           end={vec(chartBounds.bottom, chartBounds.bottom)}
                           colors={[
                             "rgba(41, 57, 63, 0.6)",
-                            "rgba(41, 57, 63, 0.6)",
+                            "rgba(41, 57, 63, 0.1)",
                           ]}
                         />
                       </Area>
                     </>
                   )}
 
-                  {/* Night time left side */}
-                  <Line
-                    points={nightTime1}
-                    color={colors.bgBlack(0.5)}
-                    strokeWidth={strokeWidth}
-                    curveType="natural"
-                  />
+                  {/* Sun Path */}
+                  <>
+                    {/* Night time left side */}
+                    <Line
+                      points={nightTime1}
+                      color={colors.bgBlack(0.5)}
+                      strokeWidth={strokeWidth}
+                      curveType="natural"
+                    />
 
-                  {/* Day time */}
+                    {/* Day time */}
+                    <Line
+                      points={dayTime}
+                      color={colors.bgWhite(0.5)}
+                      strokeWidth={strokeWidth}
+                      curveType="natural"
+                    />
+
+                    {/* Night time right side */}
+                    <Line
+                      points={nightTime2}
+                      color={colors.bgBlack(0.5)}
+                      strokeWidth={strokeWidth}
+                      curveType="natural"
+                    />
+                  </>
+
+                  {/* Phase Line */}
                   <Line
-                    points={dayTime}
+                    points={points.phaseLine}
                     color={colors.bgWhite(0.5)}
-                    strokeWidth={strokeWidth}
+                    strokeWidth={strokeWidth - 3}
                     curveType="natural"
                   />
 
-                  {/* Night time right side */}
-                  <Line
-                    points={nightTime2}
-                    color={colors.bgBlack(0.5)}
-                    strokeWidth={strokeWidth}
-                    curveType="natural"
+                  {/* Sun Position */}
+                  <Scatter
+                    points={points.sunPosition}
+                    shape="circle"
+                    radius={strokeWidth + 2}
+                    style="fill"
+                    color="white"
                   />
                 </>
                 {isActive && !removePress ? (

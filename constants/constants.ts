@@ -38,12 +38,12 @@ export const apiKey = "7295bc21a1cd4c43a94220808250802";
 // };
 
 export const weatherImages = {
-  [require("../assets/images/sunrise.png")]: ["sunrise"],
-  [require("../assets/images/sunset.png")]: ["sunset"],
+  sunrise: ["sunrise"],
+  sunset: ["sunset"],
 
-  [require("../assets/images/partlycloudy.png")]: ["partly cloudy"],
+  partlycloudy: ["partly cloudy"],
 
-  [require("../assets/images/drizzle.png")]: [
+  drizzle: [
     "moderate rain",
     "patchy rain possible",
     "patchy rain nearby",
@@ -51,9 +51,10 @@ export const weatherImages = {
     "light freezing rain",
     "moderate rain at times",
     "patchy light drizzle",
+    "light drizzle",
   ],
 
-  [require("../assets/images/heavyrain.png")]: [
+  heavyrain: [
     "heavy rain",
     "heavy rain at times",
     "moderate or heavy freezing rain",
@@ -61,7 +62,7 @@ export const weatherImages = {
     "moderate or heavy rain with thunder",
   ],
 
-  [require("../assets/images/snow.png")]: [
+  snow: [
     "light snow",
     "moderate snow",
     "heavy snow",
@@ -74,29 +75,50 @@ export const weatherImages = {
     "patchy snow nearby night",
     "patchy moderate snow night",
     "blowing snow night",
+    "light snow night",
   ],
 
-  [require("../assets/images/clear-night.png")]: ["sunny night", "clear night"],
+  "clear-night": ["sunny night", "clear night"],
 
-  [require("../assets/images/partlycloudy-night.png")]: [
+  "partlycloudy-night": [
     "overcast night",
     "cloudy night",
     "partly cloudy night",
   ],
 
-  [require("../assets/images/drizzle-night.png")]: [
+  "drizzle-night": [
     "mist night",
     "fog night",
     "moderate rain night",
     "patchy rain nearby night",
     "heavy rain night",
+    "light drizzle night",
   ],
 
-  [require("../assets/images/sun.png")]: ["sunny", "clear"],
+  sun: ["sunny", "clear"],
 
-  [require("../assets/images/cloudy.png")]: ["overcast", "cloudy"],
+  cloudy: ["overcast", "cloudy"],
 
-  [require("../assets/images/fog.png")]: ["mist", "fog"],
+  fog: ["mist", "fog"],
+};
+
+type WeatherKey = {
+  [key: string]: number;
+};
+
+export const weatherKey: WeatherKey = {
+  sunrise: require("../assets/images/sunrise.png"),
+  sunset: require("../assets/images/sunset.png"),
+  partlycloudy: require("../assets/images/partlycloudy.png"),
+  drizzle: require("../assets/images/drizzle.png"),
+  heavyrain: require("../assets/images/heavyrain.png"),
+  snow: require("../assets/images/snow.png"),
+  "clear-night": require("../assets/images/clear-night.png"),
+  "partlycloudy-night": require("../assets/images/partlycloudy-night.png"),
+  "drizzle-night": require("../assets/images/drizzle-night.png"),
+  sun: require("../assets/images/sun.png"),
+  cloudy: require("../assets/images/cloudy.png"),
+  fog: require("../assets/images/fog.png"),
 };
 
 export type WeatherType =
@@ -175,4 +197,5 @@ export type ForecastObject = {
 
 export type HourObject = WeatherData["current"] & {
   time: string;
+  chance_of_rain: number;
 };

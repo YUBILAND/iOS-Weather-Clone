@@ -14,7 +14,7 @@ import {
 import { debounce } from "lodash";
 import { fetchLocations } from "@/api/weather";
 import { getData } from "@/utils/asyncStorage";
-import Spinner from "@/components/Spinner";
+import Spinner from "@/components/atoms/Spinner";
 import "../global.css";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome6 } from "@expo/vector-icons";

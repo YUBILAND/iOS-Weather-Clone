@@ -1,22 +1,34 @@
-import { View, Text, ScrollView, TextInput, Image } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  TextInput,
+  Image,
+  Animated,
+} from "react-native";
 import React, { RefObject, useState } from "react";
-import Search from "./Search";
-import LocationName from "./LocationName";
-import RoundedTemperature from "./RoundedTemperature";
-import WeatherName from "./WeatherName";
-import HighsAndLows from "./HighsAndLows";
-import HourlyForecast from "./HourlyForecast";
-import DailyForecast from "./DailyForecast";
+import Search from "./atoms/Search";
+import LocationName from "./atoms/LocationName";
+import RoundedTemperature from "./atoms/RoundedTemperature";
+import WeatherName from "./atoms/WeatherName";
+import HighsAndLows from "./atoms/HighsAndLows";
+import HourlyForecast from "./hourly-forecast/HourlyForecast";
+import DailyForecast from "./daily-forecast/DailyForecast";
 import { Current, Forecast, Location } from "@/constants/constants";
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
-import AirQualityCard from "./AirQualityCard";
-import UVIndexCard from "./UVIndexCard";
-import SunPhase from "./SunPhaseCard";
-import SunPhaseTest from "./SunPhaseGraph";
-import SunPhaseModal from "./SunPhaseModal";
-import SunPhaseCard from "./SunPhaseCard";
-import ModalContainer from "./ModalContainer";
+import AirQualityCard from "./air-quality/AirQualityCard";
+import UVIndexCard from "./uv-index/UVIndexCard";
+import SunPhase from "./sun-phase/SunPhaseCard";
+import SunPhaseTest from "./sun-phase/SunPhaseGraph";
+import SunPhaseModal from "./sun-phase/SunPhaseModal";
+import SunPhaseCard from "./sun-phase/SunPhaseCard";
+import ModalContainer from "./modal/ModalContainer";
+import {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 
 export type SelectModal = "hourly" | "sunphase";
 
@@ -97,9 +109,9 @@ const WeatherAtLocation = ({
           modalID={"hourly"}
         />
 
-        {/* <DailyForecast cityName={cityName} getDate={getDate} />
+        <DailyForecast cityName={cityName} getDate={getDate} />
 
-        <AirQualityCard cityName={cityName} /> */}
+        <AirQualityCard cityName={cityName} />
 
         <View className="flex-row gap-x-2">
           <View className="flex-[0.5]">

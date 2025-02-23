@@ -1,0 +1,128 @@
+import {
+  getCurrentTime,
+  getRemainingTimeUntilNextPhase,
+  militaryHour,
+} from "@/hooks/hooks";
+import { RootState } from "@/state/store";
+import { FontAwesome } from "@expo/vector-icons";
+import React from "react";
+import { Pressable, TextInput, View } from "react-native";
+import Animated, { useAnimatedProps } from "react-native-reanimated";
+import { useSelector } from "react-redux";
+import { useChartPressState } from "victory-native";
+import DefaultText from "../atoms/DefaultText";
+import OpacityCard from "../atoms/OpacityCard";
+import ModalContainer from "../modal/ModalContainer";
+import { SelectModal } from "../WeatherAtLocation";
+import SunPhaseGraph, { regularTimeOnXAxis } from "./SunPhaseGraph";
+import SunPhaseModal from "./SunPhaseModal";
+
+Animated.addWhitelistedNativeProps({ value: true, source: true });
+
+type SunPhaseModalProps = {
+  cityName: string;
+  graphHeight: number;
+  modalVisible: boolean;
+  setModalVisible: React.Dispatch<React.SetStateAction<SelectModal | null>>;
+  modalID: SelectModal;
+};
+
+const SunPhaseCard = ({
+  cityName,
+  graphHeight,
+  modalVisible,
+  setModalVisible,
+  modalID,
+}: SunPhaseModalProps) => {
+  const { state, isActive } = useChartPressState({
+    x: 0,
+    y: { sunPath: 0, sunPosition: 0, phaseLine: 0 },
+  });
+
+  const { data } = useSelector((state: RootState) => state.weather);
+  const { forecast, location } = data[cityName];
+
+  const currentTime = getCurrentTime(location?.tz_id);
+
+  const currentSunriseTime = forecast.forecastday[0].astro.sunrise.replace(
+    /^0/,
+    ""
+  );
+
+  const currentSunsetTime = forecast.forecastday[0].astro.sunset.replace(
+    /^0/,
+    ""
+  );
+
+  const nextSunriseTime = forecast.forecastday[1].astro.sunrise.replace(
+    /^0/,
+    ""
+  );
+
+  const normalizedCurrentTime = regularTimeOnXAxis(currentTime);
+  const normalizedSunrise = regularTimeOnXAxis(currentSunriseTime);
+  const normalizedSunset = regularTimeOnXAxis(currentSunsetTime);
+
+  let nextPhaseTime = "";
+
+  if (normalizedCurrentTime < normalizedSunrise) {
+    // show sunrise Time
+    nextPhaseTime = currentSunriseTime;
+  } else if (
+    normalizedCurrentTime >= normalizedSunrise &&
+    normalizedCurrentTime < normalizedSunset
+  ) {
+    // show sunrise time
+    nextPhaseTime = currentSunsetTime;
+  } else {
+    //show tomorrows sunrise time
+    nextPhaseTime = nextSunriseTime;
+  }
+
+  const remainingTime = getRemainingTimeUntilNextPhase(
+    currentTime,
+    nextPhaseTime
+  );
+
+  return (
+    <OpacityCard className="">
+      <Pressable onPress={() => setModalVisible(modalID)}>
+        <ModalContainer
+          modalVisible={modalVisible}
+          setModalVisible={setModalVisible}
+          cityName={cityName}
+          title={"Sun Phase"}
+          iconName="sun-o"
+        >
+          <SunPhaseModal cityName={cityName} nextPhaseTime={nextPhaseTime} />
+        </ModalContainer>
+
+        <View className="px-4 gap-y-3">
+          <View className="flex-row items-center gap-x-2 opacity-40">
+            <FontAwesome name="sun-o" color="white" size={22} />
+            <DefaultText className="text-base uppercase font-semibold">
+              Sun Phase
+            </DefaultText>
+          </View>
+          <DefaultText className="text-3xl uppercase font-semibold">
+            {nextPhaseTime}
+          </DefaultText>
+        </View>
+
+        <SunPhaseGraph
+          cityName={cityName}
+          state={state}
+          isActive={isActive}
+          graphHeight={graphHeight}
+          strokeWidth={4}
+          removePress
+        />
+        <DefaultText className="px-4 text-base">{`in ${
+          remainingTime.split(":")[0]
+        } hrs ${remainingTime.split(":")[1]} mins`}</DefaultText>
+      </Pressable>
+    </OpacityCard>
+  );
+};
+
+export default SunPhaseCard;

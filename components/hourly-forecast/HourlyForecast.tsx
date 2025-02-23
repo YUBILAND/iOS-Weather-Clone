@@ -6,19 +6,25 @@ import {
   Pressable,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { WeatherType } from "@/constants/constants";
+import { weatherKey, WeatherType } from "@/constants/constants";
 import { weatherPNG } from "@/utils/exampleForecast";
 import { colors } from "@/assets/colors/colors";
 import { Current, Forecast, Location } from "@/constants/constants";
-import DefaultText from "./DefaultText";
-import RoundedTemperature from "./RoundedTemperature";
-import { getCurrentHour, militaryHour } from "@/hooks/hooks";
+import DefaultText from "../atoms/DefaultText";
+import RoundedTemperature from "../atoms/RoundedTemperature";
+import {
+  getCurrentHour,
+  militaryHour,
+  removeZeroFromTimeString,
+  stringToTime,
+  timeFormat,
+} from "@/hooks/hooks";
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
-import OpacityCard from "./OpacityCard";
-import ModalContainer from "./ModalContainer";
+import OpacityCard from "../atoms/OpacityCard";
+import ModalContainer from "../modal/ModalContainer";
 import HourlyModal from "./HourlyModal";
-import { SelectModal } from "./WeatherAtLocation";
+import { SelectModal } from "../WeatherAtLocation";
 
 interface HourlyForecastProps {
   cityName: string;
@@ -34,7 +40,7 @@ const HourlyForecast = ({
   modalID,
 }: HourlyForecastProps) => {
   const [dailyArr, setDailyArr] = useState<DailyStats[]>([]);
-  const [americanTime, setAmericanTime] = useState(true);
+  const { americanTime } = useSelector((state: RootState) => state.settings);
 
   type DailyStats = {
     time: string;
@@ -53,33 +59,13 @@ const HourlyForecast = ({
     if (location) {
       const currentHour = getCurrentHour(location!.tz_id);
 
-      const timeFormat = (
-        includeMinutes = true
-      ): Intl.DateTimeFormatOptions => ({
-        hour: "numeric",
-        minute: includeMinutes ? "numeric" : undefined, // Ternary operator
-        hour12: americanTime,
-      });
-
-      function removeZeroFromTimeString(timeString: string | null) {
-        if (timeString) {
-          if (timeString[0] === "0") {
-            return timeString.slice(1);
-          }
-          return timeString;
-        }
-        return "";
-      }
-
-      function stringToDate(timeString: string | null) {
-        if (timeString) {
-          const minutes = timeString.split(":")[1].split(" ")[0];
-          const date = new Date();
-          date.setHours(militaryHour(timeString));
-          date.setMinutes(parseInt(minutes));
-          return date.toLocaleTimeString("en-US", timeFormat());
-        }
-        return null;
+      function dateStringToTime(dateString: string, removeMinutes: boolean) {
+        return removeZeroFromTimeString(
+          new Date(dateString).toLocaleTimeString(
+            "en-US",
+            timeFormat(americanTime, removeMinutes)
+          )
+        );
       }
 
       function addWhiteSpace(weatherString: string) {
@@ -100,8 +86,8 @@ const HourlyForecast = ({
             forecast?.forecastday[i].astro.sunset!
           );
 
-          const sunriseDate = stringToDate(sunriseTime);
-          const sunsetDate = stringToDate(sunsetTime);
+          const sunriseDate = stringToTime(americanTime, sunriseTime, false);
+          const sunsetDate = stringToTime(americanTime, sunsetTime, false);
 
           forecast?.forecastday[i].hour.filter((hour, index) => {
             const firstIndex = i === 0;
@@ -119,12 +105,7 @@ const HourlyForecast = ({
                 : false
             ) {
               newArr.push({
-                time: removeZeroFromTimeString(
-                  new Date(hour.time).toLocaleTimeString(
-                    "en-US",
-                    timeFormat(false)
-                  )
-                ),
+                time: dateStringToTime(hour.time, true),
                 celsius: parseInt(hour.temp_c),
                 condition: hour?.is_day
                   ? hour.condition.text
@@ -234,9 +215,9 @@ const HourlyForecast = ({
 
               <Image
                 source={
-                  weatherPNG(
-                    (hour?.condition.toLowerCase() as WeatherType) ?? "Sunny"
-                  ) as ImageSourcePropType
+                  weatherKey[
+                    weatherPNG(hour?.condition.toLowerCase() as WeatherType)
+                  ]
                 }
                 className="h-11 w-11"
               />

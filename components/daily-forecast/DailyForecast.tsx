@@ -1,15 +1,15 @@
 import { View, Image, ScrollView, ImageSourcePropType } from "react-native";
 import React, { useMemo, useRef } from "react";
 import { CalendarDaysIcon } from "react-native-heroicons/solid";
-import { WeatherType } from "@/constants/constants";
+import { weatherKey, WeatherType } from "@/constants/constants";
 import { weatherPNG } from "@/utils/exampleForecast";
 import { colors } from "@/assets/colors/colors";
-import DefaultText from "./DefaultText";
-import RoundedTemperature from "./RoundedTemperature";
-import ProgressBar from "./ProgressBar";
+import DefaultText from "../atoms/DefaultText";
+import RoundedTemperature from "../atoms/RoundedTemperature";
+import ProgressBar from "../atoms/ProgressBar";
 import { RootState } from "@/state/store";
 import { useSelector } from "react-redux";
-import OpacityCard from "./OpacityCard";
+import OpacityCard from "../atoms/OpacityCard";
 
 interface DailyForecastProps {
   cityName: string;
@@ -90,10 +90,11 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ cityName, getDate }) => {
 
               <Image
                 source={
-                  weatherPNG(
-                    (item?.day.condition.text.toLowerCase() as WeatherType) ??
-                      "Sunny"
-                  ) as ImageSourcePropType
+                  weatherKey[
+                    weatherPNG(
+                      item?.day.condition.text.toLowerCase() as WeatherType
+                    )
+                  ]
                 }
                 className="h-11 w-11"
               />

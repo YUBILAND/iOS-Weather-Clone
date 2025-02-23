@@ -6,19 +6,28 @@ export const getWeatherImage = (weatherCondition: string) => {
       return imagePath;
     }
   }
-  return undefined; // Fallback image
+  return "clear"; // Fallback image
 };
 
-export const weatherPNG = (weatherName: WeatherType) => {
+export const weatherPNG = (
+  weatherName: WeatherType,
+  is_day: boolean = true
+) => {
   // remove trailing white space
   // console.log('"' + weatherName + '"');
 
   let weatherNameNoWhiteSpace: WeatherType = weatherName
+    .toLowerCase()
     .split(" ")
     .filter((x) => x)
     .join(" ") as WeatherType;
   // console.log('"' + weatherNameNoWhiteSpace + '"');
-  return getWeatherImage(weatherNameNoWhiteSpace);
+
+  if (is_day) {
+    return getWeatherImage(weatherNameNoWhiteSpace);
+  } else {
+    return getWeatherImage(weatherNameNoWhiteSpace + " night");
+  }
 };
 
 export const days: string[] = [

@@ -1,7 +1,7 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import React from "react";
-import CloseButton from "./CloseButton";
-import DefaultText from "./DefaultText";
+import CloseButton from "../atoms/CloseButton";
+import DefaultText from "../atoms/DefaultText";
 
 interface ModalHeaderProps {
   closeModal: () => void;
