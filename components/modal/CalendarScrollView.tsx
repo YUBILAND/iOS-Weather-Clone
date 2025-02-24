@@ -11,6 +11,7 @@ interface CalendarScrollViewProps {
   currentIndex: number;
   setCurrentIndex: React.Dispatch<React.SetStateAction<number>>;
   currentIndexRef: MutableRefObject<number>;
+  scrollRef: MutableRefObject<boolean>;
 }
 
 const CalendarScrollView = ({
@@ -18,6 +19,7 @@ const CalendarScrollView = ({
   currentIndex,
   setCurrentIndex,
   currentIndexRef,
+  scrollRef,
 }: CalendarScrollViewProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { location } = data[cityName];
@@ -55,7 +57,14 @@ const CalendarScrollView = ({
           <Pressable
             key={index}
             className="gap-y-1 items-center"
-            onPress={() => setCurrentIndex(index)}
+            onPress={() => {
+              if (index !== currentIndex) {
+                setCurrentIndex(index);
+                // console.log("index is", index);
+                // why is this true?
+                scrollRef.current = true;
+              }
+            }}
           >
             <DefaultText key={index} className="font-semibold">
               {val}

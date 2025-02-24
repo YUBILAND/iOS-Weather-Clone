@@ -130,13 +130,13 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
     // ),
   };
 
-  const scrollRef = useRef<boolean>(false);
+  const currentlyScrollingRef = useRef<boolean>(true);
 
-  if (flatlistRef.current && !scrollRef.current) {
+  // If user is scrolling, animate the scroll
+  if (flatlistRef.current && currentlyScrollingRef.current) {
+    console.log("currentIndex is ", currentIndex);
     flatlistRef.current.scrollToIndex({ animated: true, index: currentIndex });
   }
-
-  console.log("HI");
 
   const handleViewableItemsChanged = useCallback(
     ({
@@ -146,14 +146,16 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
         id: number;
       }>[];
     }) => {
-      console.log("Visible items are", viewableItems[0].index);
-      scrollRef.current = false; // Update the ref value
-      setCurrentIndex(viewableItems[0]?.index ?? 0); // Update state
+      if (!currentlyScrollingRef.current) {
+        // console.log("Visible items are", viewableItems[0].index);
+        setCurrentIndex(viewableItems[0]?.index ?? 0); // Update state
+      }
+      currentlyScrollingRef.current = false;
     },
     []
   ); // Empty dependency array means this function is memoized
 
-  const renderItem = useCallback(({ item }: { item: { id: number } }) => {
+  const renderItem = ({ item }: { item: { id: number } }) => {
     const currentTemperature = Math.round(parseFloat(current?.temp_c));
     const maxTemperature = Math.round(
       parseFloat(forecast?.forecastday[item.id].day.maxtemp_c)
@@ -258,7 +260,7 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
         </GraphContainer>
       </View>
     );
-  }, []);
+  };
 
   const keyExtractor = useCallback(
     (_: { id: number }, index: number) => index.toString(),
@@ -274,6 +276,7 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
           currentIndex={currentIndex}
           setCurrentIndex={setCurrentIndex}
           currentIndexRef={currentIndexRef}
+          scrollRef={currentlyScrollingRef}
         />
 
         <HorizontalLine />
