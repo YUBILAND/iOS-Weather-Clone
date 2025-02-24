@@ -48,10 +48,15 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
         ? "0" + minuteConversion.toString()
         : minuteConversion.toString());
 
-    const hour = hours;
+    const time = americanTime
+      ? (parseInt(hours.split(":")[0]) % 13) +
+        ":" +
+        hours.split(":")[1].split(" ")[0] +
+        (parseInt(hours.split(":")[0]) >= 12 ? " PM" : " AM")
+      : hours;
     return {
-      text: hour,
-      value: hour,
+      text: time,
+      value: hours,
     };
   });
 
@@ -61,14 +66,16 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
     const xPosition = state.x.position.value;
     const xValue = state.x.value.value;
 
+    const stopRight = americanTime ? 18 : 20;
+
     return {
       transform: [
         {
           translateX:
             xValue < 3
               ? (3 / 24) * width - 40
-              : xValue > 20
-              ? (18 / 24) * width - 30
+              : xValue > stopRight
+              ? ((stopRight - 2) / 24) * width - 30
               : xPosition - 40,
         },
       ], // Translate X based on state.x
@@ -84,6 +91,10 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
 
   const sunriseTime = forecast?.forecastday[0].astro.sunrise;
   const sunsetTime = forecast?.forecastday[0].astro.sunset;
+
+  const sunlightTime = getChordLength(sunriseTime, sunsetTime, true);
+  const sunlightHours = sunlightTime.toString().split(".")[0];
+  const sunlightMinutes = parseInt(sunlightTime.toString().split(".")[1]);
 
   const sunPhaseInfo = {
     Dawn: stringToTime(
@@ -107,7 +118,10 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
       false,
       28
     ),
-    Sunlight: getChordLength(sunriseTime, sunsetTime) + " hrs",
+    Sunlight:
+      sunlightHours +
+      " hrs " +
+      (sunlightMinutes ? sunlightMinutes + " mins" : ""),
   };
 
   return (
@@ -141,7 +155,7 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
                 {
                   fontSize: 32,
                   color: "white",
-                  width: 100,
+                  width: americanTime ? 150 : 100,
                   fontWeight: 800,
                 },
                 animatedStyle,

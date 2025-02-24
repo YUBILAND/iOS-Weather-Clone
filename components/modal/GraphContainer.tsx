@@ -1,14 +1,15 @@
+import { colors } from "@/assets/colors/colors";
+import { weatherKey } from "@/constants/constants";
+import { RootState } from "@/state/store";
+import { weatherPNG } from "@/utils/exampleForecast";
+import React from "react";
 import {
-  View,
-  Text,
-  TextInput,
   Image,
   ImageSourcePropType,
+  TextInput,
   TextInputProps,
+  View,
 } from "react-native";
-import React, { ReactNode } from "react";
-import { colors } from "@/assets/colors/colors";
-import { ChartPressState } from "victory-native";
 import Animated, {
   AnimatedProps,
   SharedValue,
@@ -16,10 +17,6 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSelector } from "react-redux";
-import { RootState } from "@/state/store";
-import { weatherPNG } from "@/utils/exampleForecast";
-import { weatherKey, WeatherType } from "@/constants/constants";
-import DefaultText from "../atoms/DefaultText";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
@@ -54,6 +51,7 @@ interface GraphContainerProps<Key extends string> {
   hackyWeatherImage?: boolean;
   scrollInfoBold: Partial<AnimatedProps<TextInputProps>>;
   smallBold?: boolean;
+  currentIndex: number;
 }
 
 const GraphContainer = <Key extends string>({
@@ -65,19 +63,10 @@ const GraphContainer = <Key extends string>({
   hackyWeatherImage = false,
   scrollInfoBold,
   smallBold = false,
+  currentIndex,
 }: GraphContainerProps<Key>) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { forecast } = data[cityName];
-
-  // To discrern which y axis key was passed
-  const yAxisKey = Object.keys(state.y).find(
-    (key) =>
-      key !== "currentLineTop" &&
-      key !== "currentLineBottom" &&
-      key !== "currentPosition"
-  ) as Key;
-
-  console.log(yAxisKey);
 
   // Dynamically show time
   const animatedTime = useAnimatedProps(() => {
@@ -123,7 +112,7 @@ const GraphContainer = <Key extends string>({
   });
 
   // Add midnight value
-  const todaysForecast = forecast?.forecastday[0]?.hour;
+  const todaysForecast = forecast?.forecastday[currentIndex]?.hour;
   const addMidnightWeather = [
     ...todaysForecast,
     {
@@ -141,8 +130,10 @@ const GraphContainer = <Key extends string>({
       return weatherKey[weatherPNG(hour.condition.text, hour.is_day)];
     });
 
+  // console.log(conditionArray);
+
   return (
-    <View className="pt-2">
+    <View className="pt-2 w-full px-4">
       <View className="mb-2 ">
         {/* Draggable Time */}
         <View

@@ -113,7 +113,7 @@ const WeatherAtLocation = ({
 
         <AirQualityCard cityName={cityName} />
 
-        <View className="flex-row gap-x-2">
+        <View className="flex-row gap-x-2 h-48">
           <View className="flex-[0.5]">
             <UVIndexCard cityName={cityName} />
           </View>

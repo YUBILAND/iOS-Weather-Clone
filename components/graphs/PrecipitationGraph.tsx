@@ -24,7 +24,7 @@ import { getCurrentHour, getCurrentTime, militaryHour } from "@/hooks/hooks";
 import { colors } from "@/assets/colors/colors";
 import getFont from "@/hooks/getFont";
 import { regularTimeOnXAxis } from "../sun-phase/SunPhaseGraph";
-import Cursor from "../victory-native/cursor";
+import Cursor from "../victory-native/Cursor";
 
 interface PrecipitationGraphProps {
   cityName: string;
@@ -41,6 +41,7 @@ interface PrecipitationGraphProps {
   graphHeight: number;
   strokeWidth: number;
   yAxisLabel: string;
+  currentIndex: number;
 }
 
 const PrecipitationGraph = ({
@@ -50,6 +51,7 @@ const PrecipitationGraph = ({
   graphHeight,
   strokeWidth,
   yAxisLabel,
+  currentIndex,
 }: PrecipitationGraphProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { location, forecast } = data[cityName];
@@ -61,7 +63,7 @@ const PrecipitationGraph = ({
   );
 
   // Add midnight value
-  const todaysForecast = forecast?.forecastday[0].hour;
+  const todaysForecast = forecast?.forecastday[currentIndex].hour;
   const addMidnightWeather = [
     ...todaysForecast,
     {

@@ -64,6 +64,8 @@ export const weatherImages = {
 
   snow: [
     "light snow",
+    "light snow showers",
+    "light snow showers night",
     "moderate snow",
     "heavy snow",
     "blowing snow",
@@ -72,6 +74,7 @@ export const weatherImages = {
     "patchy light snow night",
     "light sleet night",
     "patchy light snow",
+    "patchy snow nearby",
     "patchy snow nearby night",
     "patchy moderate snow night",
     "blowing snow night",

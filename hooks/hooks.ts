@@ -1,3 +1,5 @@
+import { days } from "@/utils/exampleForecast";
+
 export const getCurrentHour = (timeZone: string) => {
   const now = new Date();
   const tzs = new Intl.DateTimeFormat("en-US", {
@@ -55,10 +57,7 @@ export const getCurrentDate = (timeZone: string) => {
 export function getCalendarDate(timeZone: string, incrementBy: number) {
   let date = new Date();
   date.setUTCDate(date.getUTCDate() + incrementBy);
-  // const weekday = date.toLocaleString("en-US", {
-  //   timeZone: location?.tz_id,
-  //   weekday: "long",
-  // });
+
   const tzs = new Intl.DateTimeFormat("en-US", {
     timeZone: timeZone,
     weekday: "long",
@@ -67,7 +66,6 @@ export function getCalendarDate(timeZone: string, incrementBy: number) {
     year: "numeric",
   });
   const tmz = tzs.format(date);
-  // console.log(tmz);
   return tmz;
 }
 
@@ -129,7 +127,11 @@ export function getRemainingTimeUntilNextPhase(
   return remainingTime;
 }
 
-export function getChordLength(sunriseTime: string, sunsetTime: string) {
+export function getChordLength(
+  sunriseTime: string,
+  sunsetTime: string,
+  realTime: boolean = false
+) {
   const hourDifference = Math.abs(
     militaryHour(sunsetTime) - militaryHour(sunriseTime)
   );
@@ -141,9 +143,9 @@ export function getChordLength(sunriseTime: string, sunsetTime: string) {
 
   let chordLength = hourDifference;
   if (sunsetMinutePortion > sunriseMinutePortion) {
-    chordLength += minuteDifference / 60;
+    chordLength += realTime ? minuteDifference / 100 : minuteDifference / 60;
   } else {
-    chordLength -= minuteDifference / 60;
+    chordLength -= realTime ? minuteDifference / 100 : minuteDifference / 60;
   }
   return chordLength;
 }
@@ -173,7 +175,10 @@ export function stringToTime(
   removeMinutes: boolean = false,
   addMinutes: number = 0
 ) {
-  let minutes = timeString.split(":")[1].split(" ")[0];
+  let minutes =
+    timeString.includes("AM") || timeString.includes("PM")
+      ? timeString.split(":")[1].split(" ")[0]
+      : timeString.split(":")[1];
   minutes = (parseInt(minutes) + addMinutes).toString();
   const date = new Date();
   date.setHours(militaryHour(timeString));
@@ -183,3 +188,26 @@ export function stringToTime(
   );
   return time;
 }
+
+export const getDaysOfMonth = (y: number, m: number) =>
+  new Date(y, m, 0).getDate();
+
+export const getScrollDates = (
+  numberOfDays: number,
+  month: number,
+  day: number,
+  year: number,
+  weekday: string
+) => {
+  const xCountArray = [...Array(numberOfDays).keys()];
+  const currentWeekdayIndex = days.indexOf(weekday);
+
+  const scrollWeekdayLetters = xCountArray.map((val) => {
+    return days[(currentWeekdayIndex + val) % (days.length - 1)][0];
+  });
+
+  const scrollDates = xCountArray.map((val) => {
+    return (day + val) % (getDaysOfMonth(year, month) + 1);
+  });
+  return { scrollWeekdayLetters, scrollDates };
+};

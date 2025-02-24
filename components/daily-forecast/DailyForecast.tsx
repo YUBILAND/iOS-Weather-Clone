@@ -75,7 +75,7 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ cityName, getDate }) => {
               borderTopColor: colors.bgWhite(0.2),
             }}
             key={item?.date}
-            className="flex-row items-center w-full py-2 mr-4 gap-x-8"
+            className="flex-row items-center w-full py-4 mr-4 gap-x-8"
           >
             {/* Day + Weather Image */}
             <View
@@ -96,7 +96,7 @@ const DailyForecast: React.FC<DailyForecastProps> = ({ cityName, getDate }) => {
                     )
                   ]
                 }
-                className="h-11 w-11"
+                className="h-8 w-8"
               />
             </View>
 

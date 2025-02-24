@@ -20,7 +20,6 @@ import {
   useImage,
   Canvas,
 } from "@shopify/react-native-skia";
-import SpaceMono from "../../assets/fonts/SpaceMono-Regular.ttf";
 import { RootState } from "@/state/store";
 import { useSelector } from "react-redux";
 import { getCurrentHour, getCurrentTime, militaryHour } from "@/hooks/hooks";
@@ -29,7 +28,7 @@ import { weatherPNG } from "@/utils/exampleForecast";
 import { weatherKey, WeatherType } from "@/constants/constants";
 import getFont from "@/hooks/getFont";
 import { regularTimeOnXAxis } from "../sun-phase/SunPhaseGraph";
-import Cursor from "../victory-native/cursor";
+import Cursor from "../victory-native/Cursor";
 
 interface TemperatureGraphProps {
   cityName: string;
@@ -46,6 +45,7 @@ interface TemperatureGraphProps {
   graphHeight: number;
   strokeWidth: number;
   yAxisLabel: string;
+  currentIndex: number;
 }
 
 const TemperatureGraph = ({
@@ -55,6 +55,7 @@ const TemperatureGraph = ({
   graphHeight,
   strokeWidth,
   yAxisLabel,
+  currentIndex,
 }: TemperatureGraphProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { location, forecast } = data[cityName];
@@ -77,7 +78,7 @@ const TemperatureGraph = ({
   const minRange = weekMinTemp - 3;
 
   // Add midnight value
-  const todaysForecast = forecast?.forecastday[0].hour;
+  const todaysForecast = forecast?.forecastday[currentIndex]?.hour;
   const addMidnightWeather = [
     ...todaysForecast,
     { temp_c: todaysForecast[todaysForecast.length - 1].temp_c },
@@ -100,7 +101,7 @@ const TemperatureGraph = ({
 
   const conditionArray =
     forecast &&
-    forecast?.forecastday[0]?.hour.map((hour) => {
+    forecast?.forecastday[currentIndex]?.hour.map((hour) => {
       // console.log(hour.condition.text.toLowerCase());
       return useImage(
         weatherKey[

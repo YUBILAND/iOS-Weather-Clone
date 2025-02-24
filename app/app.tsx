@@ -34,7 +34,7 @@ import { Location } from "@/constants/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const App = () => {
-  //   AsyncStorage.clear();
+  // AsyncStorage.clear();
   const dispatch = useDispatch<AppDispatch>();
   const { data, loading, error } = useSelector(
     (state: RootState) => state.weather

@@ -2,6 +2,7 @@ import {
   getCurrentTime,
   getRemainingTimeUntilNextPhase,
   militaryHour,
+  stringToTime,
 } from "@/hooks/hooks";
 import { RootState } from "@/state/store";
 import { FontAwesome } from "@expo/vector-icons";
@@ -42,6 +43,8 @@ const SunPhaseCard = ({
   const { data } = useSelector((state: RootState) => state.weather);
   const { forecast, location } = data[cityName];
 
+  const { americanTime } = useSelector((state: RootState) => state.settings);
+
   const currentTime = getCurrentTime(location?.tz_id);
 
   const currentSunriseTime = forecast.forecastday[0].astro.sunrise.replace(
@@ -79,13 +82,16 @@ const SunPhaseCard = ({
     nextPhaseTime = nextSunriseTime;
   }
 
+  // conver to 12hr or 24hr
+  nextPhaseTime = stringToTime(americanTime, nextPhaseTime);
+
   const remainingTime = getRemainingTimeUntilNextPhase(
     currentTime,
     nextPhaseTime
   );
 
   return (
-    <OpacityCard className="">
+    <OpacityCard className="h-full">
       <Pressable onPress={() => setModalVisible(modalID)}>
         <ModalContainer
           modalVisible={modalVisible}
@@ -97,7 +103,7 @@ const SunPhaseCard = ({
           <SunPhaseModal cityName={cityName} nextPhaseTime={nextPhaseTime} />
         </ModalContainer>
 
-        <View className="px-4 gap-y-3">
+        <View className="px-4 gap-y-2">
           <View className="flex-row items-center gap-x-2 opacity-40">
             <FontAwesome name="sun-o" color="white" size={22} />
             <DefaultText className="text-base uppercase font-semibold">

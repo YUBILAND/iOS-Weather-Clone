@@ -195,6 +195,7 @@ const HourlyForecast = ({
             borderTopColor: colors.bgWhite(0.2),
             paddingRight: 16,
             marginHorizontal: 16,
+            // no gap, use padding left and right so whitespace is scrollable
           }}
         >
           {dailyArr.map((hour, index) => (
@@ -204,9 +205,9 @@ const HourlyForecast = ({
               key={hour?.fullDate}
               className="flex justify-center items-center w-fit rounded-3xl pt-3 "
               style={{
-                rowGap: 2,
-                paddingLeft: index === 0 ? 0 : 10,
-                paddingRight: index === dailyArr.length - 1 ? 0 : 10,
+                rowGap: 6,
+                paddingLeft: index === 0 ? 0 : 13,
+                paddingRight: index === dailyArr.length - 1 ? 0 : 13,
               }}
             >
               <DefaultText className="font-semibold">
@@ -219,12 +220,12 @@ const HourlyForecast = ({
                     weatherPNG(hour?.condition.toLowerCase() as WeatherType)
                   ]
                 }
-                className="h-11 w-11"
+                className="h-8 w-8"
               />
 
               <RoundedTemperature
                 temperature={hour?.celsius}
-                className="text-2xl font-semibold"
+                className="text-xl font-semibold"
               />
             </Pressable>
           ))}

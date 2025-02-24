@@ -1,73 +1,43 @@
-import { View, Text, ScrollView, Pressable } from "react-native";
-import React, { useEffect, useState } from "react";
-import { days } from "@/utils/exampleForecast";
-import DefaultText from "../atoms/DefaultText";
 import { colors } from "@/assets/colors/colors";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/state/store";
-import { getCalendarDate, getCurrentDate } from "@/hooks/hooks";
+import { getCalendarDate, getCurrentDate, getScrollDates } from "@/hooks/hooks";
+import { RootState } from "@/state/store";
+import React, { MutableRefObject, useEffect, useMemo, useState } from "react";
+import { Pressable, ScrollView, View } from "react-native";
+import { useSelector } from "react-redux";
+import DefaultText from "../atoms/DefaultText";
 
-const CalendarScrollView = ({ cityName }: { cityName: string }) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const { data, loading, error } = useSelector(
-    (state: RootState) => state.weather
-  );
+interface CalendarScrollViewProps {
+  cityName: string;
+  currentIndex: number;
+  setCurrentIndex: React.Dispatch<React.SetStateAction<number>>;
+  currentIndexRef: MutableRefObject<number>;
+}
 
-  const { location, forecast, current } = data[cityName];
+const CalendarScrollView = ({
+  cityName,
+  currentIndex,
+  setCurrentIndex,
+  currentIndexRef,
+}: CalendarScrollViewProps) => {
+  const { data } = useSelector((state: RootState) => state.weather);
+  const { location } = data[cityName];
 
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const [calendarDate, setCalendarDate] = useState("");
-
-  useEffect(() => {
+  // Change selected calendar date
+  const calendarDate = useMemo(() => {
     if (location) {
-      const newConditionDate = getCalendarDate(location?.tz_id, currentIndex);
-      setCalendarDate(newConditionDate);
+      return getCalendarDate(location.tz_id, currentIndex);
     }
+    return null;
   }, [currentIndex]);
 
-  // Get number of day in month according ot year
-  const d = (y: number, m: number) => new Date(y, m, 0).getDate();
+  // Get scrollable weekday letters and calendar dates
+  const { month, day, year, weekday } = useMemo(() => {
+    return getCurrentDate(location?.tz_id);
+  }, [location?.tz_id]);
 
-  const { month, day, year, weekday } = getCurrentDate(location?.tz_id);
-  // console.log("date is", month, "/", day, "/", year);
-  // console.log(d(year, month));
-  // console.log(weekday);
-
-  const currentWeekdayIndex = days.indexOf(weekday);
-
-  const getScrollDates = (numberOfDays: number) => {
-    const xCountArray = [...Array(numberOfDays).keys()];
-
-    const scrollWeekdayLetters = xCountArray.map((val) => {
-      return days[(currentWeekdayIndex + val) % (days.length - 1)][0];
-    });
-
-    const scrollDates = xCountArray.map((val) => {
-      return (day + val) % (d(year, month) + 1);
-    });
-    return { scrollWeekdayLetters, scrollDates };
-  };
-
-  const { scrollWeekdayLetters, scrollDates } = getScrollDates(10);
-  //   if (location) {
-  //     const now = new Date();
-
-  //     const weekday = now.toLocaleString("en-US", {
-  //       timeZone: location?.tz_id,
-  //       weekday: "long",
-  //     });
-  //     const tzs = new Intl.DateTimeFormat("en-US", {
-  //       timeZone: location?.tz_id,
-  //       weekday: "long",
-  //       month: "long",
-  //       day: "numeric",
-  //       year: "numeric",
-  //     });
-  //     const tmz = tzs.format(now);
-  //     // console.log(tmz);
-  //     setCalendarDate(tmz);
-  //   }
-  // }, []);
+  const { scrollWeekdayLetters, scrollDates } = useMemo(() => {
+    return getScrollDates(3, month, day, year, weekday);
+  }, [month, day, year, weekday]);
 
   return (
     <>

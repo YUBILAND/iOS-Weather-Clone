@@ -2,36 +2,34 @@ import { View, Text } from "react-native";
 import React from "react";
 import { colors } from "@/assets/colors/colors";
 import { LinearGradient } from "expo-linear-gradient";
-import DefaultText from "../atoms/DefaultText";
+import DefaultText from "./DefaultText";
 import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
 
-const AirQualityBar = ({
+const ColoredBar = ({
   cityName,
   index,
+  maxIndex,
   label,
+  colorsArr,
+  locationsArr,
 }: {
   cityName: string;
   index: number;
+  maxIndex: number;
+
   label: "UV" | "AQI";
+  colorsArr: readonly [string, string, ...string[]];
+  locationsArr: readonly [number, number, ...number[]];
 }) => {
-  const progressWidth = label === "AQI" ? 320 : 140;
   const barWidth = label === "AQI" ? 320 : 140;
 
   const startPadding = 0;
-  const leftGrayPercentage = 0;
-  const rightGrayPercentage = 0;
-
-  const { data, loading, error } = useSelector(
-    (state: RootState) => state.weather
-  );
-
-  const { location, forecast, current } = data[cityName];
 
   return (
     <View
       style={{
-        width: progressWidth,
+        width: barWidth,
         height: 6,
         borderRadius: 20,
         backgroundColor: colors.bgWhite(0.2),
@@ -40,16 +38,8 @@ const AirQualityBar = ({
       }}
     >
       <LinearGradient
-        colors={[
-          "#00df72",
-          "#f5e536",
-          "#fc9003",
-          "#f51458",
-          "#ad02f6",
-          "#82162c",
-          "#82162c",
-        ]} // Define your gradient colors
-        locations={[0.05, 0.2, 0.3, 0.4, 0.5, 0.8, 1]}
+        colors={colorsArr} // Define your gradient colors
+        locations={locationsArr}
         start={{ x: 0, y: 0 }} // Start point (left)
         end={{
           x: 1,
@@ -64,7 +54,7 @@ const AirQualityBar = ({
 
       <DefaultText
         style={{
-          marginLeft: index / 2,
+          marginLeft: (barWidth * index) / maxIndex,
         }}
         className="h-2 w-2 bg-white rounded-full absolute top-0 left-0"
       />
@@ -72,4 +62,4 @@ const AirQualityBar = ({
   );
 };
 
-export default AirQualityBar;
+export default ColoredBar;

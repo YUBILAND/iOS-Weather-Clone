@@ -1,33 +1,71 @@
-import { View, Text } from "react-native";
-import React from "react";
-import { colors } from "@/assets/colors/colors";
-import DefaultText from "../atoms/DefaultText";
-import AirQualityBar from "../air-quality/AirQualityBar";
-import { useSelector } from "react-redux";
 import { RootState } from "@/state/store";
+import React from "react";
+import { View } from "react-native";
 import { CalendarDaysIcon } from "react-native-heroicons/outline";
+import { useSelector } from "react-redux";
+import ColoredBar from "../atoms/ColoredBar";
+import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 
 const UVIndexCard = ({ cityName }: { cityName: string }) => {
   const { data } = useSelector((state: RootState) => state.weather);
-
   const { current } = data[cityName];
 
   const UV = Math.round(current?.uv);
+
+  const rating =
+    UV <= 2
+      ? "Low"
+      : UV <= 5
+      ? "Moderate"
+      : UV <= 7
+      ? "High"
+      : UV <= 10
+      ? "Very High"
+      : "Extreme";
+
+  const message =
+    UV <= 2
+      ? "Minimal risk of harm from sun exposure."
+      : UV <= 5
+      ? "Some risk of harm from sun exposure."
+      : UV <= 7
+      ? "Risk of harm from unprotected sun exposure."
+      : UV <= 10
+      ? "Extra protection is needed."
+      : "Unprotected skin can burn quickly.";
+
   return (
-    <OpacityCard className="px-4 gap-y-3">
+    <OpacityCard className="px-4 gap-y-2 h-full">
       <View className="flex-row items-center  gap-x-2 opacity-40">
         <CalendarDaysIcon size={22} color={"white"} />
         <DefaultText className="text-base uppercase font-semibold">
           UV Index
         </DefaultText>
       </View>
-      <DefaultText className="text-4xl font-semibold">{UV}</DefaultText>
-      <DefaultText className="text-xl font-semibold">Good</DefaultText>
+      <DefaultText
+        className="font-semibold"
+        style={{ fontSize: 30, lineHeight: 30 }}
+      >
+        {UV}
+      </DefaultText>
+      <DefaultText
+        className=" font-semibold"
+        style={{ fontSize: 18, lineHeight: 18 }}
+      >
+        {rating}
+      </DefaultText>
 
-      <AirQualityBar cityName={cityName} index={UV} label={"UV"} />
+      <ColoredBar
+        cityName={cityName}
+        index={UV}
+        maxIndex={12}
+        label={"UV"}
+        colorsArr={["#00df72", "#f5e536", "#fc9003", "#f51458", "#ad02f6"]}
+        locationsArr={[0, 0.3, 0.6, 0.8, 1]}
+      />
 
-      <DefaultText>Yeah its good trust me</DefaultText>
+      <DefaultText>{message}</DefaultText>
     </OpacityCard>
   );
 };

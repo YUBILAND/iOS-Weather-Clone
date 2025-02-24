@@ -19,7 +19,7 @@ export const weatherPNG = (
   let weatherNameNoWhiteSpace: WeatherType = weatherName
     .toLowerCase()
     .split(" ")
-    .filter((x) => x)
+    .filter((x) => x) // removes whitespace
     .join(" ") as WeatherType;
   // console.log('"' + weatherNameNoWhiteSpace + '"');
 
