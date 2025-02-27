@@ -4,6 +4,7 @@ import { RootState } from "@/state/store";
 import { weatherPNG } from "@/utils/exampleForecast";
 import React, {
   memo,
+  MutableRefObject,
   RefObject,
   useCallback,
   useEffect,
@@ -26,23 +27,41 @@ import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
 import PrecipitationGraph from "../graphs/PrecipitationGraph";
 import TemperatureGraph from "../graphs/TemperatureGraph";
-import CalendarScrollView from "../modal/CalendarScrollView";
-import GraphContainer from "../modal/GraphContainer";
-import ModalBoxTitle from "../modal/ModalBoxTitle";
-import ModalTextBoxContainer from "../modal/ModalTextBoxContainer";
+import CalendarScrollView from "./CalendarScrollView";
+import GraphContainer from "./GraphContainer";
+import ModalBoxTitle from "./ModalBoxTitle";
+import ModalTextBoxContainer from "./ModalTextBoxContainer";
 import { getCalendarDate } from "@/hooks/hooks";
+import ModalDropdown from "./dropdown/ModalDropdownContainer";
+import Test from "@/app/Test";
+import DropdownComponent from "./dropdown/DropdownComponent";
+import { SelectDemo, SelectDemoItem } from "../atoms/Dropdown";
+import ModalDropdownContainer from "./dropdown/ModalDropdownContainer";
+import TitleTemp from "../graphs/conditions/TitleTemp";
+import RenderConditionsGraphs from "../graphs/conditions/RenderConditionsGraphs";
+import UVGraph from "../graphs/UVGraph";
+import GraphLeftText from "../graphs/victoryComponents/GraphLeftText";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
 type ConditionModalProps = {
   cityName: string;
+  currentIndex: number;
+  setCurrentIndex: (index: number) => void;
+  currentIndexRef: MutableRefObject<number>;
+  selectedModal: number;
+  setSelectedModal: (index: number) => void;
 };
 
-const HourlyModal = ({ cityName }: ConditionModalProps) => {
-  // Chart Press State for temperature
-
-  const temperatureStateRef = useRef();
-
+const HourlyModal = ({
+  cityName,
+  currentIndex,
+  setCurrentIndex,
+  currentIndexRef,
+  selectedModal,
+  setSelectedModal,
+}: ConditionModalProps) => {
+  // Temperature Chart Press State
   const { state: tempState, isActive: tempIsActive } = useChartPressState({
     x: 0,
     y: {
@@ -52,7 +71,7 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
       currentPosition: 0,
     },
   });
-  // Chart Press State for precipitation
+  // Precipitation Chart Press State
   const { state: rainState, isActive: rainIsActive } = useChartPressState({
     x: 0,
     y: {
@@ -63,21 +82,27 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
     },
   });
 
-  const [update, setUpdate] = useState(false);
+  const { state: uvState, isActive: uvIsActive } = useChartPressState({
+    x: 0,
+    y: {
+      uvIndex: 0,
+      currentLineTop: 0,
+      currentLineBottom: 0,
+      currentPosition: 0,
+    },
+  });
 
+  const isAnyActive = [tempIsActive, rainIsActive, uvIsActive].some(
+    (active) => active
+  );
+
+  // Rerender to prevent bug aniamtion when scrolling on mount
+  const [update, setUpdate] = useState(false);
   useEffect(() => {
     setTimeout(() => {
       setUpdate(!update);
     });
   }, []);
-
-  // useEffect(() => {
-  //   setTimeout(() => {
-
-  //   setUpdate1(!update1);
-  // })
-
-  // }, [update]);
 
   const tempScrollInfoBold = useAnimatedProps(() => {
     const celsius = `${Math.round(tempState.y.celsius.value.value)}°`;
@@ -94,21 +119,20 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
     };
   });
 
+  const uvScrollInfoBold = useAnimatedProps(() => {
+    const uvIndex = `${Math.round(uvState.y.uvIndex.value.value)}`;
+    return {
+      text: uvIndex,
+      value: uvIndex,
+    };
+  });
+
   const { data } = useSelector((state: RootState) => state.weather);
   const { location, forecast, current } = data[cityName];
 
   const flatlistRef = useRef<FlatList>(null);
 
-  const hourlyTempMap = forecast?.forecastday[0].hour.map((hour) =>
-    Math.round(parseFloat(hour.temp_c))
-  );
-  const maxCelsius = Math.max(...hourlyTempMap);
-  const minCelsius = Math.min(...hourlyTempMap);
-
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const currentIndexRef = useRef<number>(0);
-
-  const graphData: { id: number }[] = useMemo(() => {
+  const flatlistRenderAmount: { id: number }[] = useMemo(() => {
     return Array(3)
       .fill(0)
       .map((_, idx) => ({ id: idx }));
@@ -156,108 +180,49 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
   ); // Empty dependency array means this function is memoized
 
   const renderItem = ({ item }: { item: { id: number } }) => {
-    const currentTemperature = Math.round(parseFloat(current?.temp_c));
-    const maxTemperature = Math.round(
-      parseFloat(forecast?.forecastday[item.id].day.maxtemp_c)
-    );
-    const minTemperature = Math.round(
-      parseFloat(forecast?.forecastday[item.id].day.mintemp_c)
-    );
-
-    const currentWeatherImage =
-      weatherKey[weatherPNG(current?.condition.text, current?.is_day)];
-
-    const DailyWeatherImage =
-      weatherKey[weatherPNG(forecast?.forecastday[item.id].day.condition.text)];
-
     return (
       <View className="w-screen">
-        {/* Temperature graph */}
-        <GraphContainer
-          cityName={cityName}
-          state={tempState}
-          isActive={tempIsActive}
-          hackyWeatherImage
-          scrollInfoBold={tempScrollInfoBold}
-          currentIndex={item.id}
-          leftSide={
-            <>
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "flex-end",
-                  gap: 8,
-                }}
-              >
-                <DefaultText className="text-4xl">
-                  {item.id === 0 ? currentTemperature : maxTemperature}
-                  &#176;
-                </DefaultText>
-                {item.id != 0 && (
-                  <DefaultText
-                    className="text-4xl"
-                    style={{ color: colors.lightGray }}
-                  >
-                    {minTemperature}&#176;
-                  </DefaultText>
-                )}
-                <Image
-                  source={
-                    item.id === 0 ? currentWeatherImage : DailyWeatherImage
-                  }
-                  style={{ width: 40, height: 40 }}
-                />
-              </View>
-              <View>
-                {item.id === 0 ? (
-                  <DefaultText style={{ color: colors.lightGray }}>
-                    H: {maxCelsius}&#176; L: {minCelsius}&#176;
-                  </DefaultText>
-                ) : (
-                  <DefaultText style={{ color: colors.lightGray }}>
-                    Celsius
-                  </DefaultText>
-                )}
-              </View>
-            </>
-          }
-        >
-          <TemperatureGraph
+        {selectedModal === 0 ? (
+          <RenderConditionsGraphs
+            data={data[cityName]}
             cityName={cityName}
-            state={tempState}
-            isActive={tempIsActive}
-            graphHeight={200}
-            strokeWidth={4}
-            yAxisLabel="°"
+            tempState={tempState}
+            tempIsActive={tempIsActive}
+            rainState={rainState}
+            rainIsActive={rainIsActive}
+            tempScrollInfoBold={tempScrollInfoBold}
+            rainScrollInfoBold={rainScrollInfoBold}
             currentIndex={item.id}
+            item={item}
           />
-        </GraphContainer>
-        {/* Precipitation graph */}
-        <GraphContainer
-          cityName={cityName}
-          state={rainState}
-          isActive={rainIsActive}
-          scrollInfoBold={rainScrollInfoBold}
-          smallBold
-          currentIndex={item.id}
-          leftSide={
-            <View className="h-12" style={{ justifyContent: "center" }}>
-              <DefaultText className="text-2xl font-semibold ">
-                Rain Probability
-              </DefaultText>
-            </View>
-          }
-        >
-          <PrecipitationGraph
+        ) : (
+          <GraphContainer
             cityName={cityName}
-            state={rainState}
-            isActive={rainIsActive}
-            graphHeight={200}
-            strokeWidth={4}
-            yAxisLabel="%"
-            currentIndex={item.id}
-          />
-        </GraphContainer>
+            state={uvState}
+            isActive={uvIsActive}
+            // hackyWeatherImage
+            // smallBold
+            scrollInfoBold={uvScrollInfoBold}
+            currentIndex={currentIndex}
+            leftSide={<GraphLeftText data={data[cityName]} item={item} />}
+          >
+            <UVGraph
+              cityName={cityName}
+              state={uvState}
+              isActive={uvIsActive}
+              graphHeight={200}
+              strokeWidth={4}
+              yAxisLabel=""
+              currentIndex={item.id}
+            />
+          </GraphContainer>
+        )}
+
+        <ModalDropdownContainer
+          isAnyActive={isAnyActive}
+          selectedModal={selectedModal}
+          setSelectedModal={setSelectedModal}
+        />
       </View>
     );
   };
@@ -284,7 +249,6 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
 
       {/* Graphs */}
       <>
-        {/* Weather at location */}
         <FlatList
           onViewableItemsChanged={handleViewableItemsChanged}
           viewabilityConfig={{
@@ -292,13 +256,13 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
           }}
           {...flatlistProps}
           ref={flatlistRef}
-          data={graphData}
+          data={flatlistRenderAmount}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
         />
       </>
 
-      <View className="px-4">
+      {/* <View className="px-4">
         <View>
           <ModalBoxTitle title="Total Rainfall" />
 
@@ -380,7 +344,7 @@ const HourlyModal = ({ cityName }: ConditionModalProps) => {
             </View>
           </ModalTextBoxContainer>
         </View>
-      </View>
+      </View> */}
     </>
   );
 };

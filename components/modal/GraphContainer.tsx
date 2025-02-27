@@ -17,24 +17,25 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSelector } from "react-redux";
+import { getConditionArray } from "./utils/getConditionArray";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-interface YAxisValue {
+export interface YAxisValue {
   value: SharedValue<number>;
   position: SharedValue<number>;
 }
 
-interface YAxisState<Key extends string> {
+export interface YAxisState<Key extends string> {
   [key: string]: YAxisValue; // Dynamic keys with YAxisValue type
   currentLineTop: YAxisValue;
   currentLineBottom: YAxisValue;
   currentPosition: YAxisValue;
 }
 
-interface ChartPressedState<Key extends string> {
+export interface ChartPressedState<Key extends string> {
   x: {
     value: SharedValue<number>;
     position: SharedValue<number>;
@@ -111,29 +112,10 @@ const GraphContainer = <Key extends string>({
     };
   });
 
-  // Add midnight value
-  const todaysForecast = forecast?.forecastday[currentIndex]?.hour;
-  const addMidnightWeather = [
-    ...todaysForecast,
-    {
-      condition: {
-        text: todaysForecast[todaysForecast.length - 1].condition.text,
-      },
-      is_day: todaysForecast[todaysForecast.length - 1].is_day,
-    },
-  ];
-
-  // Used in case of hacky dynamic image solution
-  const conditionArray =
-    forecast &&
-    addMidnightWeather.map((hour) => {
-      return weatherKey[weatherPNG(hour.condition.text, hour.is_day)];
-    });
-
-  // console.log(conditionArray);
+  const conditionArray = getConditionArray(data[cityName], currentIndex);
 
   return (
-    <View className="pt-2 w-full px-4">
+    <View className="pt-2 w-full px-4 relative z-0">
       <View className="mb-2 ">
         {/* Draggable Time */}
         <View

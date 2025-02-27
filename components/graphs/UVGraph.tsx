@@ -1,5 +1,17 @@
-import { Dimensions, View } from "react-native";
-import React, { useEffect } from "react";
+import { colors } from "@/assets/colors/colors";
+import getFont from "@/hooks/getFont";
+import { getCurrentHour } from "@/hooks/hooks";
+import { RootState } from "@/state/store";
+import {
+  DashPathEffect,
+  Image,
+  LinearGradient,
+  vec,
+  Text,
+} from "@shopify/react-native-skia";
+import React from "react";
+import { View } from "react-native";
+import { useSelector } from "react-redux";
 import {
   Area,
   Bar,
@@ -8,30 +20,17 @@ import {
   Line,
   Scatter,
 } from "victory-native";
-import { useDerivedValue, type SharedValue } from "react-native-reanimated";
-import {
-  Circle,
-  DashPathEffect,
-  useFont,
-  vec,
-  Rect,
-  LinearGradient,
-  Image,
-} from "@shopify/react-native-skia";
-import { RootState } from "@/state/store";
-import { useSelector } from "react-redux";
-import { getCurrentHour, getCurrentTime, militaryHour } from "@/hooks/hooks";
-import { colors } from "@/assets/colors/colors";
-import getFont from "@/hooks/getFont";
-import { regularTimeOnXAxis } from "../sun-phase/SunPhaseGraph";
-import Cursor from "./victoryComponents/Cursor";
+import { getOddConditionImages } from "./utils/getOddConditionImages";
+import ToolTip from "./victoryComponents/Tooltip";
+import { getGraphData } from "./utils/getGraphData";
+import { getOddUVIndex } from "./utils/getOddUVIndex";
 
-interface PrecipitationGraphProps {
+interface TemperatureGraphProps {
   cityName: string;
   state: ChartPressState<{
     x: number;
     y: {
-      chanceOfRain: number;
+      uvIndex: number;
       currentLineTop: number;
       currentLineBottom: number;
       currentPosition: number;
@@ -44,7 +43,7 @@ interface PrecipitationGraphProps {
   currentIndex: number;
 }
 
-const PrecipitationGraph = ({
+const UVGraph = ({
   cityName,
   state,
   isActive,
@@ -52,50 +51,55 @@ const PrecipitationGraph = ({
   strokeWidth,
   yAxisLabel,
   currentIndex,
-}: PrecipitationGraphProps) => {
+}: TemperatureGraphProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
-  const { location, forecast } = data[cityName];
+  const { location } = data[cityName];
 
   const font = getFont();
 
-  const currentHour = militaryHour(
-    new Date().toLocaleTimeString("en-US", { timeZone: location?.tz_id })
+  const maxRange = 11;
+  const minRange = 0;
+
+  const graphData = getGraphData(
+    data[cityName],
+    maxRange,
+    minRange,
+    currentIndex,
+    "uvIndex",
+    "uv"
   );
 
-  // Add midnight value
-  const todaysForecast = forecast?.forecastday[currentIndex].hour;
-  const addMidnightWeather = [
-    ...todaysForecast,
-    {
-      chance_of_rain: todaysForecast[todaysForecast.length - 1].chance_of_rain,
-    },
-  ];
+  type curveType =
+    | "linear"
+    | "natural"
+    | "step"
+    | "bumpX"
+    | "bumpY"
+    | "cardinal"
+    | "cardinal50"
+    | "catmullRom"
+    | "catmullRom0"
+    | "catmullRom100"
+    | "monotoneX";
 
-  const currentTime = getCurrentTime(location?.tz_id);
-
-  const xPosition = Math.floor(regularTimeOnXAxis(currentTime));
-
-  const hourlyTempData = addMidnightWeather.map((hour, index) => ({
-    hour: index,
-    chanceOfRain: hour.chance_of_rain,
-    currentLineTop: index === currentHour ? 100 : undefined,
-    currentLineBottom: index === currentHour ? 0 : undefined,
-    currentPosition:
-      index === xPosition ? Math.round(hour.chance_of_rain) : undefined,
-  }));
+  const lineShape: curveType = "natural";
 
   const cutoff = getCurrentHour(location!.tz_id);
 
+  const oddUVIndex = getOddUVIndex(data[cityName], currentIndex);
+
+  const areaColorTop = "rgba(86, 244, 149, 0.4)";
+  const areaColorBottom = "rgba(81, 255, 115, 0.2)";
   const areaDarkTop = "rgba(0,0,0,0.2)";
   const areaDarkBottom = "rgba(0,0,0,0.3)";
 
   return (
-    <View style={{ height: graphHeight }} className="relative z-0">
+    <View style={{ height: graphHeight }}>
       <CartesianChart
-        data={hourlyTempData!}
+        data={graphData!}
         xKey="hour"
         yKeys={[
-          "chanceOfRain",
+          "uvIndex",
           "currentLineTop",
           "currentLineBottom",
           "currentPosition",
@@ -104,9 +108,11 @@ const PrecipitationGraph = ({
         axisOptions={{
           font,
           lineWidth: 2,
+          tickCount: { x: 4, y: 8 },
         }}
         xAxis={{
           font: font,
+          axisSide: "bottom",
           tickValues: [0, 6, 12, 18, 24],
           labelColor: "white",
           lineColor: colors.mediumGray,
@@ -115,73 +121,87 @@ const PrecipitationGraph = ({
           {
             formatYLabel: (label) => label + yAxisLabel,
             font: font,
-            tickValues: Array(11)
-              .fill(0)
-              .map((_, idx) => idx * 10),
             axisSide: "right",
             labelColor: "white",
             lineColor: colors.mediumGray,
           },
         ]}
-        domain={{ y: [0, 100] }}
+        domain={{ y: [minRange, maxRange] }}
         chartPressState={state}
       >
         {({ points, chartBounds }) => {
           // 👇 and we'll use the Line component to render a line path.
-          const leftPoints = points.chanceOfRain.filter(
+          const leftPoints = points.uvIndex.filter(
             (point) => (point.xValue! as number) <= cutoff
           ); // Left side (x <= 0)
-          const rightPoints = points.chanceOfRain.filter(
+          const rightPoints = points.uvIndex.filter(
             (point) => (point.xValue! as number) >= cutoff
           ); // Right side (x >= 0)
           return (
             <>
+              {/* Top graph content */}
+              <>
+                {oddUVIndex.map((uv, index) => (
+                  <Text
+                    font={font}
+                    key={index}
+                    x={10 + index * 25.5}
+                    y={10}
+                    text={Math.round(uv).toString()}
+                    color={"white"}
+                  />
+                ))}
+              </>
+
               {/* Right side of graph*/}
               <>
                 <Line
-                  points={
-                    currentIndex === 0 ? rightPoints : points.chanceOfRain
-                  }
-                  color={colors.blue}
+                  points={currentIndex === 0 ? rightPoints : points.uvIndex}
+                  color={colors.green}
                   strokeWidth={6}
-                  curveType="linear"
+                  curveType={lineShape}
                 />
                 <Area
-                  points={
-                    currentIndex === 0 ? rightPoints : points.chanceOfRain
-                  }
+                  points={currentIndex === 0 ? rightPoints : points.uvIndex}
                   y0={chartBounds.bottom}
                   animate={{ type: "timing", duration: 300 }}
-                  curveType="linear"
+                  curveType={lineShape}
                 >
                   <LinearGradient
                     start={vec(chartBounds.bottom, 150)}
                     end={vec(chartBounds.bottom, chartBounds.bottom)}
-                    colors={["rgba(124,197,227,0.6)", "rgba(124,197,227,0.4)"]}
+                    colors={[areaColorTop, areaColorBottom]}
                   />
                 </Area>
               </>
+
               {currentIndex === 0 && (
                 <>
-                  {/* Left side of graph*/}
+                  {/* Left side of graph DASHED LINE*/}
                   <>
                     <Line
                       points={leftPoints}
-                      color="rgba(124,197,227,0.5)"
+                      // color="rgba(124,197,227,0.5)"
+                      color={colors.green}
                       strokeWidth={6}
-                      curveType="linear"
+                      curveType={lineShape}
                     >
                       <DashPathEffect intervals={[10, 10]} />
                     </Line>
                     <Area
                       points={leftPoints}
                       y0={chartBounds.bottom}
-                      color="rgba(124,197,227,0.3)"
+                      // color="rgba(124,197,227,0.3)"
                       animate={{ type: "timing", duration: 300 }}
-                      curveType="linear"
-                    />
+                      curveType={lineShape}
+                    >
+                      <LinearGradient
+                        start={vec(chartBounds.bottom, 150)}
+                        end={vec(chartBounds.bottom, chartBounds.bottom)}
+                        colors={[areaColorTop, areaColorBottom]}
+                      />
+                    </Area>
                   </>
-
                   {/* Vertical Line */}
                   <>
                     <Bar
@@ -208,7 +228,7 @@ const PrecipitationGraph = ({
                       y0={chartBounds.top}
                       color={areaDarkTop}
                       animate={{ type: "timing", duration: 300 }}
-                      curveType="natural"
+                      curveType={lineShape}
                     />
 
                     <Area
@@ -216,7 +236,7 @@ const PrecipitationGraph = ({
                       y0={chartBounds.bottom}
                       color={areaDarkBottom}
                       animate={{ type: "timing", duration: 300 }}
-                      curveType="natural"
+                      curveType={lineShape}
                     />
                   </>
 
@@ -242,12 +262,7 @@ const PrecipitationGraph = ({
               )}
 
               {isActive ? (
-                <ToolTip
-                  x={state.x.position}
-                  y={state.y.chanceOfRain.position}
-                  xValue={state.x.value}
-                  currentTime={parseInt(currentTime)}
-                />
+                <ToolTip x={state.x.position} y={state.y.uvIndex.position} />
               ) : null}
             </>
           );
@@ -257,27 +272,4 @@ const PrecipitationGraph = ({
   );
 };
 
-function ToolTip({
-  x,
-  y,
-  xValue,
-  currentTime,
-}: {
-  x: SharedValue<number>;
-  y: SharedValue<number>;
-  xValue: SharedValue<number>;
-  currentTime: number;
-}) {
-  const rectWidth = 1;
-  const rectX = useDerivedValue(() => x.value - rectWidth / 2); // offset to center line
-
-  const { width, height } = Dimensions.get("window");
-
-  return (
-    <>
-      <Cursor x={x} y={y} width={1} />
-    </>
-  );
-}
-
-export default PrecipitationGraph;
+export default UVGraph;

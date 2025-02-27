@@ -6,6 +6,8 @@ import { useSelector } from "react-redux";
 import ColoredBar from "../atoms/ColoredBar";
 import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
+import { getUVRating } from "./utils/getUVRating";
+import { getUVMessage } from "./utils/getUVMessage";
 
 const UVIndexCard = ({ cityName }: { cityName: string }) => {
   const { data } = useSelector((state: RootState) => state.weather);
@@ -13,27 +15,8 @@ const UVIndexCard = ({ cityName }: { cityName: string }) => {
 
   const UV = Math.round(current?.uv);
 
-  const rating =
-    UV <= 2
-      ? "Low"
-      : UV <= 5
-      ? "Moderate"
-      : UV <= 7
-      ? "High"
-      : UV <= 10
-      ? "Very High"
-      : "Extreme";
-
-  const message =
-    UV <= 2
-      ? "Minimal risk of harm from sun exposure."
-      : UV <= 5
-      ? "Some risk of harm from sun exposure."
-      : UV <= 7
-      ? "Risk of harm from unprotected sun exposure."
-      : UV <= 10
-      ? "Extra protection is needed."
-      : "Unprotected skin can burn quickly.";
+  const rating = getUVRating(UV);
+  const message = getUVMessage(UV);
 
   return (
     <OpacityCard className="px-4 gap-y-2 h-full">

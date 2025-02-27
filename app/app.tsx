@@ -11,6 +11,9 @@ import {
   Animated,
 } from "react-native";
 
+import { createTamagui, TamaguiProvider } from "tamagui";
+import { defaultConfig } from "@tamagui/config/v4"; // for quick config install this
+
 import { debounce } from "lodash";
 import { fetchLocations } from "@/api/weather";
 import { getData } from "@/utils/asyncStorage";
@@ -175,50 +178,54 @@ const App = () => {
     },
   };
 
+  const config = createTamagui(defaultConfig);
+
   return (
-    <View className="flex-1 relative">
-      <StatusBar style="light" />
-      <Image
-        blurRadius={70}
-        className="absolute h-full w-full"
-        source={require("../assets/images/bg.png")}
-      />
+    <TamaguiProvider config={config}>
+      <View className="flex-1 relative">
+        <StatusBar style="light" />
+        <Image
+          blurRadius={70}
+          className="absolute h-full w-full"
+          source={require("../assets/images/bg.png")}
+        />
 
-      <SafeAreaView className="flex flex-1 ">
-        <View className="relative pb-10 h-full">
-          {/* Bottom Footer */}
-          <ImageBackground
-            className="w-full h-10 absolute bottom-0 right-0 "
-            source={require("../assets/images/bg.png")}
-            imageStyle={{ resizeMode: "cover", top: -700 }}
-            blurRadius={70}
-          >
-            <View className="mx-4 mt-3 flex-row justify-between">
-              <Ionicons name="map-outline" size={25} color={"white"} />
+        <SafeAreaView className="flex flex-1 ">
+          <View className="relative pb-10 h-full">
+            {/* Bottom Footer */}
+            <ImageBackground
+              className="w-full h-10 absolute bottom-0 right-0 "
+              source={require("../assets/images/bg.png")}
+              imageStyle={{ resizeMode: "cover", top: -700 }}
+              blurRadius={70}
+            >
+              <View className="mx-4 mt-3 flex-row justify-between">
+                <Ionicons name="map-outline" size={25} color={"white"} />
 
-              <ExpandingDot {...expandingDotProps} data={dataProp} />
+                <ExpandingDot {...expandingDotProps} data={dataProp} />
 
-              <FontAwesome6 name="list-ul" size={20} color={"white"} />
-            </View>
-          </ImageBackground>
+                <FontAwesome6 name="list-ul" size={20} color={"white"} />
+              </View>
+            </ImageBackground>
 
-          {/* Weather at location */}
-          <FlatList
-            {...flatlistProps}
-            data={dataProp}
-            keyExtractor={(item: { id: string }) => item.id}
-            renderItem={({
-              item,
-            }: {
-              item: { id: string } & WeatherAtLocationProps;
-            }) => {
-              const { id, ...restProps } = item;
-              return <WeatherAtLocation {...restProps} />;
-            }}
-          />
-        </View>
-      </SafeAreaView>
-    </View>
+            {/* Weather at location */}
+            <FlatList
+              {...flatlistProps}
+              data={dataProp}
+              keyExtractor={(item: { id: string }) => item.id}
+              renderItem={({
+                item,
+              }: {
+                item: { id: string } & WeatherAtLocationProps;
+              }) => {
+                const { id, ...restProps } = item;
+                return <WeatherAtLocation {...restProps} />;
+              }}
+            />
+          </View>
+        </SafeAreaView>
+      </View>
+    </TamaguiProvider>
   );
 };
 export default App;

@@ -31,6 +31,16 @@ import { RootState } from "@/state/store";
 import { useSelector } from "react-redux";
 import OpacityCard from "../atoms/OpacityCard";
 import { getChordLength, getCurrentTime, militaryHour } from "@/hooks/hooks";
+import Cursor from "../graphs/victoryComponents/Cursor";
+import { getSunPathPercentage } from "./utils/getSunPathPercentage";
+import { useSunPhaseData } from "./utils/useSunPhaseData";
+import { getXOffset } from "./utils/getXOffset";
+import { getYShift } from "./utils/getYShift";
+import {
+  getFirstIntersectionPostOffset,
+  getSecondIntersectionPostOffset,
+} from "./utils/getIntersectionOffset";
+import ToolTip from "../graphs/victoryComponents/Tooltip";
 
 const SunPhaseGraph = ({
   cityName,
@@ -74,99 +84,44 @@ const SunPhaseGraph = ({
   // Get Vertical Offset
   const yShift = getYShift(chordLength, xTicks);
 
-  function getXOffset(sunriseTime: string, xTicks: number) {
-    const sunriseTimeOnXAxis = regularTimeOnXAxis(sunriseTime);
-
-    const firstIntersectionPreOffset =
-      xTicks / 4 + (xTicks / 2 / Math.PI) * Math.asin(yShift / (xTicks / 2));
-
-    const offset =
-      firstIntersectionPreOffset - sunriseTimeOnXAxis * (xTicks / 24);
-    return offset;
-  }
   // Get Horizontal Offset
-  const xOffset = getXOffset(sunriseTime, xTicks);
-
-  const hourToWaveCoord = (x: number) => {
-    //  get the sine wave coordinates for each hour x
-    return (
-      (xTicks / 2) *
-      Math.sin((x - xTicks / 4 + xOffset) * (Math.PI / (xTicks / 2)))
-    );
-  };
+  const xOffset = getXOffset(sunriseTime, xTicks, yShift);
 
   const currentTime = getCurrentTime(location?.tz_id);
 
-  const circleX = regularTimeOnXAxis(currentTime);
-  const circleY =
-    hourToWaveCoord(regularTimeOnXAxis(currentTime) * 60) - yShift;
-
-  const DATA = useMemo(
-    () =>
-      Array.from({ length: xTicks + 1 }, (_, i) => ({
-        hour: i * (24 / xTicks),
-        // sine wave
-        sunPath: hourToWaveCoord(i) - yShift,
-        // current position of sun
-        sunPosition: i === circleX * 60 ? circleY : null,
-        phaseLine: 0,
-      })),
-    [chordLength]
+  const sunPhaseData = useSunPhaseData(
+    xTicks,
+    chordLength,
+    currentTime,
+    yShift,
+    xOffset
   );
 
-  const firstIntersectionPostOffset =
-    xTicks / 4 -
-    xOffset +
-    (xTicks / 2 / Math.PI) * Math.asin(yShift / (xTicks / 2));
+  // Find X where intersection happens after offset has been applied.
+  const firstIntersectionPostOffset = getFirstIntersectionPostOffset(
+    xTicks,
+    xOffset,
+    yShift
+  );
 
-  const secondIntersectionPostOffset =
-    (3 * xTicks) / 4 -
-    xOffset -
-    (xTicks / 2 / Math.PI) * Math.asin(yShift / (xTicks / 2));
+  const secondIntersectionPostOffset = getSecondIntersectionPostOffset(
+    xTicks,
+    xOffset,
+    yShift
+  );
 
-  //   console.log("sunrise Time is ", sunriseTime);
-  //   console.log(
-  //     "first intersection happens at ",
-  //     firstIntersectionPostOffset / 60
-  //   );
-
-  //   console.log("sunset Time is ", sunsetTime);
-  //   console.log(
-  //     "second intersection happens at ",
-  //     secondIntersectionPostOffset / 60
-  //   );
-  //   console.log(chordLength);
-
-  //   console.log(regularTimeOnXAxis(currentTime));
-  //   console.log(hourToWaveCoord(regularTimeOnXAxis(currentTime) * 60) - yShift);
-
-  const sunPaths = DATA.map((item) => item.sunPath); // Extract all sunPath values
-  const maxSunPath = Math.max(...sunPaths); // Get the maximum value
-  const minSunPath = Math.min(...sunPaths); // Get the minimum value
-
-  // console.log(maxSunPath);
-  // console.log(minSunPath);
-
-  const sunPosition = DATA.map((item) => item.sunPosition); // Extract all sunPosition values
-  const sunIsHere = sunPosition.filter((pos) => pos)[0];
-  // console.log(sunIsHere);
-
-  const sunPathRange = Math.abs(maxSunPath - minSunPath);
-  const sunPathPercentage = (sunIsHere! + Math.abs(minSunPath)) / sunPathRange;
-  // console.log(sunPathPercentage);
-  // if (maxSunPath)
+  const sunPathPercentage = getSunPathPercentage(sunPhaseData);
 
   return (
     <>
       {/* Chart */}
       <View
-        // style={{ height: graphHeight, borderRadius: 20, overflow: "hidden"  }}
         style={{
           height: graphHeight,
         }}
       >
         <CartesianChart
-          data={DATA}
+          data={sunPhaseData}
           xKey="hour"
           yKeys={["sunPath", "sunPosition", "phaseLine"]}
           axisOptions={{
@@ -302,32 +257,5 @@ const SunPhaseGraph = ({
     </>
   );
 };
-
-const getYShift = (chordLength: number, xTicks: number) => {
-  const yShift = (xTicks / 2) * Math.sin((Math.PI / 24) * (12 - chordLength));
-  return yShift;
-};
-
-//  convert 60 tick time to 100 tick x axis
-export function regularTimeOnXAxis(timeString: string) {
-  const minutePortion = parseInt(timeString.split(":")[1].split(" ")[0]);
-  const timeOnXAxis = militaryHour(timeString) + minutePortion / 60;
-  return timeOnXAxis;
-}
-
-function ToolTip({ x, y }: { x: SharedValue<number>; y: SharedValue<number> }) {
-  const width = 1;
-  const rectX = useDerivedValue(() => x.value - width / 2); // offset to center line
-
-  return (
-    <>
-      <Rect x={rectX} y={0} width={width} height={500} color="white" />
-
-      <Circle cx={x} cy={y} r={10} color="black" />
-
-      <Circle cx={x} cy={y} r={8} color="white" />
-    </>
-  );
-}
 
 export default SunPhaseGraph;

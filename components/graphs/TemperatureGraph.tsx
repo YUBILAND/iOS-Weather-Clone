@@ -1,5 +1,16 @@
-import { View } from "react-native";
+import { colors } from "@/assets/colors/colors";
+import getFont from "@/hooks/getFont";
+import { getCurrentHour } from "@/hooks/hooks";
+import { RootState } from "@/state/store";
+import {
+  DashPathEffect,
+  Image,
+  LinearGradient,
+  vec,
+} from "@shopify/react-native-skia";
 import React from "react";
+import { View } from "react-native";
+import { useSelector } from "react-redux";
 import {
   Area,
   Bar,
@@ -8,27 +19,11 @@ import {
   Line,
   Scatter,
 } from "victory-native";
-import { useDerivedValue, type SharedValue } from "react-native-reanimated";
-import {
-  Circle,
-  DashPathEffect,
-  useFont,
-  vec,
-  Rect,
-  LinearGradient,
-  Image,
-  useImage,
-  Canvas,
-} from "@shopify/react-native-skia";
-import { RootState } from "@/state/store";
-import { useSelector } from "react-redux";
-import { getCurrentHour, getCurrentTime, militaryHour } from "@/hooks/hooks";
-import { colors } from "@/assets/colors/colors";
-import { weatherPNG } from "@/utils/exampleForecast";
-import { weatherKey, WeatherType } from "@/constants/constants";
-import getFont from "@/hooks/getFont";
-import { regularTimeOnXAxis } from "../sun-phase/SunPhaseGraph";
-import Cursor from "../victory-native/Cursor";
+import { getOddConditionImages } from "./utils/getOddConditionImages";
+import ToolTip from "./victoryComponents/Tooltip";
+import { getGraphData } from "./utils/getGraphData";
+import { getWeekMinTemp } from "./utils/getWeekMinTemp";
+import { getWeekMaxTemp } from "./utils/getWeekMaxTemp";
 
 interface TemperatureGraphProps {
   cityName: string;
@@ -58,77 +53,38 @@ const TemperatureGraph = ({
   currentIndex,
 }: TemperatureGraphProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
-  const { location, forecast } = data[cityName];
+  const { location } = data[cityName];
 
   const font = getFont();
 
-  const currentHour = militaryHour(
-    new Date().toLocaleTimeString("en-US", { timeZone: location?.tz_id })
+  const weekMaxTemp = getWeekMaxTemp(data[cityName]);
+  const weekMinTemp = getWeekMinTemp(data[cityName]);
+
+  const graphData = getGraphData(
+    data[cityName],
+    weekMaxTemp,
+    weekMinTemp,
+    currentIndex,
+    "celsius",
+    "temp_c"
   );
-
-  const weekMaxTemp = Math.max(
-    ...forecast?.forecastday.map((day) => parseFloat(day.day.maxtemp_c))
-  );
-
-  const weekMinTemp = Math.min(
-    ...forecast?.forecastday.map((day) => parseFloat(day.day.mintemp_c))
-  );
-
-  const maxRange = weekMaxTemp + 3;
-  const minRange = weekMinTemp - 3;
-
-  // Add midnight value
-  const todaysForecast = forecast?.forecastday[currentIndex]?.hour;
-  const addMidnightWeather = [
-    ...todaysForecast,
-    { temp_c: todaysForecast[todaysForecast.length - 1].temp_c },
-  ];
-
-  const currentTime = getCurrentTime(location?.tz_id);
-
-  const xPosition = Math.floor(regularTimeOnXAxis(currentTime));
-
-  const hourlyTempData = addMidnightWeather.map((hour, index) => ({
-    hour: index,
-    celsius: parseFloat(hour.temp_c),
-    currentLineTop: index === currentHour ? maxRange + 2 : undefined,
-    currentLineBottom: index === currentHour ? minRange - 2 : undefined,
-    currentPosition:
-      index === xPosition ? Math.round(parseFloat(hour.temp_c)) : undefined,
-  }));
 
   const cutoff = getCurrentHour(location!.tz_id);
 
-  const conditionArray =
-    forecast &&
-    forecast?.forecastday[currentIndex]?.hour.map((hour) => {
-      // console.log(hour.condition.text.toLowerCase());
-      return useImage(
-        weatherKey[
-          weatherPNG(
-            hour.condition.text.toLowerCase() as WeatherType,
-            hour.is_day
-          )
-        ]
-      );
-    });
-
-  const oddConditionImages = conditionArray.filter((img, index) => {
-    if (index % 2 === 1) {
-      return img;
-    }
-  });
+  const oddConditionImages = getOddConditionImages(
+    data[cityName],
+    currentIndex
+  );
 
   const areaColorTop = "rgba(124,197,227,0.4)";
   const areaColorBottom = "rgba(124,197,227,0.2)";
-
   const areaDarkTop = "rgba(0,0,0,0.2)";
   const areaDarkBottom = "rgba(0,0,0,0.3)";
 
   return (
     <View style={{ height: graphHeight }}>
       <CartesianChart
-        data={hourlyTempData!}
+        data={graphData!}
         xKey="hour"
         yKeys={[
           "celsius",
@@ -158,7 +114,7 @@ const TemperatureGraph = ({
             lineColor: colors.mediumGray,
           },
         ]}
-        domain={{ y: [minRange, maxRange] }}
+        domain={{ y: [weekMinTemp - 3, weekMaxTemp + 3] }}
         chartPressState={state}
       >
         {({ points, chartBounds }) => {
@@ -171,73 +127,7 @@ const TemperatureGraph = ({
           ); // Right side (x >= 0)
           return (
             <>
-              {/* Left side of graph*/}
-              <>
-                <Line
-                  points={leftPoints}
-                  // color="rgba(124,197,227,0.5)"
-                  color={colors.blue}
-                  strokeWidth={6}
-                  curveType="natural"
-                >
-                  <DashPathEffect intervals={[10, 10]} />
-                </Line>
-                <Area
-                  points={leftPoints}
-                  y0={chartBounds.bottom}
-                  // color="rgba(124,197,227,0.3)"
-                  animate={{ type: "timing", duration: 300 }}
-                  curveType="natural"
-                >
-                  <LinearGradient
-                    start={vec(chartBounds.bottom, 150)}
-                    end={vec(chartBounds.bottom, chartBounds.bottom)}
-                    colors={[areaColorTop, areaColorBottom]}
-                  />
-                </Area>
-              </>
-              {/* Right side of graph*/}
-              <>
-                <Line
-                  points={rightPoints}
-                  color={colors.blue}
-                  strokeWidth={6}
-                  curveType="natural"
-                />
-                <Area
-                  points={rightPoints}
-                  y0={chartBounds.bottom}
-                  animate={{ type: "timing", duration: 300 }}
-                  curveType="natural"
-                >
-                  <LinearGradient
-                    start={vec(chartBounds.bottom, 150)}
-                    end={vec(chartBounds.bottom, chartBounds.bottom)}
-                    colors={[areaColorTop, areaColorBottom]}
-                  />
-                </Area>
-              </>
-
-              {/* Vertical Line */}
-              <>
-                <Bar
-                  points={points.currentLineTop}
-                  chartBounds={chartBounds}
-                  barWidth={1}
-                  color={colors.lightGray}
-                  roundedCorners={{ topLeft: 10, topRight: 10 }}
-                />
-
-                <Bar
-                  points={points.currentLineBottom}
-                  chartBounds={chartBounds}
-                  barWidth={1}
-                  color={colors.lightGray}
-                  roundedCorners={{ topLeft: 10, topRight: 10 }}
-                />
-              </>
-
-              {/* Weather images displayed on top */}
+              {/* Top graph content */}
               <>
                 {oddConditionImages.map((img, index) => (
                   <Image
@@ -252,43 +142,114 @@ const TemperatureGraph = ({
                 ))}
               </>
 
-              {/* Left side darken */}
+              {/* Right side of graph*/}
               <>
-                <Area
-                  points={leftPoints}
-                  y0={chartBounds.top}
-                  color={areaDarkTop}
-                  animate={{ type: "timing", duration: 300 }}
+                <Line
+                  points={currentIndex === 0 ? rightPoints : points.celsius}
+                  color={colors.blue}
+                  strokeWidth={6}
                   curveType="natural"
                 />
-
                 <Area
-                  points={leftPoints}
+                  points={currentIndex === 0 ? rightPoints : points.celsius}
                   y0={chartBounds.bottom}
-                  color={areaDarkBottom}
                   animate={{ type: "timing", duration: 300 }}
                   curveType="natural"
-                />
+                >
+                  <LinearGradient
+                    start={vec(chartBounds.bottom, 150)}
+                    end={vec(chartBounds.bottom, chartBounds.bottom)}
+                    colors={[areaColorTop, areaColorBottom]}
+                  />
+                </Area>
               </>
 
-              {/* Current Position Circle */}
-              <>
-                <Scatter
-                  points={points.currentPosition}
-                  shape="circle"
-                  radius={strokeWidth + 4}
-                  style="fill"
-                  color="black"
-                />
+              {currentIndex === 0 && (
+                <>
+                  {/* Left side of graph*/}
+                  <>
+                    <Line
+                      points={leftPoints}
+                      // color="rgba(124,197,227,0.5)"
+                      color={colors.blue}
+                      strokeWidth={6}
+                      curveType="natural"
+                    >
+                      <DashPathEffect intervals={[10, 10]} />
+                    </Line>
+                    <Area
+                      points={leftPoints}
+                      y0={chartBounds.bottom}
+                      // color="rgba(124,197,227,0.3)"
+                      animate={{ type: "timing", duration: 300 }}
+                      curveType="natural"
+                    >
+                      <LinearGradient
+                        start={vec(chartBounds.bottom, 150)}
+                        end={vec(chartBounds.bottom, chartBounds.bottom)}
+                        colors={[areaColorTop, areaColorBottom]}
+                      />
+                    </Area>
+                  </>
 
-                <Scatter
-                  points={points.currentPosition}
-                  shape="circle"
-                  radius={strokeWidth}
-                  style="fill"
-                  color="white"
-                />
-              </>
+                  {/* Vertical Line */}
+                  <>
+                    <Bar
+                      points={points.currentLineTop}
+                      chartBounds={chartBounds}
+                      barWidth={1}
+                      color={colors.lightGray}
+                      roundedCorners={{ topLeft: 10, topRight: 10 }}
+                    />
+
+                    <Bar
+                      points={points.currentLineBottom}
+                      chartBounds={chartBounds}
+                      barWidth={1}
+                      color={colors.lightGray}
+                      roundedCorners={{ topLeft: 10, topRight: 10 }}
+                    />
+                  </>
+
+                  {/* Left side darken */}
+                  <>
+                    <Area
+                      points={leftPoints}
+                      y0={chartBounds.top}
+                      color={areaDarkTop}
+                      animate={{ type: "timing", duration: 300 }}
+                      curveType="natural"
+                    />
+
+                    <Area
+                      points={leftPoints}
+                      y0={chartBounds.bottom}
+                      color={areaDarkBottom}
+                      animate={{ type: "timing", duration: 300 }}
+                      curveType="natural"
+                    />
+                  </>
+
+                  {/* Current Position Circle */}
+                  <>
+                    <Scatter
+                      points={points.currentPosition}
+                      shape="circle"
+                      radius={strokeWidth + 4}
+                      style="fill"
+                      color="black"
+                    />
+
+                    <Scatter
+                      points={points.currentPosition}
+                      shape="circle"
+                      radius={strokeWidth}
+                      style="fill"
+                      color="white"
+                    />
+                  </>
+                </>
+              )}
 
               {isActive ? (
                 <ToolTip x={state.x.position} y={state.y.celsius.position} />
@@ -300,16 +261,5 @@ const TemperatureGraph = ({
     </View>
   );
 };
-
-function ToolTip({ x, y }: { x: SharedValue<number>; y: SharedValue<number> }) {
-  return (
-    <>
-      {/* <Rect x={rectX} y={0} width={width} height={500} color="white" />
-      <Circle cx={x} cy={y} r={10} color="black" />
-      <Circle cx={x} cy={y} r={8} color="white" /> */}
-      <Cursor x={x} y={y} width={1} />
-    </>
-  );
-}
 
 export default TemperatureGraph;

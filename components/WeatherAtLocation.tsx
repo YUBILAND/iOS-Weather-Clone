@@ -1,34 +1,19 @@
-import {
-  View,
-  Text,
-  ScrollView,
-  TextInput,
-  Image,
-  Animated,
-} from "react-native";
+import { Location } from "@/constants/constants";
+import { RootState } from "@/state/store";
 import React, { RefObject, useState } from "react";
-import Search from "./atoms/Search";
+import { ScrollView, TextInput, View } from "react-native";
+import { useSelector } from "react-redux";
+import AirQualityCard from "./air-quality/AirQualityCard";
+import HighsAndLows from "./atoms/HighsAndLows";
 import LocationName from "./atoms/LocationName";
 import RoundedTemperature from "./atoms/RoundedTemperature";
+import Search from "./atoms/Search";
 import WeatherName from "./atoms/WeatherName";
-import HighsAndLows from "./atoms/HighsAndLows";
-import HourlyForecast from "./hourly-forecast/HourlyForecast";
 import DailyForecast from "./daily-forecast/DailyForecast";
-import { Current, Forecast, Location } from "@/constants/constants";
-import { useSelector } from "react-redux";
-import { RootState } from "@/state/store";
-import AirQualityCard from "./air-quality/AirQualityCard";
-import UVIndexCard from "./uv-index/UVIndexCard";
-import SunPhase from "./sun-phase/SunPhaseCard";
-import SunPhaseTest from "./sun-phase/SunPhaseGraph";
-import SunPhaseModal from "./sun-phase/SunPhaseModal";
+import HourlyForecast from "./hourly-forecast/HourlyForecastCard";
 import SunPhaseCard from "./sun-phase/SunPhaseCard";
-import ModalContainer from "./modal/ModalContainer";
-import {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import UVIndexCard from "./uv-index/UVIndexCard";
+import DropdownComponent from "./modal/dropdown/DropdownComponent";
 
 export type SelectModal = "hourly" | "sunphase";
 
@@ -71,7 +56,6 @@ const WeatherAtLocation = ({
           handleLocation={handleLocation}
         />
       </View>
-
       {/* Forecast section */}
       <View className="mx-4 flex justify-around flex-1 mb-2">
         <View className="mb-8">
@@ -105,7 +89,9 @@ const WeatherAtLocation = ({
         <HourlyForecast
           cityName={cityName}
           modalVisible={modalVisible === "hourly"}
-          setModalVisible={setModalVisible}
+          setModalVisible={(modal: SelectModal | null) =>
+            setModalVisible(modal)
+          }
           modalID={"hourly"}
         />
 

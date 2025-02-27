@@ -15,8 +15,9 @@ import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 import ModalContainer from "../modal/ModalContainer";
 import { SelectModal } from "../WeatherAtLocation";
-import SunPhaseGraph, { regularTimeOnXAxis } from "./SunPhaseGraph";
+import SunPhaseGraph from "./SunPhaseGraph";
 import SunPhaseModal from "./SunPhaseModal";
+import { getNextPhaseTime } from "./utils/getNextPhaseTime";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
@@ -41,49 +42,16 @@ const SunPhaseCard = ({
   });
 
   const { data } = useSelector((state: RootState) => state.weather);
-  const { forecast, location } = data[cityName];
+  const { location } = data[cityName];
 
   const { americanTime } = useSelector((state: RootState) => state.settings);
 
   const currentTime = getCurrentTime(location?.tz_id);
-
-  const currentSunriseTime = forecast.forecastday[0].astro.sunrise.replace(
-    /^0/,
-    ""
+  const nextPhaseTime = getNextPhaseTime(
+    data[cityName],
+    currentTime,
+    americanTime
   );
-
-  const currentSunsetTime = forecast.forecastday[0].astro.sunset.replace(
-    /^0/,
-    ""
-  );
-
-  const nextSunriseTime = forecast.forecastday[1].astro.sunrise.replace(
-    /^0/,
-    ""
-  );
-
-  const normalizedCurrentTime = regularTimeOnXAxis(currentTime);
-  const normalizedSunrise = regularTimeOnXAxis(currentSunriseTime);
-  const normalizedSunset = regularTimeOnXAxis(currentSunsetTime);
-
-  let nextPhaseTime = "";
-
-  if (normalizedCurrentTime < normalizedSunrise) {
-    // show sunrise Time
-    nextPhaseTime = currentSunriseTime;
-  } else if (
-    normalizedCurrentTime >= normalizedSunrise &&
-    normalizedCurrentTime < normalizedSunset
-  ) {
-    // show sunrise time
-    nextPhaseTime = currentSunsetTime;
-  } else {
-    //show tomorrows sunrise time
-    nextPhaseTime = nextSunriseTime;
-  }
-
-  // conver to 12hr or 24hr
-  nextPhaseTime = stringToTime(americanTime, nextPhaseTime);
 
   const remainingTime = getRemainingTimeUntilNextPhase(
     currentTime,

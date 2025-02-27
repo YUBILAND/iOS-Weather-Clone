@@ -9,7 +9,7 @@ import DefaultText from "../atoms/DefaultText";
 interface CalendarScrollViewProps {
   cityName: string;
   currentIndex: number;
-  setCurrentIndex: React.Dispatch<React.SetStateAction<number>>;
+  setCurrentIndex: (index: number) => void;
   currentIndexRef: MutableRefObject<number>;
   scrollRef: MutableRefObject<boolean>;
 }

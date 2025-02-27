@@ -26,7 +26,7 @@ type IconName =
   | "search";
 type ConditionModalProps = {
   modalVisible: boolean;
-  setModalVisible: React.Dispatch<React.SetStateAction<SelectModal | null>>;
+  setModalVisible: (modal: SelectModal | null) => void;
   cityName: string;
   children: React.ReactNode;
   title: string;
@@ -53,7 +53,7 @@ const ModalContainer = ({
           style={{ height: calculatedHeight, backgroundColor: colors.darkGray }}
         >
           <View className="flex-row items-center justify-between px-6 py-3">
-            <ModalHeader closeModal={() => setModalVisible(null)} title={title}>
+            <ModalHeader closeModal={setModalVisible} title={title}>
               <FontAwesome name={iconName} color="white" size={22} />
             </ModalHeader>
           </View>
