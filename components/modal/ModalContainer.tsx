@@ -10,7 +10,6 @@ import {
   View,
 } from "react-native";
 import Animated from "react-native-reanimated";
-import { SelectModal } from "../WeatherAtLocation";
 import ModalHeader from "./ModalHeader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -26,8 +25,7 @@ type IconName =
   | "search";
 type ConditionModalProps = {
   modalVisible: boolean;
-  setModalVisible: (modal: SelectModal | null) => void;
-  cityName: string;
+  setModalVisible: (visible: boolean) => void;
   children: React.ReactNode;
   title: string;
   iconName: IconName;
@@ -36,7 +34,6 @@ type ConditionModalProps = {
 const ModalContainer = ({
   modalVisible,
   setModalVisible,
-  cityName,
   children,
   title,
   iconName,

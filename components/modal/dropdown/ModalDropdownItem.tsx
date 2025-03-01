@@ -3,30 +3,33 @@ import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import DefaultText from "../../atoms/DefaultText";
 import {
+  ModalDropdownObject,
   modalDropdownObjects,
-  modalDropdownObjectsType,
+  SelectModal,
 } from "../utils/constants";
 import HorizontalLine from "../../atoms/HorizontalLine";
 
 interface ModalDropdownItemProps {
-  item: modalDropdownObjectsType;
-  selectedModal: number;
-  setSelectedModal: (index: number) => void;
+  item: ModalDropdownObject;
   index: number;
-  setOpenModalDropdown: (visible: boolean) => void;
+  selectedModal: SelectModal;
+  setSelectedModal: (modal: SelectModal) => void;
+  setOpenModalDropdown: (open: boolean) => void;
+  modalName: SelectModal;
 }
 
 const ModalDropdownItem = ({
   item,
+  index,
   selectedModal,
   setSelectedModal,
-  index,
   setOpenModalDropdown,
+  modalName,
 }: ModalDropdownItemProps) => {
-  const lastIndex = index === modalDropdownObjects.length - 1;
+  const lastIndex = index === Object.keys(modalDropdownObjects).length - 1;
 
   const pressDropdownItem = () => {
-    setSelectedModal(item.id ?? 0);
+    setSelectedModal(modalName);
     setOpenModalDropdown(false);
   };
 
@@ -35,7 +38,7 @@ const ModalDropdownItem = ({
       <View className="flex-row items-center " style={{ paddingVertical: 8 }}>
         <View
           className="flex-[0.1] pl-4"
-          style={{ opacity: selectedModal === item.id ? 1 : 0 }}
+          style={{ opacity: selectedModal === modalName ? 1 : 0 }}
         >
           <Ionicons name="checkmark-outline" size={18} color={"white"} />
         </View>

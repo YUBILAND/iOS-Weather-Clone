@@ -23,8 +23,9 @@ import { useSelector } from "react-redux";
 import { getCurrentHour, getCurrentTime, militaryHour } from "@/hooks/hooks";
 import { colors } from "@/assets/colors/colors";
 import getFont from "@/hooks/getFont";
-import { regularTimeOnXAxis } from "../sun-phase/SunPhaseGraph";
+// import { regularTimeOnXAxis } from "../sun-phase/SunPhaseGraph";
 import Cursor from "./victoryComponents/Cursor";
+import { regularTimeOnXAxis } from "../sun-phase/utils/getRegularTimeOnXAxis";
 
 interface PrecipitationGraphProps {
   cityName: string;

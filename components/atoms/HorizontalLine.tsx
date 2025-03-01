@@ -2,12 +2,27 @@ import { View, Text } from "react-native";
 import React from "react";
 import { colors } from "@/assets/colors/colors";
 
-const HorizontalLine = () => {
+interface HorizontalLineProps {
+  color?: string;
+  size?: number;
+  children?: React.ReactNode;
+}
+
+const HorizontalLine = ({
+  color = "normal",
+  size = 1,
+  children,
+}: HorizontalLineProps) => {
   return (
-    <Text // Horizontal line
-      className="h-0"
-      style={{ borderTopWidth: 1, borderTopColor: colors.bgWhite(0.2) }}
-    />
+    <View // Horizontal line
+      className="h-0 w-full relative"
+      style={{
+        borderTopWidth: size,
+        borderTopColor: color === "normal" ? colors.bgWhite(0.2) : color,
+      }}
+    >
+      {children}
+    </View>
   );
 };
 

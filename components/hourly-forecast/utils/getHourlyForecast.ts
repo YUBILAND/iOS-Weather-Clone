@@ -4,37 +4,11 @@ import {
   militaryHour,
   removeZeroFromTimeString,
   stringToTime,
-  timeFormat,
-} from "./hooks";
+} from "@/hooks/hooks";
+import { DailyStats } from "./constants";
+import { addWhiteSpace, dateStringToTime } from "@/hooks/hourlyConstants";
 
-export function dateStringToTime(
-  dateString: string,
-  removeMinutes: boolean,
-  americanTime: boolean
-) {
-  return removeZeroFromTimeString(
-    new Date(dateString).toLocaleTimeString(
-      "en-US",
-      timeFormat(americanTime, removeMinutes)
-    )
-  );
-}
-
-export function addWhiteSpace(weatherString: string) {
-  if (weatherString[weatherString.length - 1] !== " ") {
-    return weatherString + " ";
-  }
-  return weatherString;
-}
-
-type DailyStats = {
-  time: string;
-  celsius: string | number;
-  condition: string;
-  fullDate: string;
-};
-
-export const getHourlyForecastResult = (
+export const getHourlyForecastObject = (
   data: WeatherData,
   americanTime: boolean
 ) => {
@@ -119,7 +93,7 @@ export const getHourlyForecastResult = (
           ) {
             //Sunrise should be included
             const sunsetExactTime = removeZeroFromTimeString(sunsetDate);
-            const sunsetText = "sunrise";
+            const sunsetText = "sunset";
 
             newArr.push({
               time: sunsetExactTime,

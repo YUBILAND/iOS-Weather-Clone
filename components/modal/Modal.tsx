@@ -41,26 +41,31 @@ import TitleTemp from "../graphs/conditions/TitleTemp";
 import RenderConditionsGraphs from "../graphs/conditions/RenderConditionsGraphs";
 import UVGraph from "../graphs/UVGraph";
 import GraphLeftText from "../graphs/victoryComponents/GraphLeftText";
+import WindGraph from "../graphs/WindGraph";
+import WindLeftText from "../wind-forecast/WindLeftText";
+import { SelectModal } from "./utils/constants";
+import SunPhaseCard from "../sun-phase/SunPhaseCard";
+import SunPhaseGraph from "../sun-phase/SunPhaseGraph";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
-type ConditionModalProps = {
+type ModalProps = {
   cityName: string;
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
   currentIndexRef: MutableRefObject<number>;
-  selectedModal: number;
-  setSelectedModal: (index: number) => void;
+  selectedModal: SelectModal;
+  setSelectedModal: (modal: SelectModal) => void;
 };
 
-const HourlyModal = ({
+const Modal = ({
   cityName,
   currentIndex,
   setCurrentIndex,
   currentIndexRef,
   selectedModal,
   setSelectedModal,
-}: ConditionModalProps) => {
+}: ModalProps) => {
   // Temperature Chart Press State
   const { state: tempState, isActive: tempIsActive } = useChartPressState({
     x: 0,
@@ -92,6 +97,21 @@ const HourlyModal = ({
     },
   });
 
+  const { state: windState, isActive: windIsActive } = useChartPressState({
+    x: 0,
+    y: {
+      windSpeed: 0,
+      currentLineTop: 0,
+      currentLineBottom: 0,
+      currentPosition: 0,
+    },
+  });
+
+  // const { state: sunState, isActive: sunIsActive } = useChartPressState({
+  //   x: 0,
+  //   y: { sunPath: 0, sunPosition: 0, phaseLine: 0 },
+  // });
+
   const isAnyActive = [tempIsActive, rainIsActive, uvIsActive].some(
     (active) => active
   );
@@ -118,12 +138,18 @@ const HourlyModal = ({
       value: chanceOfRain,
     };
   });
-
   const uvScrollInfoBold = useAnimatedProps(() => {
     const uvIndex = `${Math.round(uvState.y.uvIndex.value.value)}`;
     return {
       text: uvIndex,
       value: uvIndex,
+    };
+  });
+  const windScrollInfoBold = useAnimatedProps(() => {
+    const windSpeed = `${Math.round(windState.y.windSpeed.value.value)}mph`;
+    return {
+      text: windSpeed,
+      value: windSpeed,
     };
   });
 
@@ -182,7 +208,7 @@ const HourlyModal = ({
   const renderItem = ({ item }: { item: { id: number } }) => {
     return (
       <View className="w-screen">
-        {selectedModal === 0 ? (
+        {selectedModal === "temperature" ? (
           <RenderConditionsGraphs
             data={data[cityName]}
             cityName={cityName}
@@ -195,7 +221,7 @@ const HourlyModal = ({
             currentIndex={item.id}
             item={item}
           />
-        ) : (
+        ) : selectedModal === "uv" ? (
           <GraphContainer
             cityName={cityName}
             state={uvState}
@@ -216,8 +242,28 @@ const HourlyModal = ({
               currentIndex={item.id}
             />
           </GraphContainer>
+        ) : selectedModal === "wind" ? (
+          <GraphContainer
+            cityName={cityName}
+            state={windState}
+            isActive={windIsActive}
+            scrollInfoBold={windScrollInfoBold}
+            currentIndex={currentIndex}
+            leftSide={<WindLeftText data={data[cityName]} item={item} />}
+          >
+            <WindGraph
+              cityName={cityName}
+              state={windState}
+              isActive={windIsActive}
+              graphHeight={200}
+              strokeWidth={4}
+              yAxisLabel=""
+              currentIndex={item.id}
+            />
+          </GraphContainer>
+        ) : (
+          <View></View>
         )}
-
         <ModalDropdownContainer
           isAnyActive={isAnyActive}
           selectedModal={selectedModal}
@@ -234,18 +280,22 @@ const HourlyModal = ({
 
   return (
     <>
-      {/* Calendar */}
-      <View>
-        <CalendarScrollView
-          cityName={cityName}
-          currentIndex={currentIndex}
-          setCurrentIndex={setCurrentIndex}
-          currentIndexRef={currentIndexRef}
-          scrollRef={currentlyScrollingRef}
-        />
+      {selectedModal !== "sunPhase" && (
+        <>
+          {/* Calendar */}
+          <View>
+            <CalendarScrollView
+              cityName={cityName}
+              currentIndex={currentIndex}
+              setCurrentIndex={setCurrentIndex}
+              currentIndexRef={currentIndexRef}
+              scrollRef={currentlyScrollingRef}
+            />
 
-        <HorizontalLine />
-      </View>
+            <HorizontalLine />
+          </View>
+        </>
+      )}
 
       {/* Graphs */}
       <>
@@ -349,4 +399,4 @@ const HourlyModal = ({
   );
 };
 
-export default HourlyModal;
+export default Modal;

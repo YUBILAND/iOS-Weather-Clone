@@ -1,30 +1,29 @@
-import { View, Text, Pressable, Image } from "react-native";
-import React from "react";
-import { DailyStats } from "./HourlyForecast.hooks";
-import DefaultText from "../atoms/DefaultText";
 import { weatherKey, WeatherType } from "@/constants/constants";
 import { weatherPNG } from "@/utils/exampleForecast";
+import React from "react";
+import { Image, Pressable } from "react-native";
+import DefaultText from "../atoms/DefaultText";
 import RoundedTemperature from "../atoms/RoundedTemperature";
-import { SelectModal } from "../WeatherAtLocation";
+import { DailyStats } from "./utils/constants";
 
 interface HourlyForecastItemProps {
-  modalID: SelectModal;
   hour: DailyStats;
   index: number;
   dailyArr: DailyStats[];
-  setModalVisible: (modal: SelectModal | null) => void;
+  showModal: () => void;
 }
 
 const HourlyForecastItem = ({
-  modalID,
   hour,
   index,
   dailyArr,
-  setModalVisible,
+  showModal,
 }: HourlyForecastItemProps) => {
   return (
     <Pressable
-      onPress={() => setModalVisible(modalID)}
+      onPress={() => {
+        showModal();
+      }}
       onStartShouldSetResponder={() => true}
       className="flex justify-center items-center w-fit rounded-3xl pt-3 "
       style={{

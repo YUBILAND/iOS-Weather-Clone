@@ -31,8 +31,8 @@ export const getGraphData = (
   const graphData = addMidnightWeather.map((hour, index) => ({
     hour: index,
     [yAxis]: parseFloat(hour[apiObjectKey].toString()),
-    currentLineTop: index === currentHour ? maxRange + 2 : undefined,
-    currentLineBottom: index === currentHour ? minRange - 2 : undefined,
+    currentLineTop: index === currentHour ? maxRange + 100 : undefined,
+    currentLineBottom: index === currentHour ? minRange - 100 : undefined,
     currentPosition:
       index === xPosition
         ? Math.round(parseFloat(hour[apiObjectKey].toString()))

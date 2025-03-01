@@ -2,29 +2,34 @@ import { View, Text } from "react-native";
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { colors } from "@/assets/colors/colors";
-import DefaultText from "./DefaultText";
+import DefaultText from "../atoms/DefaultText";
+import { useSelector } from "react-redux";
+import { RootState } from "@/state/store";
+import { WeatherData } from "@/constants/constants";
+import { getWeekTempArr } from "../daily-forecast/utils/getWeekTempArr";
 
 type ProgressBarProps = {
-  weekHigh?: number;
-  weekLow?: number;
-  dailyHigh?: number;
-  dailyLow?: number;
-  currentTemperature?: number;
+  currentTemperature: number;
   index: number;
+  weekHigh: number;
+  weekLow: number;
+  dailyHigh: number;
+  dailyLow: number;
 };
 
 const ProgressBar = ({
+  currentTemperature,
+  index,
   weekHigh,
   weekLow,
   dailyHigh,
   dailyLow,
-  currentTemperature,
-  index,
 }: ProgressBarProps) => {
   const progressWidth = 90;
 
   const range = weekHigh! - weekLow!;
   const stepWidth = progressWidth / range;
+
   const startPadding = stepWidth * (dailyLow! - weekLow!);
 
   const dailyRange = dailyHigh! - dailyLow!;

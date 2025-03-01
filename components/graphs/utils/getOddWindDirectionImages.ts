@@ -1,29 +1,24 @@
 import { WeatherData, weatherKey, WeatherType } from "@/constants/constants";
 import { useImage } from "@shopify/react-native-skia";
 import { weatherPNG } from "@/utils/exampleForecast";
+import { Ionicons } from "@expo/vector-icons";
+import { getArrowFromDegree } from "./getArrowFromDegree";
 
-export const getOddConditionImages = (
+export const getOddWindDirectionImages = (
   data: WeatherData,
   currentIndex: number
 ) => {
-  const conditionArray =
+  const windDirectionArray =
     data.forecast &&
     data.forecast?.forecastday[currentIndex]?.hour.map((hour) => {
-      return useImage(
-        weatherKey[
-          weatherPNG(
-            hour.condition.text.toLowerCase() as WeatherType,
-            hour.is_day
-          )
-        ]
-      );
+      return useImage(getArrowFromDegree(hour.wind_degree));
     });
 
-  const oddConditionImages = conditionArray.filter((img, index) => {
+  const oddWindDirectionImages = windDirectionArray.filter((img, index) => {
     if (index % 2 === 1) {
-      return img;
+      return true;
     }
   });
 
-  return oddConditionImages;
+  return oddWindDirectionImages;
 };

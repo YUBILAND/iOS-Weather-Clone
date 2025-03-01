@@ -14,7 +14,7 @@ export const getOddUVIndex = (data: WeatherData, currentIndex: number) => {
   });
   // console.log(conditionArray);
 
-  console.log(oddUVIndex);
+  // console.log(oddUVIndex);
 
   return oddUVIndex;
 };

@@ -12,13 +12,11 @@ interface GraphLeftTextProps {
 }
 
 const GraphLeftText = ({ data, item }: GraphLeftTextProps) => {
-  const { location, forecast, current } = data;
-
-  const hourlyUVArr = forecast?.forecastday[item.id]?.hour.map((hour) =>
+  const hourlyUVArr = data.forecast?.forecastday[item.id]?.hour.map((hour) =>
     Math.round(hour.uv)
   );
 
-  const currentUV = Math.round(current?.uv);
+  const currentUV = Math.round(data.current?.uv);
   const dailyMaxUV = Math.max(...hourlyUVArr);
 
   return (

@@ -11,7 +11,7 @@ const OpacityCard = ({
 }) => {
   return (
     <View
-      className={`mb-2 rounded-xl py-4 ${className}`}
+      className={`rounded-xl py-4 ${className}`}
       style={{ backgroundColor: colors.bgWhite(0.15) }}
     >
       {children}

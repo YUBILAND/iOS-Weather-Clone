@@ -1,70 +1,41 @@
 import { colors } from "@/assets/colors/colors";
-import { weatherKey, WeatherType } from "@/constants/constants";
-import { getHourlyForecastResult } from "@/hooks/hourlyForecastHook";
 import { RootState } from "@/state/store";
-import { weatherPNG } from "@/utils/exampleForecast";
-import React, { useEffect, useRef, useState } from "react";
-import { Image, Pressable, ScrollView, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Pressable, ScrollView, View } from "react-native";
 import { useSelector } from "react-redux";
-import { SelectModal } from "../WeatherAtLocation";
 import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
-import RoundedTemperature from "../atoms/RoundedTemperature";
-import ModalContainer from "../modal/ModalContainer";
-import { modalDropdownObjects } from "../modal/utils/constants";
-import HourlyModal from "../modal/Modal";
 import HourlyForecastItem from "./HourlyForecastItem";
 import { DailyStats } from "./utils/constants";
+import { getHourlyForecastObject } from "./utils/getHourlyForecast";
 
 interface HourlyForecastProps {
   cityName: string;
-  modalVisible: boolean;
-  setModalVisible: (modal: SelectModal | null) => void;
-  modalID: SelectModal;
+  showModal: () => void;
 }
 
-const HourlyForecast = ({
-  cityName,
-  modalVisible,
-  setModalVisible,
-  modalID,
-}: HourlyForecastProps) => {
+const HourlyForecast = ({ cityName, showModal }: HourlyForecastProps) => {
   const { americanTime } = useSelector((state: RootState) => state.settings);
   const { data } = useSelector((state: RootState) => state.weather);
   const { location, forecast } = data[cityName];
 
   const [dailyArr, setDailyArr] = useState<DailyStats[]>([]);
-  const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const currentIndexRef = useRef<number>(0);
-  const [selectedModal, setSelectedModal] = useState<number>(0);
 
   useEffect(() => {
     if (location)
-      setDailyArr(getHourlyForecastResult(data[cityName], americanTime));
+      setDailyArr(getHourlyForecastObject(data[cityName], americanTime));
   }, []);
 
   const weatherMessage = "Random text related to today's weather";
 
   return (
     <OpacityCard>
-      <Pressable className="gap-y-3 " onPress={() => setModalVisible(modalID)}>
-        <ModalContainer
-          modalVisible={modalVisible}
-          setModalVisible={setModalVisible}
-          cityName={cityName}
-          title={modalDropdownObjects[selectedModal].name}
-          iconName="cloud"
-        >
-          <HourlyModal
-            cityName={cityName}
-            currentIndex={currentIndex}
-            setCurrentIndex={(index: number) => setCurrentIndex(index)}
-            currentIndexRef={currentIndexRef}
-            selectedModal={selectedModal}
-            setSelectedModal={(index: number) => setSelectedModal(index)}
-          />
-        </ModalContainer>
-
+      <Pressable
+        className="gap-y-3 "
+        onPress={() => {
+          showModal();
+        }}
+      >
         <View className="flex-row ml-2 px-4">
           <DefaultText>{weatherMessage}</DefaultText>
         </View>
@@ -83,14 +54,30 @@ const HourlyForecast = ({
           {dailyArr.map((hour, index) => (
             <HourlyForecastItem
               key={hour?.fullDate}
-              modalID={modalID}
               hour={hour}
               index={index}
               dailyArr={dailyArr}
-              setModalVisible={setModalVisible}
+              showModal={showModal}
             />
           ))}
         </ScrollView>
+
+        {/* <ModalContainer
+          currentModalVisible={currentModalVisible}
+          setModalVisible={setModalVisible}
+          cityName={cityName}
+          title={modalDropdownObjects[selectedModal].name}
+          iconName="cloud"
+        >
+          <Modal
+            cityName={cityName}
+            currentIndex={currentIndex}
+            setCurrentIndex={(index: number) => setCurrentIndex(index)}
+            currentIndexRef={currentIndexRef}
+            selectedModal={selectedModal}
+            setSelectedModal={(index: number) => setSelectedModal(index)}
+          />
+        </ModalContainer> */}
       </Pressable>
     </OpacityCard>
   );

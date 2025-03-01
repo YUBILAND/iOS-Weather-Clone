@@ -1,3 +1,5 @@
+import { CompassDirections } from "@/components/wind-forecast/utils/constants";
+
 export const apiKey = "7295bc21a1cd4c43a94220808250802";
 
 // export const weatherImages = {
@@ -157,7 +159,7 @@ export type WeatherData = {
 
 export type Current = {
   temp_c: string;
-  wind_kph: string;
+  wind_mph: number;
   humidity: string;
   condition: Condition;
   is_day: boolean;
@@ -166,6 +168,8 @@ export type Current = {
     pm2_5: number;
   };
   uv: number;
+  wind_dir: CompassDirections;
+  wind_degree: number;
 };
 
 export type Condition = {
@@ -189,6 +193,8 @@ export type ForecastObject = {
     mintemp_c: string;
     avgtemp_c: string;
     condition: Condition;
+    maxwind_mph: number;
+    maxwind_kph: number;
   };
   date: string;
   astro: {

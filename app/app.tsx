@@ -32,7 +32,6 @@ import { colors } from "@/assets/colors/colors";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/state/store";
 import { fetchWeatherData } from "@/state/api/apiSlice";
-import { getDate } from "@/hooks/hooks";
 import { Location } from "@/constants/constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -136,7 +135,6 @@ const App = () => {
     toggleSearch,
     searchResultLocations,
     handleLocation,
-    getDate,
   };
 
   const dataProp: Array<{ id: string } & WeatherAtLocationProps> =

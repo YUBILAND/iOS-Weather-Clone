@@ -14,7 +14,6 @@ import { useChartPressState } from "victory-native";
 import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 import ModalContainer from "../modal/ModalContainer";
-import { SelectModal } from "../WeatherAtLocation";
 import SunPhaseGraph from "./SunPhaseGraph";
 import SunPhaseModal from "./SunPhaseModal";
 import { getNextPhaseTime } from "./utils/getNextPhaseTime";
@@ -24,17 +23,13 @@ Animated.addWhitelistedNativeProps({ value: true, source: true });
 type SunPhaseModalProps = {
   cityName: string;
   graphHeight: number;
-  modalVisible: boolean;
-  setModalVisible: React.Dispatch<React.SetStateAction<SelectModal | null>>;
-  modalID: SelectModal;
+  showModal: () => void;
 };
 
 const SunPhaseCard = ({
   cityName,
   graphHeight,
-  modalVisible,
-  setModalVisible,
-  modalID,
+  showModal,
 }: SunPhaseModalProps) => {
   const { state, isActive } = useChartPressState({
     x: 0,
@@ -60,16 +55,20 @@ const SunPhaseCard = ({
 
   return (
     <OpacityCard className="h-full">
-      <Pressable onPress={() => setModalVisible(modalID)}>
-        <ModalContainer
-          modalVisible={modalVisible}
+      <Pressable
+        onPress={() => {
+          showModal();
+        }}
+      >
+        {/* <ModalContainer
+          currentModalVisible={currentModalVisible}
           setModalVisible={setModalVisible}
           cityName={cityName}
           title={"Sun Phase"}
           iconName="sun-o"
         >
           <SunPhaseModal cityName={cityName} nextPhaseTime={nextPhaseTime} />
-        </ModalContainer>
+        </ModalContainer> */}
 
         <View className="px-4 gap-y-2">
           <View className="flex-row items-center gap-x-2 opacity-40">

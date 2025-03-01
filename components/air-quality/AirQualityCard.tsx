@@ -8,42 +8,17 @@ import { RootState } from "@/state/store";
 import { CalendarDaysIcon } from "react-native-heroicons/outline";
 import OpacityCard from "../atoms/OpacityCard";
 import getFont from "@/hooks/getFont";
+import { getAQI } from "./utils/getAQI";
+import { getAQIRating } from "./utils/getAQIRating";
+import { getAQIMessage } from "./utils/getAQIMessage";
 
 const AirQualityCard = ({ cityName }: { cityName: string }) => {
-  const { data, loading, error } = useSelector(
-    (state: RootState) => state.weather
-  );
+  const { data } = useSelector((state: RootState) => state.weather);
   const { location, forecast, current } = data[cityName];
 
-  const AQI = Math.round(
-    Math.max(current?.air_quality.o3, current?.air_quality.pm2_5)
-  );
-
-  const rating =
-    AQI <= 50
-      ? "Good"
-      : AQI <= 100
-      ? "Moderate"
-      : AQI <= 150
-      ? "Unhealthy for Sensitive Groups"
-      : AQI <= 200
-      ? "Unhealthy"
-      : AQI <= 300
-      ? "Very unhealthy"
-      : "Hazardous";
-
-  const message =
-    AQI <= 50
-      ? "Air quality is good. It's a great day to be outside!"
-      : AQI <= 100
-      ? "Air quality is moderate. Generally acceptable, but sensitive individuals should take care."
-      : AQI <= 150
-      ? "Air quality is unhealthy for sensitive groups. Limit prolonged outdoor exertion."
-      : AQI <= 200
-      ? "Air quality is unhealthy. Everyone may begin to feel health effects."
-      : AQI <= 300
-      ? "Air quality is very unhealthy. Health alert: everyone may experience serious health effects."
-      : "Air quality is hazardous. Emergency conditions—everyone is at risk.";
+  const AQI = getAQI(data[cityName]);
+  const rating = getAQIRating(AQI);
+  const message = getAQIMessage(AQI);
 
   return (
     <OpacityCard className="px-4 gap-y-2">
