@@ -1,14 +1,13 @@
-import { View, Text, TextInputProps } from "react-native";
-import React, { Key } from "react";
-import GraphContainer, { ChartPressedState } from "../../modal/GraphContainer";
-import TemperatureGraph from "../TemperatureGraph";
-import { AnimatedProps } from "react-native-reanimated";
-import TitleTemp from "./TitleTemp";
 import { WeatherData } from "@/constants/constants";
+import React from "react";
+import { TextInputProps, View } from "react-native";
+import { AnimatedProps } from "react-native-reanimated";
 import { ChartPressState } from "victory-native";
-import DefaultText from "../../atoms/DefaultText";
-import PrecipitationGraph from "../PrecipitationGraph";
-import ModalDropdownContainer from "../../modal/dropdown/ModalDropdownContainer";
+import DefaultText from "../atoms/DefaultText";
+import ChanceOfRainGraph from "../chance-of-rain/ChanceOfRainGraph";
+import TitleTemp from "../graphs/conditions/TitleTemp";
+import TemperatureGraph from "../hourly-forecast/TemperatureGraph";
+import GraphContainer from "../modal/GraphContainer";
 
 interface RenderConditionsGraphsProps {
   data: WeatherData;
@@ -92,7 +91,7 @@ const RenderConditionsGraphs = ({
           </View>
         }
       >
-        <PrecipitationGraph
+        <ChanceOfRainGraph
           cityName={cityName}
           state={rainState}
           isActive={rainIsActive}

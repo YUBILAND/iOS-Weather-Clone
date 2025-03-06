@@ -24,12 +24,14 @@ type SunPhaseModalProps = {
   cityName: string;
   graphHeight: number;
   showModal: () => void;
+  iconSize: number;
 };
 
 const SunPhaseCard = ({
   cityName,
   graphHeight,
   showModal,
+  iconSize,
 }: SunPhaseModalProps) => {
   const { state, isActive } = useChartPressState({
     x: 0,
@@ -60,19 +62,9 @@ const SunPhaseCard = ({
           showModal();
         }}
       >
-        {/* <ModalContainer
-          currentModalVisible={currentModalVisible}
-          setModalVisible={setModalVisible}
-          cityName={cityName}
-          title={"Sun Phase"}
-          iconName="sun-o"
-        >
-          <SunPhaseModal cityName={cityName} nextPhaseTime={nextPhaseTime} />
-        </ModalContainer> */}
-
         <View className="px-4 gap-y-2">
           <View className="flex-row items-center gap-x-2 opacity-40">
-            <FontAwesome name="sun-o" color="white" size={22} />
+            <FontAwesome name="sun-o" color="white" size={iconSize} />
             <DefaultText className="text-base uppercase font-semibold">
               Sun Phase
             </DefaultText>

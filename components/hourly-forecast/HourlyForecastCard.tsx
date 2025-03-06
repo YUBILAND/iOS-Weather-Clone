@@ -61,23 +61,6 @@ const HourlyForecast = ({ cityName, showModal }: HourlyForecastProps) => {
             />
           ))}
         </ScrollView>
-
-        {/* <ModalContainer
-          currentModalVisible={currentModalVisible}
-          setModalVisible={setModalVisible}
-          cityName={cityName}
-          title={modalDropdownObjects[selectedModal].name}
-          iconName="cloud"
-        >
-          <Modal
-            cityName={cityName}
-            currentIndex={currentIndex}
-            setCurrentIndex={(index: number) => setCurrentIndex(index)}
-            currentIndexRef={currentIndexRef}
-            selectedModal={selectedModal}
-            setSelectedModal={(index: number) => setSelectedModal(index)}
-          />
-        </ModalContainer> */}
       </Pressable>
     </OpacityCard>
   );

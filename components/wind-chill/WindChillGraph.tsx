@@ -7,7 +7,6 @@ import {
   Image,
   LinearGradient,
   vec,
-  Text,
 } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
@@ -20,17 +19,17 @@ import {
   Line,
   Scatter,
 } from "victory-native";
-import { getOddConditionImages } from "./utils/getOddConditionImages";
-import ToolTip from "./victoryComponents/Tooltip";
-import { getGraphData } from "./utils/getGraphData";
-import { getOddUVIndex } from "./utils/getOddUVIndex";
+import { getGraphData } from "../graphs/utils/getGraphData";
+import { getOddConditionImages } from "../hourly-forecast/utils/getOddConditionImages";
+import { getWeekWindChillArr } from "./utils/getWeekWindChillArr";
+import ToolTip from "../graphs/victoryComponents/Tooltip";
 
-interface TemperatureGraphProps {
+interface WindChillGraphProps {
   cityName: string;
   state: ChartPressState<{
     x: number;
     y: {
-      uvIndex: number;
+      windChill: number;
       currentLineTop: number;
       currentLineBottom: number;
       currentPosition: number;
@@ -43,7 +42,7 @@ interface TemperatureGraphProps {
   currentIndex: number;
 }
 
-const UVGraph = ({
+const WindChillGraph = ({
   cityName,
   state,
   isActive,
@@ -51,45 +50,34 @@ const UVGraph = ({
   strokeWidth,
   yAxisLabel,
   currentIndex,
-}: TemperatureGraphProps) => {
+}: WindChillGraphProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { location } = data[cityName];
 
   const font = getFont();
 
-  const maxRange = 11;
-  const minRange = 0;
+  const weekWindChillArr = getWeekWindChillArr(data[cityName]);
+  const weekMaxWindChill = Math.max(...weekWindChillArr);
+  const weekMinWindChill = Math.min(...weekWindChillArr);
 
   const graphData = getGraphData(
     data[cityName],
-    maxRange,
-    minRange,
+    weekMaxWindChill,
+    weekMinWindChill,
     currentIndex,
-    "uvIndex",
-    "uv"
+    "windChill",
+    "windchill_c"
   );
-
-  type curveType =
-    | "linear"
-    | "natural"
-    | "step"
-    | "bumpX"
-    | "bumpY"
-    | "cardinal"
-    | "cardinal50"
-    | "catmullRom"
-    | "catmullRom0"
-    | "catmullRom100"
-    | "monotoneX";
-
-  const lineShape: curveType = "natural";
 
   const cutoff = getCurrentHour(location!.tz_id);
 
-  const oddUVIndex = getOddUVIndex(data[cityName], currentIndex);
+  const oddConditionImages = getOddConditionImages(
+    data[cityName],
+    currentIndex
+  );
 
-  const areaColorTop = "rgba(86, 244, 149, 0.4)";
-  const areaColorBottom = "rgba(81, 255, 115, 0.2)";
+  const areaColorTop = "rgba(124,197,227,0.4)";
+  const areaColorBottom = "rgba(124,197,227,0.2)";
   const areaDarkTop = "rgba(0,0,0,0.2)";
   const areaDarkBottom = "rgba(0,0,0,0.3)";
 
@@ -99,7 +87,7 @@ const UVGraph = ({
         data={graphData!}
         xKey="hour"
         yKeys={[
-          "uvIndex",
+          "windChill",
           "currentLineTop",
           "currentLineBottom",
           "currentPosition",
@@ -126,29 +114,31 @@ const UVGraph = ({
             lineColor: colors.mediumGray,
           },
         ]}
-        domain={{ y: [minRange, maxRange] }}
+        domain={{ y: [weekMinWindChill, weekMaxWindChill + 10] }}
         chartPressState={state}
       >
         {({ points, chartBounds }) => {
           // 👇 and we'll use the Line component to render a line path.
-          const leftPoints = points.uvIndex.filter(
+          const leftPoints = points.windChill.filter(
             (point) => (point.xValue! as number) <= cutoff
           ); // Left side (x <= 0)
-          const rightPoints = points.uvIndex.filter(
+          const rightPoints = points.windChill.filter(
             (point) => (point.xValue! as number) >= cutoff
           ); // Right side (x >= 0)
+
           return (
             <>
               {/* Top graph content */}
               <>
-                {oddUVIndex.map((uv, index) => (
-                  <Text
-                    font={font}
+                {oddConditionImages.map((img, index) => (
+                  <Image
                     key={index}
-                    x={10 + index * 25.5}
+                    image={img}
+                    fit="contain"
+                    x={4 + index * 25.5}
                     y={10}
-                    text={Math.round(uv).toString()}
-                    color={"white"}
+                    width={18}
+                    height={18}
                   />
                 ))}
               </>
@@ -156,16 +146,16 @@ const UVGraph = ({
               {/* Right side of graph*/}
               <>
                 <Line
-                  points={currentIndex === 0 ? rightPoints : points.uvIndex}
-                  color={colors.green}
+                  points={currentIndex === 0 ? rightPoints : points.windChill}
+                  color={colors.blue}
                   strokeWidth={6}
-                  curveType={lineShape}
+                  curveType="natural"
                 />
                 <Area
-                  points={currentIndex === 0 ? rightPoints : points.uvIndex}
+                  points={currentIndex === 0 ? rightPoints : points.windChill}
                   y0={chartBounds.bottom}
                   animate={{ type: "timing", duration: 300 }}
-                  curveType={lineShape}
+                  curveType="natural"
                 >
                   <LinearGradient
                     start={vec(chartBounds.bottom, 150)}
@@ -177,14 +167,14 @@ const UVGraph = ({
 
               {currentIndex === 0 && (
                 <>
-                  {/* Left side of graph DASHED LINE*/}
+                  {/* Left side of graph*/}
                   <>
                     <Line
                       points={leftPoints}
                       // color="rgba(124,197,227,0.5)"
-                      color={colors.green}
+                      color={colors.blue}
                       strokeWidth={6}
-                      curveType={lineShape}
+                      curveType="natural"
                     >
                       <DashPathEffect intervals={[10, 10]} />
                     </Line>
@@ -193,7 +183,7 @@ const UVGraph = ({
                       y0={chartBounds.bottom}
                       // color="rgba(124,197,227,0.3)"
                       animate={{ type: "timing", duration: 300 }}
-                      curveType={lineShape}
+                      curveType="natural"
                     >
                       <LinearGradient
                         start={vec(chartBounds.bottom, 150)}
@@ -202,6 +192,7 @@ const UVGraph = ({
                       />
                     </Area>
                   </>
+
                   {/* Vertical Line */}
                   <>
                     <Bar
@@ -228,7 +219,7 @@ const UVGraph = ({
                       y0={chartBounds.top}
                       color={areaDarkTop}
                       animate={{ type: "timing", duration: 300 }}
-                      curveType={lineShape}
+                      curveType="natural"
                     />
 
                     <Area
@@ -236,7 +227,7 @@ const UVGraph = ({
                       y0={chartBounds.bottom}
                       color={areaDarkBottom}
                       animate={{ type: "timing", duration: 300 }}
-                      curveType={lineShape}
+                      curveType="natural"
                     />
                   </>
 
@@ -262,7 +253,7 @@ const UVGraph = ({
               )}
 
               {isActive ? (
-                <ToolTip x={state.x.position} y={state.y.uvIndex.position} />
+                <ToolTip x={state.x.position} y={state.y.windChill.position} />
               ) : null}
             </>
           );
@@ -272,4 +263,4 @@ const UVGraph = ({
   );
 };
 
-export default UVGraph;
+export default WindChillGraph;

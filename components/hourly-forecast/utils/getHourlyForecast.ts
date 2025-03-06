@@ -1,4 +1,4 @@
-import { WeatherData } from "@/constants/constants";
+import { WeatherData, WeatherType } from "@/constants/constants";
 import {
   getCurrentHour,
   militaryHour,
@@ -43,9 +43,12 @@ export const getHourlyForecastObject = (
           ) {
             const normalTime = dateStringToTime(hour.time, true, americanTime);
             const celsius = parseInt(hour.temp_c);
-            const condition = hour?.is_day
-              ? hour.condition.text
-              : addWhiteSpace(hour.condition.text) + "night";
+            const condition =
+              hour.wind_mph >= 15
+                ? ("windy" as WeatherType)
+                : hour?.is_day
+                ? hour.condition.text
+                : addWhiteSpace(hour.condition.text) + "night";
             newArr.push({
               time: normalTime,
               condition: condition,
@@ -58,12 +61,16 @@ export const getHourlyForecastObject = (
           // Insert Sunrise Time
           const sunriseGreaterThanCurrentHour =
             militaryHour(sunriseTime) >= currentHour;
+          const sunriseGreaterThanCurrentTime =
+            militaryHour(sunriseTime) >= currentHour &&
+            sunriseTime.split(":")[0] >
+              stringToTime(false, sunriseTime).split(":")[0];
           const sunriseLessThanCurrentHour =
             militaryHour(sunriseTime) <= currentHour;
           const sunriseIndex = index === militaryHour(sunriseTime);
 
           if (
-            (firstIndex && sunriseIndex && sunriseGreaterThanCurrentHour) ||
+            (firstIndex && sunriseIndex && sunriseGreaterThanCurrentTime) ||
             (lastIndex && sunriseIndex && sunriseLessThanCurrentHour)
           ) {
             //Sunrise should be included
@@ -83,12 +90,16 @@ export const getHourlyForecastObject = (
           // Insert Sunset Time
           const sunsetGreaterThanCurrentHour =
             militaryHour(sunsetTime) >= currentHour;
+          const sunsetGreaterThanCurrentTime =
+            militaryHour(sunsetTime) >= currentHour &&
+            sunsetTime.split(":")[0] >
+              stringToTime(false, sunriseTime).split(":")[0];
           const sunsetLessThanCurrentHour =
             militaryHour(sunsetTime) <= currentHour;
           const sunsetIndex = index === militaryHour(sunsetTime);
 
           if (
-            (firstIndex && sunsetIndex && sunsetGreaterThanCurrentHour) ||
+            (firstIndex && sunsetIndex && sunsetGreaterThanCurrentTime) ||
             (lastIndex && sunsetIndex && sunsetLessThanCurrentHour)
           ) {
             //Sunrise should be included

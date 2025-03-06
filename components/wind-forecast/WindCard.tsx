@@ -12,9 +12,10 @@ import { RootState } from "@/state/store";
 interface WindCardProps {
   cityName: string;
   showModal: () => void;
+  iconSize: number;
 }
 
-const WindCard = ({ cityName, showModal }: WindCardProps) => {
+const WindCard = ({ cityName, showModal, iconSize }: WindCardProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
 
   return (
@@ -26,7 +27,7 @@ const WindCard = ({ cityName, showModal }: WindCardProps) => {
       >
         <View className="px-4 gap-y-2">
           <View className="flex-row items-center gap-x-2 opacity-40">
-            <FontAwesome6 name="wind" color="white" size={20} />
+            <FontAwesome6 name="wind" color="white" size={iconSize} />
             <DefaultText className="text-base uppercase font-semibold">
               Wind
             </DefaultText>

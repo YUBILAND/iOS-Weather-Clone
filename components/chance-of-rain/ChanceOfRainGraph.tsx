@@ -24,10 +24,10 @@ import { getCurrentHour, getCurrentTime, militaryHour } from "@/hooks/hooks";
 import { colors } from "@/assets/colors/colors";
 import getFont from "@/hooks/getFont";
 // import { regularTimeOnXAxis } from "../sun-phase/SunPhaseGraph";
-import Cursor from "./victoryComponents/Cursor";
+import Cursor from "../graphs/victoryComponents/Cursor";
 import { regularTimeOnXAxis } from "../sun-phase/utils/getRegularTimeOnXAxis";
 
-interface PrecipitationGraphProps {
+interface ChanceOfRainGraphProps {
   cityName: string;
   state: ChartPressState<{
     x: number;
@@ -45,7 +45,7 @@ interface PrecipitationGraphProps {
   currentIndex: number;
 }
 
-const PrecipitationGraph = ({
+const ChanceOfRainGraph = ({
   cityName,
   state,
   isActive,
@@ -53,7 +53,7 @@ const PrecipitationGraph = ({
   strokeWidth,
   yAxisLabel,
   currentIndex,
-}: PrecipitationGraphProps) => {
+}: ChanceOfRainGraphProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { location, forecast } = data[cityName];
 
@@ -90,6 +90,8 @@ const PrecipitationGraph = ({
   const areaDarkTop = "rgba(0,0,0,0.2)";
   const areaDarkBottom = "rgba(0,0,0,0.3)";
 
+  const curveType = "linear";
+
   return (
     <View style={{ height: graphHeight }} className="relative z-0">
       <CartesianChart
@@ -124,7 +126,7 @@ const PrecipitationGraph = ({
             lineColor: colors.mediumGray,
           },
         ]}
-        domain={{ y: [0, 100] }}
+        domain={{ y: [0, 110] }}
         chartPressState={state}
       >
         {({ points, chartBounds }) => {
@@ -145,7 +147,7 @@ const PrecipitationGraph = ({
                   }
                   color={colors.blue}
                   strokeWidth={6}
-                  curveType="linear"
+                  curveType={curveType}
                 />
                 <Area
                   points={
@@ -153,7 +155,7 @@ const PrecipitationGraph = ({
                   }
                   y0={chartBounds.bottom}
                   animate={{ type: "timing", duration: 300 }}
-                  curveType="linear"
+                  curveType={curveType}
                 >
                   <LinearGradient
                     start={vec(chartBounds.bottom, 150)}
@@ -170,7 +172,7 @@ const PrecipitationGraph = ({
                       points={leftPoints}
                       color="rgba(124,197,227,0.5)"
                       strokeWidth={6}
-                      curveType="linear"
+                      curveType={curveType}
                     >
                       <DashPathEffect intervals={[10, 10]} />
                     </Line>
@@ -179,7 +181,7 @@ const PrecipitationGraph = ({
                       y0={chartBounds.bottom}
                       color="rgba(124,197,227,0.3)"
                       animate={{ type: "timing", duration: 300 }}
-                      curveType="linear"
+                      curveType={curveType}
                     />
                   </>
 
@@ -209,7 +211,7 @@ const PrecipitationGraph = ({
                       y0={chartBounds.top}
                       color={areaDarkTop}
                       animate={{ type: "timing", duration: 300 }}
-                      curveType="natural"
+                      curveType={curveType}
                     />
 
                     <Area
@@ -217,7 +219,7 @@ const PrecipitationGraph = ({
                       y0={chartBounds.bottom}
                       color={areaDarkBottom}
                       animate={{ type: "timing", duration: 300 }}
-                      curveType="natural"
+                      curveType={curveType}
                     />
                   </>
 
@@ -281,4 +283,4 @@ function ToolTip({
   );
 }
 
-export default PrecipitationGraph;
+export default ChanceOfRainGraph;

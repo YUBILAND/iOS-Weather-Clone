@@ -3,7 +3,7 @@ import { BlurView } from "expo-blur";
 import React, { useState } from "react";
 import { View } from "react-native";
 import ModalDropdownButton from "./ModalDropdownButton";
-import { modalDropdownObjects, SelectModal } from "../utils/constants";
+import { modalDropdownObjects, SelectModal } from "../utils/modalConstants";
 import ModalDropdownItem from "./ModalDropdownItem";
 
 interface ModalDropdownProps {

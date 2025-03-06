@@ -18,34 +18,21 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSelector } from "react-redux";
 import { getConditionArray } from "./utils/getConditionArray";
+import { ChartPressState } from "victory-native";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-export interface YAxisValue {
-  value: SharedValue<number>;
-  position: SharedValue<number>;
-}
-
-export interface YAxisState<Key extends string> {
-  [key: string]: YAxisValue; // Dynamic keys with YAxisValue type
-  currentLineTop: YAxisValue;
-  currentLineBottom: YAxisValue;
-  currentPosition: YAxisValue;
-}
-
-export interface ChartPressedState<Key extends string> {
-  x: {
-    value: SharedValue<number>;
-    position: SharedValue<number>;
-  };
-  y: YAxisState<Key>;
-}
-
 interface GraphContainerProps<Key extends string> {
   cityName: string;
-  state: ChartPressedState<Key>;
+  state: ChartPressState<{
+    x: number;
+    y: Record<
+      "currentLineTop" | "currentLineBottom" | "currentPosition" | Key,
+      number
+    >;
+  }>;
   isActive: boolean;
   leftSide: React.ReactNode;
   children: React.ReactNode;

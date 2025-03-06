@@ -9,8 +9,8 @@ import { WeatherData } from "@/constants/constants";
 import { getWeekTempArr } from "../daily-forecast/utils/getWeekTempArr";
 
 type ProgressBarProps = {
-  currentTemperature: number;
-  index: number;
+  barWidth: number;
+  currentTemperature?: number;
   weekHigh: number;
   weekLow: number;
   dailyHigh: number;
@@ -18,33 +18,31 @@ type ProgressBarProps = {
 };
 
 const ProgressBar = ({
+  barWidth,
   currentTemperature,
-  index,
   weekHigh,
   weekLow,
   dailyHigh,
   dailyLow,
 }: ProgressBarProps) => {
-  const progressWidth = 90;
-
   const range = weekHigh! - weekLow!;
-  const stepWidth = progressWidth / range;
+  const stepWidth = barWidth / range;
 
   const startPadding = stepWidth * (dailyLow! - weekLow!);
 
   const dailyRange = dailyHigh! - dailyLow!;
-  const barWidth = dailyRange * stepWidth;
+  const progressWidth = dailyRange * stepWidth;
 
   const leftGrayPercentage = startPadding / progressWidth;
   const rightGrayPercentage =
-    (progressWidth - (startPadding + barWidth)) / progressWidth;
+    (progressWidth - (startPadding + progressWidth)) / progressWidth;
 
   const stepWidthOffset = (progressWidth - range) / range;
 
   return (
     <View
       style={{
-        width: progressWidth,
+        width: barWidth,
         height: 6,
         borderRadius: 20,
         backgroundColor: colors.bgWhite(0.2),
@@ -60,19 +58,19 @@ const ProgressBar = ({
           y: 0,
         }} // End point (right)
         style={{
-          width: barWidth,
+          width: progressWidth,
           height: 6,
           borderRadius: 20,
         }} // Set the size
       />
-      {index === 0 && (
+      {currentTemperature != undefined && (
         <DefaultText
           style={{
             marginLeft:
               startPadding +
               stepWidthOffset * (currentTemperature! - dailyLow!),
           }}
-          className="h-2 w-2 bg-white rounded-full absolute top-0 left-0"
+          className="h-2 w-2 bg-white rounded-full absolute top-0 left-0 border-[1px] border-black"
         />
       )}
     </View>

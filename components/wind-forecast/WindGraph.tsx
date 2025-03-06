@@ -6,8 +6,6 @@ import {
   DashPathEffect,
   Image,
   LinearGradient,
-  rotate,
-  useImage,
   vec,
 } from "@shopify/react-native-skia";
 import React from "react";
@@ -21,14 +19,10 @@ import {
   Line,
   Scatter,
 } from "victory-native";
-import { getOddConditionImages } from "./utils/getOddConditionImages";
-import ToolTip from "./victoryComponents/Tooltip";
-import { getGraphData } from "./utils/getGraphData";
-import { getWeekMinTemp } from "./utils/getWeekMinTemp";
-import { getWeekMaxTemp } from "./utils/getWeekMaxTemp";
-import { getWeekMaxWind } from "./utils/getWeekMaxWind";
+import { getGraphData } from "../graphs/utils/getGraphData";
+import ToolTip from "../graphs/victoryComponents/Tooltip";
 import { getOddWindDirectionImages } from "./utils/getOddWindDirectionImages";
-import { getArrowFromDegree } from "./utils/getArrowFromDegree";
+import { getWeekMaxWind } from "./utils/getWeekMaxWind";
 
 interface WindGraphProps {
   cityName: string;

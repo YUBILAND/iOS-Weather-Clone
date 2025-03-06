@@ -1,4 +1,4 @@
-import { CompassDirections } from "@/components/wind-forecast/utils/constants";
+import { CompassDirections } from "@/components/wind-forecast/utils/windConstants";
 
 export const apiKey = "7295bc21a1cd4c43a94220808250802";
 
@@ -54,6 +54,7 @@ export const weatherImages = {
     "moderate rain at times",
     "patchy light drizzle",
     "light drizzle",
+    "patchy light rain",
   ],
 
   heavyrain: [
@@ -81,6 +82,9 @@ export const weatherImages = {
     "patchy moderate snow night",
     "blowing snow night",
     "light snow night",
+    "moderate or heavy sleet",
+    "light sleet",
+    "moderate or heavy sleet night",
   ],
 
   "clear-night": ["sunny night", "clear night"],
@@ -98,6 +102,8 @@ export const weatherImages = {
     "patchy rain nearby night",
     "heavy rain night",
     "light drizzle night",
+    "light rain night",
+    "patchy light rain night",
   ],
 
   sun: ["sunny", "clear"],
@@ -105,6 +111,8 @@ export const weatherImages = {
   cloudy: ["overcast", "cloudy"],
 
   fog: ["mist", "fog"],
+
+  windy: ["windy", "windy night"],
 };
 
 type WeatherKey = {
@@ -124,6 +132,7 @@ export const weatherKey: WeatherKey = {
   sun: require("../assets/images/sun.png"),
   cloudy: require("../assets/images/cloudy.png"),
   fog: require("../assets/images/fog.png"),
+  windy: require("../assets/images/windy.png"),
 };
 
 export type WeatherType =
@@ -149,7 +158,8 @@ export type WeatherType =
   | "overcast"
   | "cloudy"
   | "mist"
-  | "fog";
+  | "fog"
+  | "windy";
 
 export type WeatherData = {
   current: Current;
@@ -160,7 +170,7 @@ export type WeatherData = {
 export type Current = {
   temp_c: string;
   wind_mph: number;
-  humidity: string;
+  humidity: number;
   condition: Condition;
   is_day: boolean;
   air_quality: {
@@ -170,6 +180,10 @@ export type Current = {
   uv: number;
   wind_dir: CompassDirections;
   wind_degree: number;
+  windchill_c: number;
+  precip_in: number;
+  gust_mph: number;
+  vis_miles: number;
 };
 
 export type Condition = {
@@ -189,17 +203,22 @@ export type Forecast = {
 
 export type ForecastObject = {
   day: {
-    maxtemp_c: string;
-    mintemp_c: string;
-    avgtemp_c: string;
+    maxtemp_c: number;
+    mintemp_c: number;
+    avgtemp_c: number;
     condition: Condition;
     maxwind_mph: number;
     maxwind_kph: number;
+    totalprecip_in: number;
   };
   date: string;
   astro: {
     sunrise: string;
     sunset: string;
+    moonrise: string;
+    moonset: string;
+    moon_phase: string;
+    moon_illumination: string;
   };
   hour: HourObject[];
 };
@@ -207,4 +226,40 @@ export type ForecastObject = {
 export type HourObject = WeatherData["current"] & {
   time: string;
   chance_of_rain: number;
+  temp_c: number;
+  wind_mph: number;
+  humidity: number;
+  uv: number;
+  wind_degree: number;
+  windchill_c: number;
+  precip_in: number;
+  gust_mph: number;
+  vis_miles: number;
+  vis: number;
 };
+
+// Would have used HourObject for Graph.tsx but union doesn't seem to work, so have to declare explicitly
+
+export type GraphKeyType = {
+  chance_of_rain: number;
+  temp_c: number;
+  wind_mph: number;
+  humidity: number;
+  uv: number;
+  wind_degree: number;
+  windchill_c: number;
+  precip_in: number;
+  gust_mph: number;
+  vis_miles: number;
+  vis: number;
+};
+
+export const weekday = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];

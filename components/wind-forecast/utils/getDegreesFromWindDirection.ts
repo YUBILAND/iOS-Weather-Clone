@@ -1,4 +1,4 @@
-import { CompassDirections } from "./constants";
+import { CompassDirections } from "./windConstants";
 
 export const getDegreesFromWindDirection = (
   windDirection: CompassDirections

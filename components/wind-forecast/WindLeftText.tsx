@@ -29,6 +29,13 @@ const WindLeftText = ({ data, item }: WindLeftTextProps) => {
     Math.round(dailyMaxWindSpeed) +
     " mph";
 
+  const currentGustSpeed = data.current.gust_mph;
+
+  const gustArr = data.forecast.forecastday[item.id].hour.map(
+    (hour) => hour.gust_mph
+  );
+  const dailyMaxGustSpeed = Math.max(...gustArr);
+
   return (
     <View className="flex-row justify-between items-center">
       <View>
@@ -49,7 +56,9 @@ const WindLeftText = ({ data, item }: WindLeftTextProps) => {
         </View>
 
         <DefaultText style={{ color: colors.lightGray }}>
-          Fastest wind speed is{" "}
+          {item.id === 0
+            ? `Gust speed: ${Math.round(currentGustSpeed)} mph`
+            : `Maximum gust speed: ${Math.round(dailyMaxGustSpeed)} mph`}
         </DefaultText>
       </View>
     </View>

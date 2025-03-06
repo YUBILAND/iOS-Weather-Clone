@@ -25,8 +25,7 @@ import { shallowEqual, useSelector } from "react-redux";
 import { useChartPressState } from "victory-native";
 import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
-import PrecipitationGraph from "../graphs/PrecipitationGraph";
-import TemperatureGraph from "../graphs/TemperatureGraph";
+import TemperatureGraph from "../hourly-forecast/TemperatureGraph";
 import CalendarScrollView from "./CalendarScrollView";
 import GraphContainer from "./GraphContainer";
 import ModalBoxTitle from "./ModalBoxTitle";
@@ -38,14 +37,29 @@ import DropdownComponent from "./dropdown/DropdownComponent";
 import { SelectDemo, SelectDemoItem } from "../atoms/Dropdown";
 import ModalDropdownContainer from "./dropdown/ModalDropdownContainer";
 import TitleTemp from "../graphs/conditions/TitleTemp";
-import RenderConditionsGraphs from "../graphs/conditions/RenderConditionsGraphs";
-import UVGraph from "../graphs/UVGraph";
+import UVGraph from "../uv-index/UVGraph";
 import GraphLeftText from "../graphs/victoryComponents/GraphLeftText";
-import WindGraph from "../graphs/WindGraph";
 import WindLeftText from "../wind-forecast/WindLeftText";
-import { SelectModal } from "./utils/constants";
+import { SelectModal } from "./utils/modalConstants";
 import SunPhaseCard from "../sun-phase/SunPhaseCard";
 import SunPhaseGraph from "../sun-phase/SunPhaseGraph";
+import WindChillGraph from "../wind-chill/WindChillGraph";
+import WindChillLeftText from "../wind-chill/WindChillLeftText";
+import PrecipitationGraph from "../precipitation/PrecipitationGraph";
+import ConditionsModalDescription from "../conditions/ConditionsModalDescription";
+import WindGraph from "../wind-forecast/WindGraph";
+import RenderConditionsGraphs from "../conditions/RenderConditionsGraphs";
+import UVModalDescription from "../uv-index/UVModalDescription";
+import WindModalDescription from "../wind-forecast/WindModalDescription";
+import WindChillModalDescription from "../wind-chill/WindChillModalDescription";
+import PrecipitationModalDescription from "../precipitation/PrecipitationModalDescription";
+import VisibilityGraph from "../visibility/VisibilityGraph";
+import Graph from "../graphs/Graph";
+import VisibilityLeftText from "../visibility/VisibilityLeftText";
+import VisibilityModalDescription from "../visibility/VisibilityModalDescription";
+import HumidityGraph from "../humidity/HumidityGraph";
+import HumidityLeftText from "../humidity/HumidityLeftText";
+import HumidityModalDescription from "../humidity/HumidityModalDescription";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
@@ -56,6 +70,7 @@ type ModalProps = {
   currentIndexRef: MutableRefObject<number>;
   selectedModal: SelectModal;
   setSelectedModal: (modal: SelectModal) => void;
+  openModalOnIndexRef: MutableRefObject<boolean>;
 };
 
 const Modal = ({
@@ -65,8 +80,8 @@ const Modal = ({
   currentIndexRef,
   selectedModal,
   setSelectedModal,
+  openModalOnIndexRef,
 }: ModalProps) => {
-  // Temperature Chart Press State
   const { state: tempState, isActive: tempIsActive } = useChartPressState({
     x: 0,
     y: {
@@ -76,7 +91,6 @@ const Modal = ({
       currentPosition: 0,
     },
   });
-  // Precipitation Chart Press State
   const { state: rainState, isActive: rainIsActive } = useChartPressState({
     x: 0,
     y: {
@@ -86,7 +100,6 @@ const Modal = ({
       currentPosition: 0,
     },
   });
-
   const { state: uvState, isActive: uvIsActive } = useChartPressState({
     x: 0,
     y: {
@@ -96,7 +109,6 @@ const Modal = ({
       currentPosition: 0,
     },
   });
-
   const { state: windState, isActive: windIsActive } = useChartPressState({
     x: 0,
     y: {
@@ -106,23 +118,44 @@ const Modal = ({
       currentPosition: 0,
     },
   });
-
-  // const { state: sunState, isActive: sunIsActive } = useChartPressState({
-  //   x: 0,
-  //   y: { sunPath: 0, sunPosition: 0, phaseLine: 0 },
-  // });
-
-  const isAnyActive = [tempIsActive, rainIsActive, uvIsActive].some(
-    (active) => active
-  );
-
-  // Rerender to prevent bug aniamtion when scrolling on mount
-  const [update, setUpdate] = useState(false);
-  useEffect(() => {
-    setTimeout(() => {
-      setUpdate(!update);
+  const { state: windChillState, isActive: windChillIsActive } =
+    useChartPressState({
+      x: 0,
+      y: {
+        windChill: 0,
+        currentLineTop: 0,
+        currentLineBottom: 0,
+        currentPosition: 0,
+      },
     });
-  }, []);
+  const { state: precipState, isActive: precipIsActive } = useChartPressState({
+    x: 0,
+    y: {
+      precip: 0,
+      currentLineTop: 0,
+      currentLineBottom: 0,
+      currentPosition: 0,
+    },
+  });
+  const { state: visState, isActive: visIsActive } = useChartPressState({
+    x: 0,
+    y: {
+      vis: 0,
+      currentLineTop: 0,
+      currentLineBottom: 0,
+      currentPosition: 0,
+    },
+  });
+  const { state: humidityState, isActive: humidityIsActive } =
+    useChartPressState({
+      x: 0,
+      y: {
+        humidity: 0,
+        currentLineTop: 0,
+        currentLineBottom: 0,
+        currentPosition: 0,
+      },
+    });
 
   const tempScrollInfoBold = useAnimatedProps(() => {
     const celsius = `${Math.round(tempState.y.celsius.value.value)}°`;
@@ -152,6 +185,54 @@ const Modal = ({
       value: windSpeed,
     };
   });
+  const windChillScrollInfoBold = useAnimatedProps(() => {
+    const windChill = `${Math.round(windChillState.y.windChill.value.value)}°`;
+    return {
+      text: windChill,
+      value: windChill,
+    };
+  });
+  const precipScrollInfoBold = useAnimatedProps(() => {
+    const precip = `${precipState.y.precip.value.value}"`;
+    return {
+      text: precip,
+      value: precip,
+    };
+  });
+  const visScrollInfoBold = useAnimatedProps(() => {
+    const vis = `${visState.y.vis.value.value} mi`;
+    return {
+      text: vis,
+      value: vis,
+    };
+  });
+  const humidityScrollInfoBold = useAnimatedProps(() => {
+    const humidity = `${humidityState.y.humidity.value.value} %`;
+    return {
+      text: humidity,
+      value: humidity,
+    };
+  });
+
+  // Hide dropdown button when hovering over graph
+  const isAnyActive = [
+    tempIsActive,
+    rainIsActive,
+    uvIsActive,
+    windIsActive,
+    windChillIsActive,
+    precipIsActive,
+    visIsActive,
+    humidityIsActive,
+  ].some((active) => active);
+
+  // Rerender to prevent bug aniamtion when scrolling on mount
+  const [update, setUpdate] = useState(false);
+  useEffect(() => {
+    setTimeout(() => {
+      setUpdate(!update);
+    });
+  }, []);
 
   const { data } = useSelector((state: RootState) => state.weather);
   const { location, forecast, current } = data[cityName];
@@ -181,11 +262,21 @@ const Modal = ({
   };
 
   const currentlyScrollingRef = useRef<boolean>(true);
+  // Prevent user scroll interrupt when click calendar
+  const buttonScrollActiveRef = useRef<boolean>(false);
 
   // If user is scrolling, animate the scroll
   if (flatlistRef.current && currentlyScrollingRef.current) {
-    console.log("currentIndex is ", currentIndex);
+    console.log("current index is ", currentIndex);
     flatlistRef.current.scrollToIndex({ animated: true, index: currentIndex });
+    currentlyScrollingRef.current = true;
+    buttonScrollActiveRef.current = true;
+  }
+
+  if (flatlistRef.current && openModalOnIndexRef.current) {
+    console.log("current index is ", currentIndex);
+    flatlistRef.current.scrollToIndex({ animated: false, index: currentIndex });
+    openModalOnIndexRef.current = false;
   }
 
   const handleViewableItemsChanged = useCallback(
@@ -209,58 +300,186 @@ const Modal = ({
     return (
       <View className="w-screen">
         {selectedModal === "temperature" ? (
-          <RenderConditionsGraphs
-            data={data[cityName]}
-            cityName={cityName}
-            tempState={tempState}
-            tempIsActive={tempIsActive}
-            rainState={rainState}
-            rainIsActive={rainIsActive}
-            tempScrollInfoBold={tempScrollInfoBold}
-            rainScrollInfoBold={rainScrollInfoBold}
-            currentIndex={item.id}
-            item={item}
-          />
+          <>
+            <RenderConditionsGraphs
+              data={data[cityName]}
+              cityName={cityName}
+              tempState={tempState}
+              tempIsActive={tempIsActive}
+              rainState={rainState}
+              rainIsActive={rainIsActive}
+              tempScrollInfoBold={tempScrollInfoBold}
+              rainScrollInfoBold={rainScrollInfoBold}
+              currentIndex={item.id}
+              item={item}
+            />
+            <ConditionsModalDescription
+              data={data[cityName]}
+              currentIndex={item.id}
+            />
+          </>
         ) : selectedModal === "uv" ? (
-          <GraphContainer
-            cityName={cityName}
-            state={uvState}
-            isActive={uvIsActive}
-            // hackyWeatherImage
-            // smallBold
-            scrollInfoBold={uvScrollInfoBold}
-            currentIndex={currentIndex}
-            leftSide={<GraphLeftText data={data[cityName]} item={item} />}
-          >
-            <UVGraph
+          <>
+            <GraphContainer
               cityName={cityName}
               state={uvState}
               isActive={uvIsActive}
-              graphHeight={200}
-              strokeWidth={4}
-              yAxisLabel=""
-              currentIndex={item.id}
-            />
-          </GraphContainer>
+              scrollInfoBold={uvScrollInfoBold}
+              currentIndex={currentIndex}
+              leftSide={<GraphLeftText data={data[cityName]} item={item} />}
+            >
+              <UVGraph
+                cityName={cityName}
+                state={uvState}
+                isActive={uvIsActive}
+                graphHeight={240}
+                strokeWidth={4}
+                yAxisLabel=""
+                currentIndex={item.id}
+              />
+            </GraphContainer>
+            <UVModalDescription data={data[cityName]} currentIndex={item.id} />
+          </>
         ) : selectedModal === "wind" ? (
-          <GraphContainer
-            cityName={cityName}
-            state={windState}
-            isActive={windIsActive}
-            scrollInfoBold={windScrollInfoBold}
-            currentIndex={currentIndex}
-            leftSide={<WindLeftText data={data[cityName]} item={item} />}
-          >
-            <WindGraph
+          <>
+            <GraphContainer
               cityName={cityName}
               state={windState}
               isActive={windIsActive}
-              graphHeight={200}
-              strokeWidth={4}
-              yAxisLabel=""
+              scrollInfoBold={windScrollInfoBold}
+              currentIndex={currentIndex}
+              leftSide={<WindLeftText data={data[cityName]} item={item} />}
+            >
+              <WindGraph
+                cityName={cityName}
+                state={windState}
+                isActive={windIsActive}
+                graphHeight={240}
+                strokeWidth={4}
+                yAxisLabel=""
+                currentIndex={item.id}
+              />
+            </GraphContainer>
+            <WindModalDescription
+              data={data[cityName]}
               currentIndex={item.id}
             />
-          </GraphContainer>
+          </>
+        ) : selectedModal === "windChill" ? (
+          <>
+            <GraphContainer
+              cityName={cityName}
+              state={windChillState}
+              isActive={windChillIsActive}
+              scrollInfoBold={windChillScrollInfoBold}
+              currentIndex={currentIndex}
+              leftSide={<WindChillLeftText data={data[cityName]} item={item} />}
+            >
+              <WindChillGraph
+                cityName={cityName}
+                state={windChillState}
+                isActive={windChillIsActive}
+                graphHeight={240}
+                strokeWidth={4}
+                yAxisLabel=""
+                currentIndex={item.id}
+              />
+            </GraphContainer>
+            <WindChillModalDescription
+              data={data[cityName]}
+              currentIndex={item.id}
+            />
+          </>
+        ) : selectedModal === "precipitation" ? (
+          <>
+            <GraphContainer
+              cityName={cityName}
+              state={precipState}
+              isActive={precipIsActive}
+              scrollInfoBold={precipScrollInfoBold}
+              currentIndex={currentIndex}
+              leftSide={<WindChillLeftText data={data[cityName]} item={item} />}
+            >
+              <PrecipitationGraph
+                cityName={cityName}
+                state={precipState}
+                isActive={precipIsActive}
+                graphHeight={240}
+                strokeWidth={4}
+                yAxisLabel='"'
+                currentIndex={item.id}
+              />
+            </GraphContainer>
+            <PrecipitationModalDescription
+              data={data[cityName]}
+              currentIndex={item.id}
+            />
+          </>
+        ) : selectedModal === "visibility" ? (
+          <>
+            <GraphContainer
+              cityName={cityName}
+              state={visState}
+              isActive={visIsActive}
+              scrollInfoBold={visScrollInfoBold}
+              currentIndex={currentIndex}
+              leftSide={
+                <VisibilityLeftText data={data[cityName]} item={item} />
+              }
+            >
+              <VisibilityGraph
+                cityName={cityName}
+                state={visState}
+                isActive={visIsActive}
+                graphHeight={240}
+                strokeWidth={4}
+                yAxisLabel="mi"
+                currentIndex={item.id}
+              />
+              {/* <Graph
+              cityName={cityName}
+              state={visState}
+              isActive={visIsActive}
+              graphHeight={200}
+              strokeWidth={4}
+              yAxisLabel={""}
+              currentIndex={item.id}
+              apiObjectString={"vis_miles"}
+              domainBottom={0}
+              domainTop={10}
+              customColor="bgWhite"
+            /> */}
+            </GraphContainer>
+            <VisibilityModalDescription
+              data={data[cityName]}
+              currentIndex={item.id}
+            />
+          </>
+        ) : selectedModal === "humidity" ? (
+          <>
+            <GraphContainer
+              cityName={cityName}
+              state={humidityState}
+              isActive={humidityIsActive}
+              scrollInfoBold={humidityScrollInfoBold}
+              currentIndex={currentIndex}
+              leftSide={<HumidityLeftText data={data[cityName]} item={item} />}
+            >
+              <HumidityGraph
+                cityName={cityName}
+                state={humidityState}
+                isActive={humidityIsActive}
+                graphHeight={240}
+                strokeWidth={4}
+                yAxisLabel="%"
+                currentIndex={item.id}
+              />
+            </GraphContainer>
+            <HumidityModalDescription
+              data={data[cityName]}
+              currentIndex={item.id}
+            />
+          </>
         ) : (
           <View></View>
         )}
@@ -309,92 +528,12 @@ const Modal = ({
           data={flatlistRenderAmount}
           keyExtractor={keyExtractor}
           renderItem={renderItem}
+          scrollEnabled={!buttonScrollActiveRef.current}
+          onMomentumScrollEnd={() => {
+            buttonScrollActiveRef.current = false;
+          }}
         />
       </>
-
-      {/* <View className="px-4">
-        <View>
-          <ModalBoxTitle title="Total Rainfall" />
-
-          <ModalTextBoxContainer>
-            <View className="gap-y-2">
-              <DefaultText>Last 24 hours</DefaultText>
-              <View className="flex-row justify-between">
-                <DefaultText>Precipitation</DefaultText>
-                <DefaultText>0"</DefaultText>
-              </View>
-            </View>
-
-            <HorizontalLine />
-
-            <View className="gap-y-2">
-              <DefaultText>Last 24 hours</DefaultText>
-              <View className="flex-row justify-between">
-                <DefaultText>Precipitation</DefaultText>
-                <DefaultText>0"</DefaultText>
-              </View>
-            </View>
-          </ModalTextBoxContainer>
-        </View>
-
-        <View>
-          <ModalBoxTitle title="Forecast" />
-
-          <ModalTextBoxContainer>
-            <View className="text-balance ">
-              <DefaultText className="font-semibold">
-                Lorem, ipsum dolor sit amet consectetur adipisicing elit. Omnis,
-                illo harum cupiditate accusantium et voluptate nemo earum
-                placeat! Necessitatibus quibusdam saepe voluptate libero
-                doloremque quo dolores deleniti ab quam molestiae!
-              </DefaultText>
-            </View>
-          </ModalTextBoxContainer>
-        </View>
-
-        <View>
-          <ModalBoxTitle title="Compared to yesterday" />
-
-          <ModalTextBoxContainer removeHorizontalPadding>
-            <View className="gap-y-2 px-4">
-              <DefaultText>Today is hotter than yesterday</DefaultText>
-            </View>
-
-            <HorizontalLine />
-
-            <View className="gap-y-2 px-4">
-              <View className="flex-row ">
-                <DefaultText className="flex-[0.2]">Today</DefaultText>
-                <DefaultText className="flex-[0.8]">
-                  <View className="items-center w-full">
-                    <DefaultText>Progress Bar</DefaultText>
-                  </View>
-                </DefaultText>
-              </View>
-
-              <View className="flex-row justify-between">
-                <DefaultText className="flex-[0.2]">Yesterday</DefaultText>
-                <DefaultText className="flex-[0.8]">
-                  <View className="items-center w-full">
-                    <DefaultText>Progress Bar</DefaultText>
-                  </View>
-                </DefaultText>
-              </View>
-            </View>
-          </ModalTextBoxContainer>
-        </View>
-
-        <View>
-          <ModalBoxTitle title="Option" />
-
-          <ModalTextBoxContainer>
-            <View className="flex-row justify-between">
-              <DefaultText>Metric</DefaultText>
-              <DefaultText>Use system settings C°</DefaultText>
-            </View>
-          </ModalTextBoxContainer>
-        </View>
-      </View> */}
     </>
   );
 };

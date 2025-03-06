@@ -2,7 +2,7 @@ import { View, Text, Pressable, Image } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/assets/colors/colors";
-import { modalDropdownObjects, SelectModal } from "../utils/constants";
+import { modalDropdownObjects, SelectModal } from "../utils/modalConstants";
 
 interface ModalDropdownButtonProps {
   openModalDropdown: boolean;

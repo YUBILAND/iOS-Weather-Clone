@@ -7,6 +7,7 @@ import {
   Image,
   LinearGradient,
   vec,
+  Text,
 } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
@@ -19,18 +20,17 @@ import {
   Line,
   Scatter,
 } from "victory-native";
-import { getOddConditionImages } from "./utils/getOddConditionImages";
-import ToolTip from "./victoryComponents/Tooltip";
-import { getGraphData } from "./utils/getGraphData";
-import { getWeekMinTemp } from "./utils/getWeekMinTemp";
-import { getWeekMaxTemp } from "./utils/getWeekMaxTemp";
+import { getOddConditionImages } from "../hourly-forecast/utils/getOddConditionImages";
+import ToolTip from "../graphs/victoryComponents/Tooltip";
+import { getGraphData } from "../graphs/utils/getGraphData";
+import { getOddUVIndex } from "./utils/getOddUVIndex";
 
 interface TemperatureGraphProps {
   cityName: string;
   state: ChartPressState<{
     x: number;
     y: {
-      celsius: number;
+      uvIndex: number;
       currentLineTop: number;
       currentLineBottom: number;
       currentPosition: number;
@@ -43,7 +43,7 @@ interface TemperatureGraphProps {
   currentIndex: number;
 }
 
-const TemperatureGraph = ({
+const UVGraph = ({
   cityName,
   state,
   isActive,
@@ -57,27 +57,39 @@ const TemperatureGraph = ({
 
   const font = getFont();
 
-  const weekMaxTemp = getWeekMaxTemp(data[cityName]);
-  const weekMinTemp = getWeekMinTemp(data[cityName]);
+  const maxRange = 11;
+  const minRange = 0;
 
   const graphData = getGraphData(
     data[cityName],
-    weekMaxTemp,
-    weekMinTemp,
+    maxRange,
+    minRange,
     currentIndex,
-    "celsius",
-    "temp_c"
+    "uvIndex",
+    "uv"
   );
+
+  type curveType =
+    | "linear"
+    | "natural"
+    | "step"
+    | "bumpX"
+    | "bumpY"
+    | "cardinal"
+    | "cardinal50"
+    | "catmullRom"
+    | "catmullRom0"
+    | "catmullRom100"
+    | "monotoneX";
+
+  const lineShape: curveType = "linear";
 
   const cutoff = getCurrentHour(location!.tz_id);
 
-  const oddConditionImages = getOddConditionImages(
-    data[cityName],
-    currentIndex
-  );
+  const oddUVIndex = getOddUVIndex(data[cityName], currentIndex);
 
-  const areaColorTop = "rgba(124,197,227,0.4)";
-  const areaColorBottom = "rgba(124,197,227,0.2)";
+  const areaColorTop = "rgba(86, 244, 149, 0.4)";
+  const areaColorBottom = "rgba(81, 255, 115, 0.2)";
   const areaDarkTop = "rgba(0,0,0,0.2)";
   const areaDarkBottom = "rgba(0,0,0,0.3)";
 
@@ -87,7 +99,7 @@ const TemperatureGraph = ({
         data={graphData!}
         xKey="hour"
         yKeys={[
-          "celsius",
+          "uvIndex",
           "currentLineTop",
           "currentLineBottom",
           "currentPosition",
@@ -114,30 +126,29 @@ const TemperatureGraph = ({
             lineColor: colors.mediumGray,
           },
         ]}
-        domain={{ y: [weekMinTemp - 3, weekMaxTemp + 3] }}
+        domain={{ y: [minRange, maxRange] }}
         chartPressState={state}
       >
         {({ points, chartBounds }) => {
           // 👇 and we'll use the Line component to render a line path.
-          const leftPoints = points.celsius.filter(
+          const leftPoints = points.uvIndex.filter(
             (point) => (point.xValue! as number) <= cutoff
           ); // Left side (x <= 0)
-          const rightPoints = points.celsius.filter(
+          const rightPoints = points.uvIndex.filter(
             (point) => (point.xValue! as number) >= cutoff
           ); // Right side (x >= 0)
           return (
             <>
               {/* Top graph content */}
               <>
-                {oddConditionImages.map((img, index) => (
-                  <Image
+                {oddUVIndex.map((uv, index) => (
+                  <Text
+                    font={font}
                     key={index}
-                    image={img}
-                    fit="contain"
-                    x={5 + index * 25}
+                    x={10 + index * 25.5}
                     y={10}
-                    width={18}
-                    height={18}
+                    text={Math.round(uv).toString()}
+                    color={"white"}
                   />
                 ))}
               </>
@@ -145,16 +156,16 @@ const TemperatureGraph = ({
               {/* Right side of graph*/}
               <>
                 <Line
-                  points={currentIndex === 0 ? rightPoints : points.celsius}
-                  color={colors.blue}
+                  points={currentIndex === 0 ? rightPoints : points.uvIndex}
+                  color={colors.green}
                   strokeWidth={6}
-                  curveType="natural"
+                  curveType={lineShape}
                 />
                 <Area
-                  points={currentIndex === 0 ? rightPoints : points.celsius}
+                  points={currentIndex === 0 ? rightPoints : points.uvIndex}
                   y0={chartBounds.bottom}
                   animate={{ type: "timing", duration: 300 }}
-                  curveType="natural"
+                  curveType={lineShape}
                 >
                   <LinearGradient
                     start={vec(chartBounds.bottom, 150)}
@@ -166,14 +177,14 @@ const TemperatureGraph = ({
 
               {currentIndex === 0 && (
                 <>
-                  {/* Left side of graph*/}
+                  {/* Left side of graph DASHED LINE*/}
                   <>
                     <Line
                       points={leftPoints}
                       // color="rgba(124,197,227,0.5)"
-                      color={colors.blue}
+                      color={colors.green}
                       strokeWidth={6}
-                      curveType="natural"
+                      curveType={lineShape}
                     >
                       <DashPathEffect intervals={[10, 10]} />
                     </Line>
@@ -182,7 +193,7 @@ const TemperatureGraph = ({
                       y0={chartBounds.bottom}
                       // color="rgba(124,197,227,0.3)"
                       animate={{ type: "timing", duration: 300 }}
-                      curveType="natural"
+                      curveType={lineShape}
                     >
                       <LinearGradient
                         start={vec(chartBounds.bottom, 150)}
@@ -191,7 +202,6 @@ const TemperatureGraph = ({
                       />
                     </Area>
                   </>
-
                   {/* Vertical Line */}
                   <>
                     <Bar
@@ -218,7 +228,7 @@ const TemperatureGraph = ({
                       y0={chartBounds.top}
                       color={areaDarkTop}
                       animate={{ type: "timing", duration: 300 }}
-                      curveType="natural"
+                      curveType={lineShape}
                     />
 
                     <Area
@@ -226,7 +236,7 @@ const TemperatureGraph = ({
                       y0={chartBounds.bottom}
                       color={areaDarkBottom}
                       animate={{ type: "timing", duration: 300 }}
-                      curveType="natural"
+                      curveType={lineShape}
                     />
                   </>
 
@@ -252,7 +262,7 @@ const TemperatureGraph = ({
               )}
 
               {isActive ? (
-                <ToolTip x={state.x.position} y={state.y.celsius.position} />
+                <ToolTip x={state.x.position} y={state.y.uvIndex.position} />
               ) : null}
             </>
           );
@@ -262,4 +272,4 @@ const TemperatureGraph = ({
   );
 };
 
-export default TemperatureGraph;
+export default UVGraph;

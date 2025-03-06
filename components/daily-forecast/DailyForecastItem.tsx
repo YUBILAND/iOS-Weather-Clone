@@ -7,7 +7,7 @@ import {
 } from "@/constants/constants";
 import { getDate } from "@/hooks/hooks";
 import { weatherPNG } from "@/utils/exampleForecast";
-import React from "react";
+import React, { MutableRefObject } from "react";
 import { Image, Pressable, View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import RoundedTemperature from "../atoms/RoundedTemperature";
@@ -15,6 +15,7 @@ import ProgressBar from "../progress-bar/ProgressBar";
 import { getDailyTempArr } from "./utils/getDailyTempArr";
 import { getShortWeekday } from "./utils/getShortWeekday";
 import { getWeekTempArr } from "./utils/getWeekTempArr";
+import TemperatureBar from "../conditions/TemperatureBar";
 
 interface DailyForecastItemProp {
   data: WeatherData;
@@ -22,6 +23,7 @@ interface DailyForecastItemProp {
   index: number;
   showModal: () => void;
   setCurrentIndex: (index: number) => void;
+  openModalOnIndexRef: MutableRefObject<boolean>;
 }
 
 const DailyForecastItem = ({
@@ -30,6 +32,7 @@ const DailyForecastItem = ({
   index,
   showModal,
   setCurrentIndex,
+  openModalOnIndexRef,
 }: DailyForecastItemProp) => {
   const weekday = getShortWeekday(getDate(item?.date + "T00:00:00"));
 
@@ -41,6 +44,9 @@ const DailyForecastItem = ({
   const dailyHigh = Math.max(...dailyTempArr);
   const dailyLow = Math.min(...dailyTempArr);
 
+  const windyCountArr = item.hour.filter((hour) => hour.wind_mph >= 15);
+  const isWindyDay = windyCountArr.length > 12;
+
   return (
     <Pressable
       style={{
@@ -51,6 +57,7 @@ const DailyForecastItem = ({
       className="flex-row items-center w-full py-4 mr-4 gap-x-8"
       onPress={() => {
         setCurrentIndex(index);
+        openModalOnIndexRef.current = true;
         showModal();
       }}
     >
@@ -66,7 +73,11 @@ const DailyForecastItem = ({
         <Image
           source={
             weatherKey[
-              weatherPNG(item?.day.condition.text.toLowerCase() as WeatherType)
+              weatherPNG(
+                isWindyDay
+                  ? ("windy" as WeatherType)
+                  : (item?.day.condition.text.toLowerCase() as WeatherType)
+              )
             ]
           }
           className="h-8 w-8"
@@ -74,39 +85,17 @@ const DailyForecastItem = ({
       </View>
 
       {/* High and Low + Progress Bar */}
-      <View
-        className="flex-row justify-center items-center gap-x-4"
-        style={{ flex: 60 }}
-      >
-        {/* Daily Low */}
-        <View className=" " style={{ flex: 25 }}>
-          <RoundedTemperature
-            className="text-xl font-semibold "
-            temperature={Math.round(dailyLow)}
-            style={{ alignSelf: "flex-end", paddingRight: 5 }}
-          />
-        </View>
-
-        {/* Temperature Bar */}
-        <View style={{ flex: 50 }}>
-          <ProgressBar
-            weekHigh={weekHigh}
-            weekLow={weekLow}
-            dailyHigh={dailyHigh}
-            dailyLow={dailyLow}
-            currentTemperature={parseInt(data.current?.temp_c!)}
-            index={index}
-          />
-        </View>
-
-        {/* Daily High */}
-        <View style={{ flex: 20 }}>
-          <RoundedTemperature
-            className="text-xl font-semibold "
-            temperature={Math.round(dailyHigh)}
-            style={{ alignSelf: "flex-end" }}
-          />
-        </View>
+      <View style={{ flex: 60 }}>
+        <TemperatureBar
+          barWidth={100}
+          weekHigh={weekHigh}
+          weekLow={weekLow}
+          tempHigh={dailyHigh}
+          tempLow={dailyLow}
+          currentTemperature={
+            index === 0 ? parseFloat(data.current.temp_c) : undefined
+          }
+        />
       </View>
     </Pressable>
   );

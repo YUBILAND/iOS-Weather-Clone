@@ -12,7 +12,9 @@ export const getOddConditionImages = (
       return useImage(
         weatherKey[
           weatherPNG(
-            hour.condition.text.toLowerCase() as WeatherType,
+            hour.wind_mph >= 15
+              ? ("windy" as WeatherType)
+              : (hour.condition.text.toLowerCase() as WeatherType),
             hour.is_day
           )
         ]

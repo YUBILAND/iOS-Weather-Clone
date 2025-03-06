@@ -8,13 +8,15 @@ import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 import { getUVRating } from "./utils/getUVRating";
 import { getUVMessage } from "./utils/getUVMessage";
+import { FontAwesome } from "@expo/vector-icons";
 
 interface UVIndexCardProps {
   cityName: string;
   showModal: () => void;
+  iconSize: number;
 }
 
-const UVIndexCard = ({ cityName, showModal }: UVIndexCardProps) => {
+const UVIndexCard = ({ cityName, showModal, iconSize }: UVIndexCardProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { current } = data[cityName];
 
@@ -32,7 +34,7 @@ const UVIndexCard = ({ cityName, showModal }: UVIndexCardProps) => {
         }}
       >
         <View className="flex-row items-center  gap-x-2 opacity-40">
-          <CalendarDaysIcon size={22} color={"white"} />
+          <FontAwesome name="sun-o" size={iconSize} color={"white"} />
           <DefaultText className="text-base uppercase font-semibold">
             UV Index
           </DefaultText>

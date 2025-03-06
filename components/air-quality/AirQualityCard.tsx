@@ -12,7 +12,12 @@ import { getAQI } from "./utils/getAQI";
 import { getAQIRating } from "./utils/getAQIRating";
 import { getAQIMessage } from "./utils/getAQIMessage";
 
-const AirQualityCard = ({ cityName }: { cityName: string }) => {
+interface AirQualityCardProps {
+  cityName: string;
+  iconSize: number;
+}
+
+const AirQualityCard = ({ cityName, iconSize }: AirQualityCardProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { location, forecast, current } = data[cityName];
 
@@ -23,7 +28,7 @@ const AirQualityCard = ({ cityName }: { cityName: string }) => {
   return (
     <OpacityCard className="px-4 gap-y-2">
       <View className="flex-row items-center  gap-x-2 opacity-40">
-        <CalendarDaysIcon size={22} color={"white"} />
+        <CalendarDaysIcon size={iconSize} color={"white"} />
         <DefaultText className="text-base uppercase font-semibold">
           Air Quality
         </DefaultText>

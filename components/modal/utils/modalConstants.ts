@@ -7,7 +7,8 @@ export type SelectModal =
   | "humidity"
   | "visibility"
   | "airPressure"
-  | "sunPhase";
+  | "sunPhase"
+  | "moonPhase";
 
 export type IoniconName =
   | "cloudy-night-outline"
@@ -72,6 +73,11 @@ export const modalDropdownObjects: ModalDropdownObjectsType = {
   sunPhase: {
     label: "Sun Phase",
     id: 8,
+    imageName: "cloudy-night-outline",
+  },
+  moonPhase: {
+    label: "Moon Phase",
+    id: 9,
     imageName: "cloudy-night-outline",
   },
 };

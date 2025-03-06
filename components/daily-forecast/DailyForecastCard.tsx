@@ -1,5 +1,5 @@
 import { RootState } from "@/state/store";
-import React from "react";
+import React, { MutableRefObject } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { CalendarDaysIcon } from "react-native-heroicons/solid";
 import { useSelector } from "react-redux";
@@ -11,12 +11,16 @@ interface DailyForecastCardProps {
   cityName: string;
   showModal: () => void;
   setCurrentIndex: (index: number) => void;
+  openModalOnIndexRef: MutableRefObject<boolean>;
+  iconSize: number;
 }
 
 const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
   cityName,
   showModal,
   setCurrentIndex,
+  openModalOnIndexRef,
+  iconSize,
 }) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { forecast, current } = data[cityName];
@@ -25,7 +29,7 @@ const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
     <OpacityCard>
       <Pressable>
         <View className="flex-row items-center mx-5 gap-x-2 opacity-40 mb-2">
-          <CalendarDaysIcon size={22} color={"white"} />
+          <CalendarDaysIcon size={iconSize} color={"white"} />
           <DefaultText className="text-base uppercase font-semibold">
             10-Day Forecast
           </DefaultText>
@@ -46,6 +50,7 @@ const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
               index={index}
               showModal={showModal}
               setCurrentIndex={setCurrentIndex}
+              openModalOnIndexRef={openModalOnIndexRef}
             />
           ))}
         </ScrollView>

@@ -6,7 +6,7 @@ import {
   ModalDropdownObject,
   modalDropdownObjects,
   SelectModal,
-} from "../utils/constants";
+} from "../utils/modalConstants";
 import HorizontalLine from "../../atoms/HorizontalLine";
 
 interface ModalDropdownItemProps {

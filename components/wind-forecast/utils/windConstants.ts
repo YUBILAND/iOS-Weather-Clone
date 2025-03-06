@@ -1,3 +1,21 @@
+export type CompassDirections =
+  | "N"
+  | "NNE"
+  | "NE"
+  | "ENE"
+  | "E"
+  | "ESE"
+  | "SE"
+  | "SSE"
+  | "S"
+  | "SSW"
+  | "SW"
+  | "WSW"
+  | "W"
+  | "WNW"
+  | "NW"
+  | "NNW";
+
 const prefix = "../../../assets/icons/";
 
 type ArrowKey = {

@@ -29,6 +29,7 @@ type ConditionModalProps = {
   children: React.ReactNode;
   title: string;
   iconName: IconName;
+  backgroundColor?: string;
 };
 
 const ModalContainer = ({
@@ -37,6 +38,7 @@ const ModalContainer = ({
   children,
   title,
   iconName,
+  backgroundColor = colors.darkGray,
 }: ConditionModalProps) => {
   const screenHeight = Dimensions.get("window").height;
   const insets = useSafeAreaInsets();
@@ -47,7 +49,7 @@ const ModalContainer = ({
     <Modal animationType="slide" transparent={true} visible={modalVisible}>
       <SafeAreaView>
         <View
-          style={{ height: calculatedHeight, backgroundColor: colors.darkGray }}
+          style={{ height: calculatedHeight, backgroundColor: backgroundColor }}
         >
           <View className="flex-row items-center justify-between px-6 py-3">
             <ModalHeader closeModal={setModalVisible} title={title}>

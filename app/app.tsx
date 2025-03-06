@@ -114,20 +114,20 @@ const App = () => {
     );
   }
 
-  if (!cityData) {
-    return (
-      <View className="flex-1 relative">
-        <StatusBar style="light" />
-        <Image
-          blurRadius={70}
-          className="absolute h-full w-full"
-          source={require("../assets/images/bg.png")}
-        />
+  // if (!cityData) {
+  //   return (
+  //     <View className="flex-1 relative">
+  //       <StatusBar style="light" />
+  //       <Image
+  //         blurRadius={70}
+  //         className="absolute h-full w-full"
+  //         source={require("../assets/images/bg.png")}
+  //       />
 
-        <Text>No weather api data available</Text>
-      </View>
-    );
-  }
+  //       <Text>No weather api data available</Text>
+  //     </View>
+  //   );
+  // }
 
   const props = {
     handleTextDebounce,
