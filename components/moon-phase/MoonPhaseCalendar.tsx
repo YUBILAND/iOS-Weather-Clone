@@ -176,6 +176,16 @@ const MoonPhaseCalendar = ({ data }: MoonPhaseCalendarProps) => {
 
             [date]: {
               customStyles: {
+                container: {
+                  borderRadius: 10,
+                  backgroundColor:
+                    selected === date ? colors.bgBlue(0.6) : "transparent",
+
+                  // content: require("../../assets/images/windy.png"),
+                  content: "Hello",
+                  color: "white",
+                },
+
                 text: {
                   color: colors.bgBlue(1),
                 },

@@ -7,7 +7,8 @@ import { WeatherData } from "@/constants/constants";
 export const getScrolledDate = (
   data: WeatherData,
   offsetX: number,
-  tickPosition: SharedValue<number>
+  tickPosition: SharedValue<number>,
+  setUserScrolledIndex: (offset: number) => void
 ) => {
   const { totalTicks } = getTicksAmount();
 
@@ -24,6 +25,7 @@ export const getScrolledDate = (
     withinBounds;
   if (scrolledPastWhiteLine) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setUserScrolledIndex(offsetX / 120);
   }
   tickPosition.value = offsetX;
 

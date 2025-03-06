@@ -30,7 +30,7 @@ const MoonPhaseModalInfo = ({ data }: MoonPhaseModalInfoProps) => {
 
   const moonData = [
     {
-      title: "Moon Illumintaion",
+      title: "Moon Illumination",
       value: astroData.moon_illumination + "%",
     },
     {

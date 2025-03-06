@@ -135,13 +135,19 @@ const MoonPhaseModal = ({ cityName, nextPhaseTime }: MoonPhaseModalProps) => {
     TICKS_PER_DAY * OFFSETX_PER_TICK * daysSincePrevMonth
   );
 
+  // console.log(offsetX.value);
+
+  const [userScrolledIndex, setUserScrolledIndex] = useState(0);
+
   const handleHaptic = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     offsetX.value = event.nativeEvent.contentOffset.x;
     const scrollPosToDateString = getScrolledDate(
       data[cityName],
       offsetX.value,
-      tickPosition
+      tickPosition,
+      (offset: number) => setUserScrolledIndex(offset)
     );
+
     // sharedDate.value = scrollPosToDateString;
 
     // In this format ["Thu", " 3/6"]
@@ -168,6 +174,9 @@ const MoonPhaseModal = ({ cityName, nextPhaseTime }: MoonPhaseModalProps) => {
           isActive={isActive}
           graphHeight={250}
           strokeWidth={6}
+          offsetX={offsetX}
+          initialScrollPosition={TICKS_PER_DAY * daysSincePrevMonth * 10}
+          userScrolledIndex={userScrolledIndex}
         />
 
         {/* Date text */}
