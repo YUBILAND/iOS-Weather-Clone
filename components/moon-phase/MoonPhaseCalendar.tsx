@@ -1,9 +1,17 @@
-import { View, Text, Pressable, Image } from "react-native";
+import { View, Text, Pressable, Image, FlatList } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import { colors } from "@/assets/colors/colors";
-import React, { memo, useState } from "react";
+import React, {
+  memo,
+  MutableRefObject,
+  RefObject,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Calendar,
+  CalendarList,
   CalendarProvider,
   LocaleConfig,
 } from "react-native-calendars";
@@ -12,6 +20,11 @@ import { SharedValue } from "react-native-reanimated";
 import HorizontalLine from "../atoms/HorizontalLine";
 import { FontWeight } from "@shopify/react-native-skia";
 import { getTimeUntilNextFullMoonDate } from "./utils/getNextFullMoonDate";
+import { timeToDays } from "./utils/timeToDays";
+import { getDaysSincePrevMonth } from "./utils/getDaysSincePrevMonth";
+import { usePrevious } from "./utils/usePrevious";
+import { TICKS_PER_DAY } from "./utils/constants";
+import { getTicksAmount } from "./utils/getTicksAmount";
 
 const DayComponent = memo(
   ({
@@ -58,15 +71,21 @@ const DayComponent = memo(
 
 interface MoonPhaseCalendarProps {
   data: WeatherData;
+  currentCalendarDate: string;
+  userScrolledIndex: number;
+  flatlistRef: RefObject<FlatList>;
+  setUserScrolledIndex: (index: number) => void;
+  offsetX: SharedValue<number>;
 }
 
-const MoonPhaseCalendar = ({ data }: MoonPhaseCalendarProps) => {
-  const date = new Date().toLocaleDateString("en-CA", {
-    timeZone: data.location.tz_id,
-  });
-
-  const [selected, setSelected] = useState(date);
-
+const MoonPhaseCalendar = ({
+  data,
+  currentCalendarDate,
+  userScrolledIndex,
+  flatlistRef,
+  setUserScrolledIndex,
+  offsetX,
+}: MoonPhaseCalendarProps) => {
   const timeUntilNextFullMoonDate = Math.ceil(
     getTimeUntilNextFullMoonDate(data)
   );
@@ -104,46 +123,120 @@ const MoonPhaseCalendar = ({ data }: MoonPhaseCalendarProps) => {
     { title: "New Moon", value: newMoonDate + ` (${newMoonWeekday})` },
   ];
 
+  const calendarTheme = {
+    todayTextColor: "white",
+    backgroundColor: colors.mediumGray,
+    calendarBackground: colors.mediumGray,
+    textSectionTitleColor: "#b6c1cd",
+    textSectionTitleDisabledColor: "#d9e1e8",
+    selectedDayBackgroundColor: "#00adf5",
+    selectedDayTextColor: "#ffffff",
+    dayTextColor: "white",
+    dotColor: "#00adf5",
+    selectedDotColor: "#ffffff",
+    arrowColor: colors.lightGray,
+    disabledArrowColor: colors.bgBlack(0),
+    monthTextColor: "white",
+    indicatorColor: "blue",
+    textDayFontFamily: "monospace",
+    textMonthFontFamily: "monospace",
+    textDayHeaderFontFamily: "monospace",
+    textDayFontWeight: "600",
+    textMonthFontWeight: "bold",
+    textDayHeaderFontWeight: "300",
+    textDayFontSize: 16,
+    textMonthFontSize: 16,
+    textDayHeaderFontSize: 12,
+  };
+
+  const { whiteTicks } = getTicksAmount();
+
+  console.log(userScrolledIndex);
+
+  const scrolledToDate = Math.min(
+    Math.max(userScrolledIndex + 1, 1),
+    whiteTicks - 1
+  );
+
+  const dateDay =
+    scrolledToDate < 28
+      ? scrolledToDate
+      : scrolledToDate < 28 + 31
+      ? scrolledToDate - 28
+      : scrolledToDate - (28 + 31);
+
+  const month = scrolledToDate < 28 ? 2 : scrolledToDate < 28 + 31 ? 3 : 4;
+
+  const scrollToThis = new Date(2025, month - 1, dateDay).toLocaleDateString(
+    "en-CA",
+    {
+      timeZone: data.location.tz_id,
+    }
+  );
+  console.log(scrolledToDate);
+  const selectedRef = useRef(currentCalendarDate);
+
+  selectedRef.current = scrollToThis;
+
+  const handleDayPress = (day: { dateString: string; timestamp: number }) => {
+    const daysSincePrevMonthOfSelected = getDaysSincePrevMonth(
+      new Date(day.timestamp)
+    );
+    setUserScrolledIndex(daysSincePrevMonthOfSelected);
+    offsetX.value = daysSincePrevMonthOfSelected * 120;
+    flatlistRef.current?.scrollToIndex({
+      index: (daysSincePrevMonthOfSelected * 120) / 10,
+      animated: false,
+    });
+  };
+
+  type CalendarArrow = "left" | "right" | "none";
+  const disabledArrowRef = useRef<CalendarArrow>("none");
+  const selectedMonth = parseInt(selectedRef.current.split("-")[1]);
+  const accountForZeroIndex = 1;
+  const prevMonth = new Date().getUTCMonth() + accountForZeroIndex - 1;
+  const nextMonth = new Date().getUTCMonth() + accountForZeroIndex + 1;
+
+  const [disabledArrow, setDisabledArrow] = useState<CalendarArrow>("none");
+
+  const monthUserWasJustOn = usePrevious(selectedMonth);
+
+  useEffect(() => {
+    selectedMonth === prevMonth
+      ? setDisabledArrow("left")
+      : selectedMonth === nextMonth
+      ? setDisabledArrow("right")
+      : setDisabledArrow("none");
+  }, [selectedMonth]);
+
+  const handleMonthChange = (day: { month: number }) => {
+    day.month === prevMonth
+      ? setDisabledArrow("left")
+      : day.month === nextMonth
+      ? setDisabledArrow("right")
+      : setDisabledArrow("none");
+  };
+
   return (
     <>
-      <View className=" px-4">
+      <View className="px-4">
         <DefaultText
           className="uppercase font-semibold text-2xl pb-2 pl-2"
           style={{ letterSpacing: 2 }}
         >
           Calendar
         </DefaultText>
+
         <Calendar
+          disableArrowLeft={disabledArrow === "left"}
+          disableArrowRight={disabledArrow === "right"}
+          key={selectedRef.current.toString()}
+          current={selectedRef.current}
           hideExtraDays
           style={{ borderTopLeftRadius: 5, borderTopRightRadius: 5 }}
-          theme={{
-            todayTextColor: "white",
-            backgroundColor: colors.mediumGray,
-            calendarBackground: colors.mediumGray,
-            textSectionTitleColor: "#b6c1cd",
-            textSectionTitleDisabledColor: "#d9e1e8",
-            selectedDayBackgroundColor: "#00adf5",
-            selectedDayTextColor: "#ffffff",
-            dayTextColor: "white",
-            dotColor: "#00adf5",
-            selectedDotColor: "#ffffff",
-            arrowColor: colors.lightGray,
-            disabledArrowColor: "#d9e1e8",
-            monthTextColor: "white",
-            indicatorColor: "blue",
-            textDayFontFamily: "monospace",
-            textMonthFontFamily: "monospace",
-            textDayHeaderFontFamily: "monospace",
-            textDayFontWeight: "600",
-            textMonthFontWeight: "bold",
-            textDayHeaderFontWeight: "300",
-            textDayFontSize: 16,
-            textMonthFontSize: 16,
-            textDayHeaderFontSize: 12,
-          }}
-          onDayPress={(day: { dateString: any }) => {
-            setSelected(day.dateString);
-          }}
+          theme={calendarTheme}
+          onDayPress={handleDayPress}
+          onMonthChange={handleMonthChange}
           // dayComponent={({ date }: { date: { dateString: string } }) => (
           //   <DayComponent
           //     dateString={date.dateString}
@@ -153,14 +246,14 @@ const MoonPhaseCalendar = ({ data }: MoonPhaseCalendarProps) => {
           // )}
           markingType={"custom"}
           markedDates={{
-            [selected]: {
+            [selectedRef.current]: {
               selected: true,
               disableTouchEvent: true,
               customStyles: {
                 container: {
                   borderRadius: 10,
                   backgroundColor:
-                    selected === date
+                    selectedRef.current === currentCalendarDate
                       ? colors.bgBlue(0.6)
                       : colors.bgWhite(0.4),
                   // content: require("../../assets/images/windy.png"),
@@ -168,18 +261,23 @@ const MoonPhaseCalendar = ({ data }: MoonPhaseCalendarProps) => {
                   color: "white",
                 },
                 text: {
-                  color: selected === date ? colors.bgBlue(1) : "white",
+                  color:
+                    selectedRef.current === currentCalendarDate
+                      ? colors.bgBlue(1)
+                      : "white",
                   fontWeight: "bold",
                 },
               },
             },
 
-            [date]: {
+            [currentCalendarDate]: {
               customStyles: {
                 container: {
                   borderRadius: 10,
                   backgroundColor:
-                    selected === date ? colors.bgBlue(0.6) : "transparent",
+                    selectedRef.current === currentCalendarDate
+                      ? colors.bgBlue(0.6)
+                      : "transparent",
 
                   // content: require("../../assets/images/windy.png"),
                   content: "Hello",
@@ -192,10 +290,9 @@ const MoonPhaseCalendar = ({ data }: MoonPhaseCalendarProps) => {
               },
             },
           }}
-        />
+        ></Calendar>
         <HorizontalLine />
         <View
-          className=""
           style={{
             backgroundColor: colors.mediumGray,
             borderBottomLeftRadius: 5,

@@ -30,6 +30,7 @@ type ConditionModalProps = {
   title: string;
   iconName: IconName;
   backgroundColor?: string;
+  putMoonHere?: React.ReactNode;
 };
 
 const ModalContainer = ({
@@ -39,6 +40,7 @@ const ModalContainer = ({
   title,
   iconName,
   backgroundColor = colors.darkGray,
+  putMoonHere,
 }: ConditionModalProps) => {
   const screenHeight = Dimensions.get("window").height;
   const insets = useSafeAreaInsets();
@@ -56,6 +58,9 @@ const ModalContainer = ({
               <FontAwesome name={iconName} color="white" size={22} />
             </ModalHeader>
           </View>
+
+          <View>{putMoonHere}</View>
+
           <ScrollView showsVerticalScrollIndicator={false}>
             <View className="pb-16">{children}</View>
           </ScrollView>

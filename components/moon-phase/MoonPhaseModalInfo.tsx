@@ -55,12 +55,12 @@ const MoonPhaseModalInfo = ({ data }: MoonPhaseModalInfoProps) => {
     <View className="mb-4" style={{ backgroundColor: "black" }}>
       {moonData.map((item, ind) => (
         <React.Fragment key={ind}>
-          <View className="flex-row justify-between py-4 px-4">
-            <DefaultText className="font-semibold " style={{ fontSize: 16 }}>
+          <View className="flex-row justify-between py-3 px-4">
+            <DefaultText className="font-semibold " style={{ fontSize: 14 }}>
               {item.title}
             </DefaultText>
 
-            <DefaultText style={{ color: colors.lightGray, fontSize: 16 }}>
+            <DefaultText style={{ color: colors.lightGray, fontSize: 14 }}>
               {item.value}
             </DefaultText>
           </View>

@@ -1,4 +1,8 @@
-import { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
+import {
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Vibration,
+} from "react-native";
 import { getTicksAmount } from "./getTicksAmount";
 import { SharedValue } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -16,20 +20,22 @@ export const getScrolledDate = (
   const currentMonth = new Date().getMonth();
   startingDate = new Date(2025, currentMonth - 1, 1);
 
+  const distance = 120;
+
   //  add 1 to bounds so that haptic works on both directions
   const withinBounds =
-    Math.floor(offsetX / 120) >= -1 &&
-    Math.floor(offsetX / 120) <= (totalTicks - 1) / 12 + 1;
+    Math.floor(offsetX / distance) >= -1 &&
+    Math.floor(offsetX / distance) <= (totalTicks - 1) / 12 + 1;
   const scrolledPastWhiteLine =
-    Math.floor(offsetX / 120) !== Math.floor(tickPosition.value / 120) &&
-    withinBounds;
+    Math.floor(offsetX / distance) !==
+      Math.floor(tickPosition.value / distance) && withinBounds;
   if (scrolledPastWhiteLine) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setUserScrolledIndex(offsetX / 120);
+    setUserScrolledIndex(Math.floor(offsetX / distance));
   }
   tickPosition.value = offsetX;
 
-  const scrollPosInDays = Math.floor(Math.floor(offsetX) / 120);
+  const scrollPosInDays = Math.floor(Math.floor(offsetX) / distance);
 
   const leftScrollBound = Math.min(scrollPosInDays, (totalTicks - 1) / 12);
 

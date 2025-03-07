@@ -1,5 +1,13 @@
-import { View, Text, Animated, TextInput, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  Animated,
+  TextInput,
+  Pressable,
+  FlatList,
+} from "react-native";
 import React, {
+  RefObject,
   useCallback,
   useEffect,
   useMemo,
@@ -50,19 +58,20 @@ import Cursor from "../graphs/victoryComponents/Cursor";
 import ToolTip from "../graphs/victoryComponents/Tooltip";
 import MoonSVG from "./MoonSVG";
 import { SvgXml } from "react-native-svg";
+import { getMoonGraphLumin } from "./utils/getMoonGraphLumin";
+import { getMoonRotationDegress } from "./utils/getMoonRotationDegrees";
+import { MoonPhase } from "./utils/constants";
+import { getRemoveAnimationRef } from "./utils/getRemoveAnimationRef";
+import { getMoonPhaseGraphData } from "./utils/getMoonPhaseGraphData";
 
 const MoonPhaseGraph = ({
   cityName,
   state,
-  isActive,
   graphHeight,
-  removePress = false,
-  strokeWidth,
-  addBackground = false,
   addLines = false,
-  offsetX,
   initialScrollPosition,
   userScrolledIndex,
+  currentPhase,
 }: {
   cityName: string;
   state: ChartPressState<{
@@ -73,139 +82,43 @@ const MoonPhaseGraph = ({
       phaseLine: number;
     };
   }>;
-  isActive: boolean;
   graphHeight: number;
-  removePress?: boolean;
-  strokeWidth: number;
-  addBackground?: boolean;
   addLines?: boolean;
-  offsetX: SharedValue<number>;
   initialScrollPosition: number;
   userScrolledIndex: number;
+  currentPhase: MoonPhase;
 }) => {
   const font = useFont(SpaceMono, 12);
 
   const { data } = useSelector((state: RootState) => state.weather);
-  const { forecast, current, location } = data[cityName];
-
-  const moonriseTime = forecast?.forecastday[0].astro.moonrise;
-  const moonsetTime = forecast?.forecastday[0].astro.moonset;
-  const currentMoonIllumination =
-    forecast?.forecastday[0].astro.moon_illumination;
-
-  const startingMoonIllumination =
-    (parseInt(currentMoonIllumination) / 100) * 15;
-
-  function getMoonGraphIllumination(x: number) {
-    const amplitude = 50;
-    const xOffset = 3;
-    const period = 4.6;
-    const cutoff = 15;
-
-    // Parabolic formula to calculate y
-
-    // JS modulo can't handle negative, -1 % 15 should be 14 but gives -1
-    const handleNegativeModulo =
-      (((x + startingMoonIllumination) % cutoff) + cutoff) % cutoff;
-    let y =
-      amplitude * Math.cos(handleNegativeModulo / period + xOffset) + amplitude;
-
-    // Apply bounds to ensure y stays between 0 and 100
-    if (y > 100) y = 100;
-    if (y < 0) y = 0;
-
-    return y;
-  }
-
-  const MoonPhaseData = useMemo(
-    () =>
-      Array(30)
-        .fill(0)
-        .map((_, index) => {
-          // const A = (100 - 2 * generateYValue(userScrolledIndex)) / 100; // amplitude
-
-          // range is [-10, 10] for graph
-          const A =
-            -10 +
-            (getMoonGraphIllumination(
-              userScrolledIndex - initialScrollPosition / 120
-            ) /
-              100) *
-              20; // amplitude
-
-          const r = 8;
-          const a = 0;
-          const x = index - 15;
-
-          return {
-            day: x,
-            // moonPath: A * r * Math.cos(x / r) + a,
-            moonPath: -A * Math.pow(Math.cos((x * Math.PI) / (2 * r)), 1 / 2.2),
-
-            // moonPathTop: -r * Math.acos(x / (A * r)) + a,
-            // moonPathBottom
-
-            sunPosition: 0,
-            phaseLine: 0,
-          };
-        }),
-    [userScrolledIndex]
-  );
 
   const image = useImage(require("../../assets/images/moon.png"));
-
   const MOON_IMAGE_SIZE = 200;
-
   // Graph overflows a bit on the right so when rotated is offset to the right. Add some right padding to recenter it
   const GRAPH_PADDING_TO_RECENTER = 12;
 
+  const moonGraphLumin = getMoonGraphLumin(
+    data[cityName],
+    userScrolledIndex - initialScrollPosition / 120
+  );
+
+  const MoonPhaseData = useMemo(() => {
+    return getMoonPhaseGraphData(moonGraphLumin);
+  }, [moonGraphLumin]);
+
   // Remove Animation when transitioning in reverse to prevent flicker
+  const removeAnimationRef = getRemoveAnimationRef(currentPhase);
 
-  const currentPhaseIndex = Math.abs(
-    Math.floor(
-      (userScrolledIndex -
-        initialScrollPosition / 120 +
-        startingMoonIllumination) /
-        15
-    ) % 2
-  );
-
-  const prevRef = useRef(currentPhaseIndex);
-  const removeAnimationRef = useRef(false);
-  // Store previous value to compare when chart area changes sides, then remove animation
-
-  if (prevRef.current !== currentPhaseIndex) {
-    removeAnimationRef.current = true;
-  } else {
-    removeAnimationRef.current = false;
-  }
-  prevRef.current = currentPhaseIndex;
-  // console.log(currentPhaseIndex);
-
-  const moonGraphIllumination = Math.round(
-    getMoonGraphIllumination(userScrolledIndex - initialScrollPosition / 120)
-  );
-
-  const waxingIndex = 0;
-
-  const moonRotation =
-    90 +
-    ((currentPhaseIndex === waxingIndex
-      ? moonGraphIllumination
-      : 100 - moonGraphIllumination) /
-      100) *
-      20;
-  console.log(moonRotation);
+  const moonRotation = getMoonRotationDegress(currentPhase, moonGraphLumin);
 
   return (
     <>
       {/* Chart */}
-
-      <View className="w-full h-20 items-center">
+      <View className="absolute w-full items-start">
         <DefaultText className="font-bold text-4xl">
-          {currentPhaseIndex === waxingIndex
-            ? moonGraphIllumination + "%"
-            : 100 - moonGraphIllumination + "%"}
+          {currentPhase === "waxing"
+            ? Math.round(moonGraphLumin) + "%"
+            : 100 - Math.round(moonGraphLumin) + "%"}
         </DefaultText>
       </View>
 
@@ -250,23 +163,13 @@ const MoonPhaseGraph = ({
                     <SkiaImage
                       image={image}
                       rect={{
-                        // x: 203 - size / 2,
-                        // y: graphHeight / 2 - 0 - size / 2,
                         x: canvasSize.width / 2 + 8 - MOON_IMAGE_SIZE / 2,
                         y: canvasSize.height / 2 - 4 - MOON_IMAGE_SIZE / 2,
                         width: MOON_IMAGE_SIZE,
                         height: MOON_IMAGE_SIZE,
                       }}
-                      // origin={{
-                      //   x: canvasSize.width / 2 + 8,
-                      //   y: canvasSize.height / 2 - 4,
-                      // }}
-                      // transform={[{ rotate: 10 }]}
                     />
-                    {/* Sun Path */}
                     <>
-                      {/* Night time left side */}
-
                       {/* <Line
                         points={points.moonPath}
                         color={colors.bgWhite(0.5)}
@@ -277,7 +180,7 @@ const MoonPhaseGraph = ({
                       <Area
                         points={points.moonPath}
                         y0={
-                          currentPhaseIndex === waxingIndex
+                          currentPhase === "waxing"
                             ? chartBounds.bottom
                             : chartBounds.top
                         }

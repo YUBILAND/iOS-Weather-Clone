@@ -1,7 +1,7 @@
 import { Location } from "@/constants/constants";
 import { RootState } from "@/state/store";
-import React, { RefObject, useRef, useState } from "react";
-import { ScrollView, TextInput, View } from "react-native";
+import React, { RefObject, useMemo, useRef, useState } from "react";
+import { FlatList, ScrollView, TextInput, View } from "react-native";
 import { useSelector } from "react-redux";
 import AirQualityCard from "./air-quality/AirQualityCard";
 import HighsAndLows from "./atoms/HighsAndLows";
@@ -33,6 +33,19 @@ import HumidityCard from "./humidity/HumidityCard";
 import MoonPhaseCard from "./moon-phase/MoonPhaseCard";
 import MoonPhaseModal from "./moon-phase/MoonPhaseModal";
 import { colors } from "@/assets/colors/colors";
+import MoonPhaseGraph from "./moon-phase/MoonPhaseGraph";
+import { Ionicons } from "@expo/vector-icons";
+import { useChartPressState } from "victory-native";
+import Animated, {
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+} from "react-native-reanimated";
+import { OFFSETX_PER_TICK, TICKS_PER_DAY } from "./moon-phase/utils/constants";
+import { getCurrentMoonPhase } from "./moon-phase/utils/getCurrentMoonPhase";
+import { getDaysSincePrevMonth } from "./moon-phase/utils/getDaysSincePrevMonth";
+
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 export interface WeatherAtLocationProps {
   handleTextDebounce: (value: string) => void;
@@ -75,6 +88,49 @@ const WeatherAtLocation = ({
   const openModalOnIndexRef = useRef<boolean>(false);
 
   const iconSize = 18;
+
+  const { state } = useChartPressState({
+    x: 0,
+    y: { moonPath: 0, sunPosition: 0, phaseLine: 0 },
+  });
+
+  const sharedDate = useSharedValue("");
+
+  const scrolledDate = useAnimatedProps(() => {
+    const position = `${sharedDate.value}`;
+    return {
+      text: position,
+      value: position,
+    };
+  });
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      fontSize: 30,
+      color: "white",
+      fontWeight: 800,
+      width: 200,
+      marginLeft: 100,
+    };
+  });
+
+  const daysSincePrevMonth = useMemo(() => getDaysSincePrevMonth(), []);
+
+  const initialScrollPosition = TICKS_PER_DAY * daysSincePrevMonth * 10;
+  const initialScrollIndex = initialScrollPosition / 120;
+
+  const flatlistRef = useRef<FlatList>(null);
+
+  const offsetX = useSharedValue(
+    TICKS_PER_DAY * OFFSETX_PER_TICK * daysSincePrevMonth
+  );
+
+  const [userScrolledIndex, setUserScrolledIndex] = useState(0);
+
+  const currentMoonPhase = getCurrentMoonPhase(
+    data[cityName],
+    userScrolledIndex,
+    initialScrollIndex
+  );
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="w-screen">
@@ -138,8 +194,83 @@ const WeatherAtLocation = ({
             title={"Moon Phase"}
             iconName="moon-o"
             backgroundColor={colors.darkGray}
+            putMoonHere={
+              <View style={{ backgroundColor: "black", paddingBottom: 4 }}>
+                <MoonPhaseGraph
+                  cityName={cityName}
+                  state={state}
+                  graphHeight={250}
+                  initialScrollPosition={initialScrollPosition}
+                  userScrolledIndex={userScrolledIndex}
+                  currentPhase={currentMoonPhase}
+                />
+
+                <View className="w-full flex-row items-center h-12">
+                  <View style={{ flex: 20, alignItems: "center" }}>
+                    {userScrolledIndex >= initialScrollIndex + 3 && (
+                      <Ionicons
+                        name="arrow-back-circle-outline"
+                        size={40}
+                        color={colors.bgBlue(1)}
+                        onPress={() => {
+                          setUserScrolledIndex(Math.floor(initialScrollIndex));
+                          offsetX.value = initialScrollPosition;
+                          flatlistRef.current?.scrollToIndex({
+                            index: initialScrollPosition / 10,
+                            animated: false,
+                          });
+                        }}
+                      />
+                    )}
+                  </View>
+
+                  <View
+                    style={{ flex: 60 }}
+                    className="flex-row justify-center"
+                  >
+                    <AnimatedTextInput
+                      editable={false}
+                      underlineColorAndroid={"transparent"}
+                      style={animatedStyle}
+                      animatedProps={scrolledDate}
+                    />
+                  </View>
+
+                  <View style={{ flex: 20, alignItems: "center" }}>
+                    {userScrolledIndex <= initialScrollIndex - 3 && (
+                      <Ionicons
+                        name="arrow-forward-circle-outline"
+                        size={40}
+                        color={colors.bgBlue(1)}
+                        onPress={() => {
+                          setUserScrolledIndex(
+                            Math.floor(initialScrollPosition / 120)
+                          );
+                          offsetX.value = initialScrollPosition;
+                          flatlistRef.current?.scrollToIndex({
+                            index: initialScrollPosition / 10,
+                            animated: false,
+                          });
+                        }}
+                      />
+                    )}
+                  </View>
+                </View>
+              </View>
+            }
           >
-            <MoonPhaseModal cityName={cityName} nextPhaseTime={nextPhaseTime} />
+            <MoonPhaseModal
+              cityName={cityName}
+              flatlistRef={flatlistRef}
+              sharedDate={sharedDate}
+              offsetX={offsetX}
+              userScrolledIndex={userScrolledIndex}
+              setUserScrolledIndex={(index: number) =>
+                setUserScrolledIndex(index)
+              }
+              currentMoonPhase={currentMoonPhase}
+              daysSincePrevMonth={daysSincePrevMonth}
+            />
           </ModalContainer>
         ) : (
           <ModalContainer

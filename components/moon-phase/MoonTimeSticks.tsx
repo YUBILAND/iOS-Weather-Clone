@@ -16,10 +16,11 @@ const MoonTimeSticks = ({
 }) => {
   return (
     <View
-      className=" w-0 h-8 mb-12 relative "
+      className="h-8 mb-12 relative "
       style={{
-        borderWidth: 1,
-        borderColor: item.id % 12 === 0 ? "white" : colors.mediumGray,
+        width: item.id === arrLength - 1 ? 0 : 10,
+        borderWidth: 2,
+        borderLeftColor: item.id % 12 === 0 ? "white" : colors.mediumGray,
       }}
     >
       {/* {item.id % 12 === 0 && item.id < arrLength - 1 && (
@@ -29,11 +30,11 @@ const MoonTimeSticks = ({
       )} */}
 
       {item.id % 12 === 0 && Math.floor(item.id / 12) === daysSincePrevMonth ? (
-        <View className="absolute bottom-[-30px] left-12">
+        <View className="absolute bottom-[-30px] left-12 w-20">
           <DefaultText className="font-semibold">Today</DefaultText>
         </View>
       ) : item.id % 12 === 0 && item.id < arrLength - 1 ? (
-        <View className="absolute bottom-[-30px] left-12">
+        <View className="absolute bottom-[-30px] left-12 w-20">
           <DefaultText className="">{item.weekday}</DefaultText>
         </View>
       ) : (
