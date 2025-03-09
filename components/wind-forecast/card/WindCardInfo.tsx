@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import React from "react";
 import WindCardInfoItem from "./WindCardInfoItem";
-import HorizontalLine from "../atoms/HorizontalLine";
+import HorizontalLine from "../../atoms/HorizontalLine";
 import { WeatherData } from "@/constants/constants";
 
 interface WindCardInfoProps {
@@ -13,15 +13,15 @@ const WindCardInfo = ({ data }: WindCardInfoProps) => {
   const maxWindSpeed = Math.round(
     Math.max(
       ...data.forecast.forecastday[0].hour.map((hour) => {
-        return hour.wind_mph;
+        return hour.gust_mph;
       })
     )
   );
   return (
     <View className="">
-      <WindCardInfoItem windSpeed={windSpeed} measurement={"wind"} />
+      <WindCardInfoItem windSpeed={windSpeed} measurement={"Wind Speed"} />
       <HorizontalLine />
-      <WindCardInfoItem windSpeed={maxWindSpeed} measurement={"max wind"} />
+      <WindCardInfoItem windSpeed={maxWindSpeed} measurement={"Max Gust"} />
     </View>
   );
 };

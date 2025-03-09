@@ -11,6 +11,8 @@ import getFont from "@/hooks/getFont";
 import { getAQI } from "./utils/getAQI";
 import { getAQIRating } from "./utils/getAQIRating";
 import { getAQIMessage } from "./utils/getAQIMessage";
+import CardTitle from "../atoms/CardTitle";
+import CardBottomText from "../atoms/CardBottomText";
 
 interface AirQualityCardProps {
   cityName: string;
@@ -27,12 +29,11 @@ const AirQualityCard = ({ cityName, iconSize }: AirQualityCardProps) => {
 
   return (
     <OpacityCard className="px-4 gap-y-2">
-      <View className="flex-row items-center  gap-x-2 opacity-40">
-        <CalendarDaysIcon size={iconSize} color={"white"} />
-        <DefaultText className="text-base uppercase font-semibold">
-          Air Quality
-        </DefaultText>
-      </View>
+      <CardTitle
+        title={"Air Quality"}
+        icon={<CalendarDaysIcon size={iconSize} color={"white"} />}
+      />
+
       <DefaultText className="text-4xl font-semibold">{AQI}</DefaultText>
       <DefaultText className="text-xl font-semibold">{rating}</DefaultText>
 
@@ -53,7 +54,7 @@ const AirQualityCard = ({ cityName, iconSize }: AirQualityCardProps) => {
         locationsArr={[0.05, 0.2, 0.3, 0.4, 0.5, 0.8, 1]}
       />
 
-      <DefaultText className="pt-2">{message}</DefaultText>
+      <CardBottomText className="pt-2" text={message} />
     </OpacityCard>
   );
 };

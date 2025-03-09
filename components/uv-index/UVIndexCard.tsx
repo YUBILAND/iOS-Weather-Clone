@@ -9,6 +9,8 @@ import OpacityCard from "../atoms/OpacityCard";
 import { getUVRating } from "./utils/getUVRating";
 import { getUVMessage } from "./utils/getUVMessage";
 import { FontAwesome } from "@expo/vector-icons";
+import CardTitle from "../atoms/CardTitle";
+import CardBottomText from "../atoms/CardBottomText";
 
 interface UVIndexCardProps {
   cityName: string;
@@ -33,12 +35,11 @@ const UVIndexCard = ({ cityName, showModal, iconSize }: UVIndexCardProps) => {
           showModal();
         }}
       >
-        <View className="flex-row items-center  gap-x-2 opacity-40">
-          <FontAwesome name="sun-o" size={iconSize} color={"white"} />
-          <DefaultText className="text-base uppercase font-semibold">
-            UV Index
-          </DefaultText>
-        </View>
+        <CardTitle
+          title={"UV Index"}
+          icon={<FontAwesome name="sun-o" size={iconSize} color={"white"} />}
+        />
+
         <DefaultText
           className="font-semibold"
           style={{ fontSize: 30, lineHeight: 30 }}
@@ -61,7 +62,7 @@ const UVIndexCard = ({ cityName, showModal, iconSize }: UVIndexCardProps) => {
           locationsArr={[0, 0.3, 0.6, 0.8, 1]}
         />
 
-        <DefaultText>{message}</DefaultText>
+        <CardBottomText className="pt-2" text={message} />
       </Pressable>
     </OpacityCard>
   );

@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import React from "react";
+import React, { memo } from "react";
 import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
 import { colors } from "@/assets/colors/colors";
@@ -13,7 +13,7 @@ interface MoonPhaseModalInfoProps {
   data: WeatherData;
 }
 
-const MoonPhaseModalInfo = ({ data }: MoonPhaseModalInfoProps) => {
+const MoonPhaseModalInfo = memo(({ data }: MoonPhaseModalInfoProps) => {
   const astroData = data.forecast.forecastday[0].astro;
   const daysUntilFullMoon = getTimeUntilNextFullMoonDate(data);
 
@@ -69,6 +69,6 @@ const MoonPhaseModalInfo = ({ data }: MoonPhaseModalInfoProps) => {
       ))}
     </View>
   );
-};
+});
 
 export default MoonPhaseModalInfo;

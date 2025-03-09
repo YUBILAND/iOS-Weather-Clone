@@ -46,11 +46,14 @@ const WindLeftText = ({ data, item }: WindLeftTextProps) => {
             gap: 8,
           }}
         >
-          <DefaultText className="text-4xl">
+          <DefaultText
+            className="text-4xl"
+            style={{ color: colors.bgWhite(0.4) }}
+          >
             {item.id === 0 ? currentWindDirection : dailyWindSpeedRange}
           </DefaultText>
 
-          <DefaultText className="text-2xl font-semibold">
+          <DefaultText className="text-4xl font-semibold">
             {item.id === 0 && currentWindSpeed + "mph"}
           </DefaultText>
         </View>

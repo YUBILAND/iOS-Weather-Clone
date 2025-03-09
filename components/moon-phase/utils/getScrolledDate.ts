@@ -7,6 +7,7 @@ import { getTicksAmount } from "./getTicksAmount";
 import { SharedValue } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { WeatherData } from "@/constants/constants";
+import { TICKS_PER_DAY } from "./constants";
 
 export const getScrolledDate = (
   data: WeatherData,
@@ -25,7 +26,7 @@ export const getScrolledDate = (
   //  add 1 to bounds so that haptic works on both directions
   const withinBounds =
     Math.floor(offsetX / distance) >= -1 &&
-    Math.floor(offsetX / distance) <= (totalTicks - 1) / 12 + 1;
+    Math.floor(offsetX / distance) <= (totalTicks - 1) / TICKS_PER_DAY + 1;
   const scrolledPastWhiteLine =
     Math.floor(offsetX / distance) !==
       Math.floor(tickPosition.value / distance) && withinBounds;
@@ -33,11 +34,15 @@ export const getScrolledDate = (
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setUserScrolledIndex(Math.floor(offsetX / distance));
   }
+
   tickPosition.value = offsetX;
 
   const scrollPosInDays = Math.floor(Math.floor(offsetX) / distance);
 
-  const leftScrollBound = Math.min(scrollPosInDays, (totalTicks - 1) / 12);
+  const leftScrollBound = Math.min(
+    scrollPosInDays,
+    (totalTicks - 1) / TICKS_PER_DAY
+  );
 
   const leftAndRightScrollBound = Math.max(leftScrollBound, 0);
 

@@ -14,7 +14,7 @@ import HourlyForecast from "./hourly-forecast/HourlyForecastCard";
 import SunPhaseCard from "./sun-phase/SunPhaseCard";
 import UVIndexCard from "./uv-index/UVIndexCard";
 import DropdownComponent from "./modal/dropdown/DropdownComponent";
-import WindCard from "./wind-forecast/WindCard";
+import WindCard from "./wind-forecast/card/WindCard";
 import DailyForecastCard from "./daily-forecast/DailyForecastCard";
 import HourlyForecastCard from "./hourly-forecast/HourlyForecastCard";
 import ModalContainer from "./modal/ModalContainer";
@@ -44,6 +44,9 @@ import Animated, {
 import { OFFSETX_PER_TICK, TICKS_PER_DAY } from "./moon-phase/utils/constants";
 import { getCurrentMoonPhase } from "./moon-phase/utils/getCurrentMoonPhase";
 import { getDaysSincePrevMonth } from "./moon-phase/utils/getDaysSincePrevMonth";
+import TwoCards from "./atoms/TwoCards";
+import CardTitle from "./atoms/CardTitle";
+import DefaultText from "./atoms/DefaultText";
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -74,7 +77,7 @@ const WeatherAtLocation = ({
 
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const currentIndexRef = useRef<number>(0);
-  const [selectedModal, setSelectedModal] = useState<SelectModal>("moonPhase");
+  const [selectedModal, setSelectedModal] = useState<SelectModal | null>(null);
 
   const { americanTime } = useSelector((state: RootState) => state.settings);
 
@@ -116,7 +119,7 @@ const WeatherAtLocation = ({
   const daysSincePrevMonth = useMemo(() => getDaysSincePrevMonth(), []);
 
   const initialScrollPosition = TICKS_PER_DAY * daysSincePrevMonth * 10;
-  const initialScrollIndex = initialScrollPosition / 120;
+  const initialScrollIndex = initialScrollPosition / 10;
 
   const flatlistRef = useRef<FlatList>(null);
 
@@ -124,13 +127,20 @@ const WeatherAtLocation = ({
     TICKS_PER_DAY * OFFSETX_PER_TICK * daysSincePrevMonth
   );
 
-  const [userScrolledIndex, setUserScrolledIndex] = useState(0);
+  const [userScrolledIndex, setUserScrolledIndex] =
+    useState(initialScrollIndex);
 
   const currentMoonPhase = getCurrentMoonPhase(
     data[cityName],
     userScrolledIndex,
     initialScrollIndex
   );
+
+  const showThisModal = (modalName: SelectModal) => {
+    setSelectedModal(modalName);
+    setCurrentIndex(0);
+    setModalVisible(true);
+  };
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="w-screen">
@@ -167,10 +177,12 @@ const WeatherAtLocation = ({
 
           <HighsAndLows
             high={
-              forecast?.forecastday[0].day.maxtemp_c.toString() ?? "undefined"
+              Math.round(forecast?.forecastday[0].day.maxtemp_c).toString() ??
+              "undefined"
             }
             low={
-              forecast?.forecastday[0].day.mintemp_c.toString() ?? "undefined"
+              Math.round(forecast?.forecastday[0].day.mintemp_c).toString() ??
+              "undefined"
             }
             className="flex-row gap-x-2 justify-center items-center "
             textClasses="text-2xl font-semibold"
@@ -195,15 +207,27 @@ const WeatherAtLocation = ({
             iconName="moon-o"
             backgroundColor={colors.darkGray}
             putMoonHere={
-              <View style={{ backgroundColor: "black", paddingBottom: 4 }}>
-                <MoonPhaseGraph
-                  cityName={cityName}
-                  state={state}
-                  graphHeight={250}
-                  initialScrollPosition={initialScrollPosition}
-                  userScrolledIndex={userScrolledIndex}
-                  currentPhase={currentMoonPhase}
-                />
+              <View
+                style={{
+                  backgroundColor: "black",
+                }}
+              >
+                <View
+                  className="items-center"
+                  style={{ paddingTop: 20, paddingBottom: 8 }}
+                >
+                  <MoonPhaseGraph
+                    cityName={cityName}
+                    state={state}
+                    graphHeight={250}
+                    initialScrollPosition={initialScrollPosition}
+                    userScrolledIndex={userScrolledIndex}
+                    currentMoonPhase={currentMoonPhase}
+                    showPercent
+                    scaleDown={40}
+                    // addLines
+                  />
+                </View>
 
                 <View className="w-full flex-row items-center h-12">
                   <View style={{ flex: 20, alignItems: "center" }}>
@@ -214,9 +238,9 @@ const WeatherAtLocation = ({
                         color={colors.bgBlue(1)}
                         onPress={() => {
                           setUserScrolledIndex(Math.floor(initialScrollIndex));
-                          offsetX.value = initialScrollPosition;
+                          offsetX.value = initialScrollPosition * 12;
                           flatlistRef.current?.scrollToIndex({
-                            index: initialScrollPosition / 10,
+                            index: initialScrollPosition / (TICKS_PER_DAY * 10),
                             animated: false,
                           });
                         }}
@@ -244,11 +268,13 @@ const WeatherAtLocation = ({
                         color={colors.bgBlue(1)}
                         onPress={() => {
                           setUserScrolledIndex(
-                            Math.floor(initialScrollPosition / 120)
+                            Math.floor(
+                              initialScrollPosition / (TICKS_PER_DAY * 10)
+                            )
                           );
-                          offsetX.value = initialScrollPosition;
+                          offsetX.value = initialScrollPosition * 12;
                           flatlistRef.current?.scrollToIndex({
-                            index: initialScrollPosition / 10,
+                            index: initialScrollPosition / (TICKS_PER_DAY * 10),
                             animated: false,
                           });
                         }}
@@ -272,7 +298,7 @@ const WeatherAtLocation = ({
               daysSincePrevMonth={daysSincePrevMonth}
             />
           </ModalContainer>
-        ) : (
+        ) : selectedModal ? (
           <ModalContainer
             modalVisible={modalVisible}
             setModalVisible={(visible: boolean) => setModalVisible(visible)}
@@ -289,17 +315,15 @@ const WeatherAtLocation = ({
               openModalOnIndexRef={openModalOnIndexRef}
             />
           </ModalContainer>
+        ) : (
+          <View></View>
         )}
 
         <View className="gap-y-2">
           {/* Hourly Forecast */}
           <HourlyForecastCard
             cityName={cityName}
-            showModal={() => {
-              setSelectedModal("temperature");
-              setCurrentIndex(0);
-              setModalVisible(true);
-            }}
+            showModal={() => showThisModal("temperature")}
           />
 
           <DailyForecastCard
@@ -315,89 +339,60 @@ const WeatherAtLocation = ({
 
           <AirQualityCard cityName={cityName} iconSize={iconSize} />
 
-          <View className="flex-row gap-x-2 h-48">
-            <View className="flex-[0.5]">
+          <TwoCards
+            leftCard={
               <UVIndexCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => {
-                  setSelectedModal("uv");
-                  setCurrentIndex(0);
-                  setModalVisible(true);
-                }}
+                showModal={() => showThisModal("uv")}
               />
-            </View>
-            <View className="flex-[0.5]">
+            }
+            rightCard={
               <SunPhaseCard
                 graphHeight={60}
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => {
-                  setSelectedModal("sunPhase");
-                  setModalVisible(true);
-                }}
+                showModal={() => showThisModal("sunPhase")}
               />
-            </View>
-          </View>
+            }
+          />
 
           <WindCard
             cityName={cityName}
             iconSize={iconSize}
-            showModal={() => {
-              setSelectedModal("wind");
-              setCurrentIndex(0);
-              setModalVisible(true);
-            }}
+            showModal={() => showThisModal("wind")}
           />
 
-          <View className="flex-row gap-x-2 h-48">
-            <View className="flex-[0.5]">
+          <TwoCards
+            leftCard={
               <WindChillCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => {
-                  setSelectedModal("windChill");
-                  setCurrentIndex(0);
-
-                  setModalVisible(true);
-                }}
+                showModal={() => showThisModal("windChill")}
               />
-            </View>
-            <View className="flex-[0.5]">
+            }
+            rightCard={
               <PrecipitationCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => {
-                  setSelectedModal("precipitation");
-                  setCurrentIndex(0);
-
-                  setModalVisible(true);
-                }}
+                showModal={() => showThisModal("precipitation")}
               />
-            </View>
-          </View>
+            }
+          />
 
           <View className="flex-row gap-x-2 h-48">
             <View className="flex-[0.5]">
               <VisibilityCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => {
-                  setSelectedModal("visibility");
-                  setCurrentIndex(0);
-                  setModalVisible(true);
-                }}
+                showModal={() => showThisModal("visibility")}
               />
             </View>
             <View className="flex-[0.5]">
               <HumidityCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => {
-                  setSelectedModal("humidity");
-                  setCurrentIndex(0);
-                  setModalVisible(true);
-                }}
+                showModal={() => showThisModal("humidity")}
               />
             </View>
           </View>
@@ -405,11 +400,10 @@ const WeatherAtLocation = ({
           <MoonPhaseCard
             cityName={cityName}
             iconSize={iconSize}
-            showModal={() => {
-              setSelectedModal("moonPhase");
-              setCurrentIndex(0);
-              setModalVisible(true);
-            }}
+            userScrolledIndex={userScrolledIndex}
+            currentMoonPhase={currentMoonPhase}
+            initialScrollPosition={initialScrollPosition}
+            showModal={() => showThisModal("moonPhase")}
           />
         </View>
       </View>

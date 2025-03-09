@@ -117,8 +117,8 @@ const MoonPhaseModal = ({
       return { length: 0, offset: 0, index }; // Return default values when data is undefined or null
     }
     return {
-      length: 10, // The height of each item (fixed-size)
-      offset: 10 * index,
+      length: 120, // The height of each item (fixed-size)
+      offset: 120 * index,
       index,
     };
   };
@@ -127,6 +127,7 @@ const MoonPhaseModal = ({
 
   const handleHaptic = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     offsetX.value = event.nativeEvent.contentOffset.x;
+    // console.log(offsetX.value);
     const scrollPosToDateString = getScrolledDate(
       data[cityName],
       offsetX.value,

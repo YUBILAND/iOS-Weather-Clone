@@ -1,20 +1,16 @@
-import { View, Text } from "react-native";
-import React from "react";
-import DefaultText from "../atoms/DefaultText";
 import { colors } from "@/assets/colors/colors";
-import HorizontalLine from "../atoms/HorizontalLine";
-import { rotate } from "@shopify/react-native-skia";
 import { WeatherData } from "@/constants/constants";
-import { getDegreesFromWindDirection } from "./utils/getDegreesFromWindDirection";
+import React from "react";
+import { View } from "react-native";
+import DefaultText from "../../atoms/DefaultText";
+import HorizontalLine from "../../atoms/HorizontalLine";
 
 interface WindCardCompassProps {
   data: WeatherData;
 }
 
 const WindCardCompass = ({ data }: WindCardCompassProps) => {
-  //   const windDirection = getDegreesFromWindDirection(data.current.wind_dir);
-  //   console.log(data.current.wind_dir);
-  const rotationDegrees = (data.current.wind_degree + 90).toString() + "deg";
+  const rotationDegrees = (data.current.wind_degree - 90).toString() + "deg";
 
   return (
     <View className="items-center ">
@@ -81,13 +77,10 @@ const WindCardCompass = ({ data }: WindCardCompassProps) => {
                   <View
                     className="w-5 h-5 bg-black "
                     style={{ borderRadius: "50%" }}
-                  ></View>
+                  />
                 </View>
               </HorizontalLine>
             </View>
-            {/* <View className="flex-[0.2]">
-              <View className="w-5 h-5 bg-black "></View>
-            </View> */}
           </View>
         </View>
       </View>

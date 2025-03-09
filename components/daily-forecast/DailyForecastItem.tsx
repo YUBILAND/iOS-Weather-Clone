@@ -16,6 +16,7 @@ import { getDailyTempArr } from "./utils/getDailyTempArr";
 import { getShortWeekday } from "./utils/getShortWeekday";
 import { getWeekTempArr } from "./utils/getWeekTempArr";
 import TemperatureBar from "../conditions/TemperatureBar";
+import HorizontalLine from "../atoms/HorizontalLine";
 
 interface DailyForecastItemProp {
   data: WeatherData;
@@ -48,56 +49,55 @@ const DailyForecastItem = ({
   const isWindyDay = windyCountArr.length > 12;
 
   return (
-    <Pressable
-      style={{
-        borderTopWidth: 1,
-        borderTopColor: colors.bgWhite(0.2),
-      }}
-      key={item?.date}
-      className="flex-row items-center w-full py-4 mr-4 gap-x-8"
-      onPress={() => {
-        setCurrentIndex(index);
-        openModalOnIndexRef.current = true;
-        showModal();
-      }}
-    >
-      {/* Day + Weather Image */}
-      <View
-        className="flex-row justify-between items-center "
-        style={{ flex: 40 }}
+    <>
+      <HorizontalLine />
+      <Pressable
+        key={item?.date}
+        className="flex-row items-center w-full mr-4 gap-x-8"
+        onPress={() => {
+          setCurrentIndex(index);
+          openModalOnIndexRef.current = true;
+          showModal();
+        }}
       >
-        <DefaultText className="font-bold text-xl">
-          {index === 0 ? "Today" : weekday}
-        </DefaultText>
+        {/* Day + Weather Image */}
+        <View
+          className="flex-row justify-between items-center "
+          style={{ flex: 40 }}
+        >
+          <DefaultText className="font-bold text-xl">
+            {index === 0 ? "Today" : weekday}
+          </DefaultText>
 
-        <Image
-          source={
-            weatherKey[
-              weatherPNG(
-                isWindyDay
-                  ? ("windy" as WeatherType)
-                  : (item?.day.condition.text.toLowerCase() as WeatherType)
-              )
-            ]
-          }
-          className="h-8 w-8"
-        />
-      </View>
+          <Image
+            source={
+              weatherKey[
+                weatherPNG(
+                  isWindyDay
+                    ? ("windy" as WeatherType)
+                    : (item?.day.condition.text.toLowerCase() as WeatherType)
+                )
+              ]
+            }
+            className="h-8 w-8"
+          />
+        </View>
 
-      {/* High and Low + Progress Bar */}
-      <View style={{ flex: 60 }}>
-        <TemperatureBar
-          barWidth={100}
-          weekHigh={weekHigh}
-          weekLow={weekLow}
-          tempHigh={dailyHigh}
-          tempLow={dailyLow}
-          currentTemperature={
-            index === 0 ? parseFloat(data.current.temp_c) : undefined
-          }
-        />
-      </View>
-    </Pressable>
+        {/* High and Low + Progress Bar */}
+        <View style={{ flex: 60 }}>
+          <TemperatureBar
+            barWidth={100}
+            weekHigh={weekHigh}
+            weekLow={weekLow}
+            tempHigh={dailyHigh}
+            tempLow={dailyLow}
+            currentTemperature={
+              index === 0 ? parseFloat(data.current.temp_c) : undefined
+            }
+          />
+        </View>
+      </Pressable>
+    </>
   );
 };
 

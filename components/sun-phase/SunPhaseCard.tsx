@@ -17,6 +17,9 @@ import ModalContainer from "../modal/ModalContainer";
 import SunPhaseGraph from "./SunPhaseGraph";
 import SunPhaseModal from "./SunPhaseModal";
 import { getNextPhaseTime } from "./utils/getNextPhaseTime";
+import CardTitle from "../atoms/CardTitle";
+import CardBottomText from "../atoms/CardBottomText";
+import CardStat from "../atoms/CardStat";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
@@ -63,15 +66,11 @@ const SunPhaseCard = ({
         }}
       >
         <View className="px-4 gap-y-2">
-          <View className="flex-row items-center gap-x-2 opacity-40">
-            <FontAwesome name="sun-o" color="white" size={iconSize} />
-            <DefaultText className="text-base uppercase font-semibold">
-              Sun Phase
-            </DefaultText>
-          </View>
-          <DefaultText className="text-3xl uppercase font-semibold">
-            {nextPhaseTime}
-          </DefaultText>
+          <CardTitle
+            title={"Sun Phase"}
+            icon={<FontAwesome name="sun-o" color="white" size={iconSize} />}
+          />
+          <CardStat stat={nextPhaseTime} />
         </View>
 
         <SunPhaseGraph
@@ -82,9 +81,12 @@ const SunPhaseCard = ({
           strokeWidth={4}
           removePress
         />
-        <DefaultText className="px-4 text-base">{`in ${
-          remainingTime.split(":")[0]
-        } hrs ${remainingTime.split(":")[1]} mins`}</DefaultText>
+        <CardBottomText
+          className="px-4"
+          text={`in ${remainingTime.split(":")[0]} hrs ${
+            remainingTime.split(":")[1]
+          } mins`}
+        />
       </Pressable>
     </OpacityCard>
   );

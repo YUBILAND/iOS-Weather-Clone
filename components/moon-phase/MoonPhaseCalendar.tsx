@@ -1,73 +1,15 @@
-import { View, Text, Pressable, Image, FlatList } from "react-native";
-import DefaultText from "../atoms/DefaultText";
 import { colors } from "@/assets/colors/colors";
-import React, {
-  memo,
-  MutableRefObject,
-  RefObject,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-import {
-  Calendar,
-  CalendarList,
-  CalendarProvider,
-  LocaleConfig,
-} from "react-native-calendars";
 import { WeatherData } from "@/constants/constants";
+import React, { RefObject, useEffect, useRef, useState } from "react";
+import { FlatList, View } from "react-native";
+import { Calendar } from "react-native-calendars";
 import { SharedValue } from "react-native-reanimated";
+import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
-import { FontWeight } from "@shopify/react-native-skia";
-import { getTimeUntilNextFullMoonDate } from "./utils/getNextFullMoonDate";
-import { timeToDays } from "./utils/timeToDays";
-import { getDaysSincePrevMonth } from "./utils/getDaysSincePrevMonth";
-import { usePrevious } from "./utils/usePrevious";
 import { TICKS_PER_DAY } from "./utils/constants";
+import { getDaysSincePrevMonth } from "./utils/getDaysSincePrevMonth";
+import { getTimeUntilNextFullMoonDate } from "./utils/getNextFullMoonDate";
 import { getTicksAmount } from "./utils/getTicksAmount";
-
-const DayComponent = memo(
-  ({
-    dateString,
-    selected,
-    setSelected,
-  }: {
-    dateString: string;
-    selected: string;
-    setSelected: (date: string) => void;
-  }) => {
-    return (
-      <Pressable
-        onPress={() => setSelected(dateString)}
-        className="gap-y-2"
-        style={{
-          backgroundColor:
-            dateString === selected ? colors.bgBlue(0.5) : undefined,
-          borderRadius: 5,
-          paddingHorizontal: 10,
-          paddingVertical: 10,
-        }}
-      >
-        <Text
-          className="font-semibold"
-          style={{
-            textAlign: "center",
-            fontSize: 12,
-
-            // fontFamily:fonts.Medium,
-            color: dateString === selected ? colors.bgBlue(1) : "white",
-          }}
-        >
-          {dateString.split("-")[2]}
-        </Text>
-        <Image
-          source={require("../../assets/images/moon.png")}
-          style={{ width: 15, height: 15 }}
-        />
-      </Pressable>
-    );
-  }
-);
 
 interface MoonPhaseCalendarProps {
   data: WeatherData;
@@ -151,8 +93,6 @@ const MoonPhaseCalendar = ({
 
   const { whiteTicks } = getTicksAmount();
 
-  console.log(userScrolledIndex);
-
   const scrolledToDate = Math.min(
     Math.max(userScrolledIndex + 1, 1),
     whiteTicks - 1
@@ -173,7 +113,6 @@ const MoonPhaseCalendar = ({
       timeZone: data.location.tz_id,
     }
   );
-  console.log(scrolledToDate);
   const selectedRef = useRef(currentCalendarDate);
 
   selectedRef.current = scrollToThis;
@@ -185,21 +124,18 @@ const MoonPhaseCalendar = ({
     setUserScrolledIndex(daysSincePrevMonthOfSelected);
     offsetX.value = daysSincePrevMonthOfSelected * 120;
     flatlistRef.current?.scrollToIndex({
-      index: (daysSincePrevMonthOfSelected * 120) / 10,
+      index: daysSincePrevMonthOfSelected * TICKS_PER_DAY,
       animated: false,
     });
   };
 
   type CalendarArrow = "left" | "right" | "none";
-  const disabledArrowRef = useRef<CalendarArrow>("none");
   const selectedMonth = parseInt(selectedRef.current.split("-")[1]);
   const accountForZeroIndex = 1;
   const prevMonth = new Date().getUTCMonth() + accountForZeroIndex - 1;
   const nextMonth = new Date().getUTCMonth() + accountForZeroIndex + 1;
 
   const [disabledArrow, setDisabledArrow] = useState<CalendarArrow>("none");
-
-  const monthUserWasJustOn = usePrevious(selectedMonth);
 
   useEffect(() => {
     selectedMonth === prevMonth
@@ -237,13 +173,6 @@ const MoonPhaseCalendar = ({
           theme={calendarTheme}
           onDayPress={handleDayPress}
           onMonthChange={handleMonthChange}
-          // dayComponent={({ date }: { date: { dateString: string } }) => (
-          //   <DayComponent
-          //     dateString={date.dateString}
-          //     selected={selected}
-          //     setSelected={(date: string) => setSelected(date)}
-          //   />
-          // )}
           markingType={"custom"}
           markedDates={{
             [selectedRef.current]: {

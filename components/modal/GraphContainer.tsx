@@ -2,7 +2,7 @@ import { colors } from "@/assets/colors/colors";
 import { weatherKey } from "@/constants/constants";
 import { RootState } from "@/state/store";
 import { weatherPNG } from "@/utils/exampleForecast";
-import React from "react";
+import React, { useRef } from "react";
 import {
   Image,
   ImageSourcePropType,
@@ -12,8 +12,11 @@ import {
 } from "react-native";
 import Animated, {
   AnimatedProps,
+  measure,
+  runOnUI,
   SharedValue,
   useAnimatedProps,
+  useAnimatedRef,
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSelector } from "react-redux";
@@ -31,7 +34,9 @@ interface GraphContainerProps<Key extends string> {
     y: Record<
       "currentLineTop" | "currentLineBottom" | "currentPosition" | Key,
       number
-    >;
+    > & {
+      secondLine?: number;
+    };
   }>;
   isActive: boolean;
   leftSide: React.ReactNode;
@@ -40,6 +45,7 @@ interface GraphContainerProps<Key extends string> {
   scrollInfoBold: Partial<AnimatedProps<TextInputProps>>;
   smallBold?: boolean;
   currentIndex: number;
+  belowScrollInfo?: Partial<AnimatedProps<TextInputProps>>;
 }
 
 const GraphContainer = <Key extends string>({
@@ -52,6 +58,7 @@ const GraphContainer = <Key extends string>({
   scrollInfoBold,
   smallBold = false,
   currentIndex,
+  belowScrollInfo,
 }: GraphContainerProps<Key>) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { forecast } = data[cityName];
@@ -73,7 +80,16 @@ const GraphContainer = <Key extends string>({
     const xValue = state.x.value.value;
     return {
       transform: [
-        { translateX: xValue < stopLeftScrollOnXValue ? 30 : xPosition - 10 },
+        { translateX: xValue < stopLeftScrollOnXValue ? 30 : xPosition - 15 },
+      ], // Translate X based on state.x
+    };
+  });
+  const bottomStyle = useAnimatedStyle(() => {
+    const xPosition = state.x.position.value;
+    const xValue = state.x.value.value;
+    return {
+      transform: [
+        { translateX: xValue < stopLeftScrollOnXValue ? 10 : xPosition - 40 },
       ], // Translate X based on state.x
     };
   });
@@ -101,14 +117,17 @@ const GraphContainer = <Key extends string>({
 
   const conditionArray = getConditionArray(data[cityName], currentIndex);
 
+  console.log(currentIndex);
+
   return (
-    <View className="pt-2 w-full px-4 relative z-0">
+    <View className=" w-full px-4 relative z-0">
       <View className="mb-2 ">
         {/* Draggable Time */}
         <View
           style={{
             opacity: isActive ? 100 : 0,
             position: "absolute",
+            paddingTop: 2,
           }}
         >
           {/* Shows user hovered time */}
@@ -157,16 +176,34 @@ const GraphContainer = <Key extends string>({
               underlineColorAndroid={"transparent"}
               style={[
                 {
-                  fontSize: smallBold ? 20 : 30,
+                  fontSize: smallBold ? 20 : 25,
                   color: "white",
-                  width: 10, // removes ellipses
-                  marginLeft: hackyWeatherImage ? 40 : 0,
-                  fontWeight: 800,
+                  width: 10,
+                  // backgroundColor: colors.bgWhite(0.2),
+                  marginLeft: hackyWeatherImage ? 40 : -20,
+                  fontWeight: 600,
                 },
               ]}
               animatedProps={scrollInfoBold}
             />
           </AnimatedView>
+
+          {belowScrollInfo && (
+            <AnimatedTextInput
+              editable={false}
+              underlineColorAndroid={"transparent"}
+              style={[
+                {
+                  fontSize: 12,
+                  width: 140,
+                  lineHeight: 12,
+                  color: colors.lightGray,
+                },
+                bottomStyle,
+              ]}
+              animatedProps={belowScrollInfo}
+            />
+          )}
         </View>
 
         {/* Left side  */}
@@ -175,6 +212,7 @@ const GraphContainer = <Key extends string>({
             paddingLeft: 8,
             gap: 2,
             opacity: isActive ? 0 : 100,
+            paddingTop: 8,
           }}
         >
           {leftSide}

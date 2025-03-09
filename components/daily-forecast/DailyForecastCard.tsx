@@ -6,6 +6,7 @@ import { useSelector } from "react-redux";
 import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 import DailyForecastItem from "./DailyForecastItem";
+import CardTitle from "../atoms/CardTitle";
 
 interface DailyForecastCardProps {
   cityName: string;
@@ -26,33 +27,33 @@ const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
   const { forecast, current } = data[cityName];
 
   return (
-    <OpacityCard>
+    <OpacityCard className="px-4 gap-y-2">
       <Pressable>
-        <View className="flex-row items-center mx-5 gap-x-2 opacity-40 mb-2">
-          <CalendarDaysIcon size={iconSize} color={"white"} />
-          <DefaultText className="text-base uppercase font-semibold">
-            10-Day Forecast
-          </DefaultText>
-        </View>
+        <CardTitle
+          title={"10-Day Forecast"}
+          icon={<CalendarDaysIcon size={iconSize} color={"white"} />}
+          className={"pb-2"}
+        />
 
         <ScrollView
           contentContainerStyle={{
-            marginHorizontal: 15,
+            marginHorizontal: 0,
           }}
-          style={{}}
           showsHorizontalScrollIndicator={false}
         >
-          {forecast?.forecastday.map((item, index) => (
-            <DailyForecastItem
-              key={index}
-              data={data[cityName]}
-              item={item}
-              index={index}
-              showModal={showModal}
-              setCurrentIndex={setCurrentIndex}
-              openModalOnIndexRef={openModalOnIndexRef}
-            />
-          ))}
+          <View className="gap-y-3">
+            {forecast?.forecastday.map((item, index) => (
+              <DailyForecastItem
+                key={index}
+                data={data[cityName]}
+                item={item}
+                index={index}
+                showModal={showModal}
+                setCurrentIndex={setCurrentIndex}
+                openModalOnIndexRef={openModalOnIndexRef}
+              />
+            ))}
+          </View>
         </ScrollView>
       </Pressable>
     </OpacityCard>

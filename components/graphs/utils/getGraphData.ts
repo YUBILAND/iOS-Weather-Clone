@@ -8,7 +8,8 @@ export const getGraphData = (
   minRange: number,
   currentIndex: number,
   yAxis: string,
-  apiObjectKey: keyof HourObject
+  apiObjectKey: keyof HourObject,
+  apiObjectKey2?: keyof HourObject
 ) => {
   const currentHour = militaryHour(
     new Date().toLocaleTimeString("en-US", { timeZone: data.location?.tz_id })
@@ -21,6 +22,12 @@ export const getGraphData = (
     {
       [apiObjectKey as string]:
         todaysForecast[todaysForecast.length - 1][apiObjectKey],
+      ...(apiObjectKey2
+        ? {
+            [apiObjectKey2 as string]:
+              todaysForecast[todaysForecast.length - 1][apiObjectKey2],
+          }
+        : {}),
     },
   ];
 
@@ -30,13 +37,21 @@ export const getGraphData = (
 
   const graphData = addMidnightWeather.map((hour, index) => ({
     hour: index,
-    [yAxis]: parseFloat(hour[apiObjectKey].toString()),
+    [yAxis]:
+      apiObjectKey && hour[apiObjectKey] !== undefined
+        ? parseFloat(hour[apiObjectKey].toString())
+        : 0,
     currentLineTop: index === currentHour ? maxRange + 100 : undefined,
     currentLineBottom: index === currentHour ? minRange - 100 : undefined,
     currentPosition:
       index === xPosition
         ? Math.round(parseFloat(hour[apiObjectKey].toString()))
         : undefined,
+    secondLine:
+      apiObjectKey2 && hour[apiObjectKey2] !== undefined
+        ? Math.round(parseFloat(hour[apiObjectKey2].toString()))
+        : 0,
   }));
+
   return graphData;
 };

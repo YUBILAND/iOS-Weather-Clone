@@ -12,7 +12,9 @@ const MoonPhaseInfoItem = ({ text, value }: MoonPhaseInfoItemProps) => {
   return (
     <View className="flex-row justify-between">
       <View className=" py-2">
-        <DefaultText style={{ fontSize: 15 }}>{text}</DefaultText>
+        <DefaultText style={{ fontSize: 15 }} className="font-semibold">
+          {text}
+        </DefaultText>
       </View>
 
       <View className="justify-center ">

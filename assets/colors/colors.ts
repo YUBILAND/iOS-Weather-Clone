@@ -4,6 +4,7 @@ export const colors = {
   bgMediumGray: (opacity: number) => `rgba(49,48,53, ${opacity})`,
 
   bgBlue: (opacity: number = 1) => `rgba(124,197,227, ${opacity})`,
+  bgGreen: (opacity: number = 1) => `rgba(72, 227, 82, ${opacity})`,
 
   // lightGray: "#777679",
   lightGray: `rgba(255,255,255, 0.6)`,

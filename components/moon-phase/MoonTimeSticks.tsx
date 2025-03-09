@@ -15,7 +15,8 @@ const MoonTimeSticks = ({
   daysSincePrevMonth: number;
 }) => {
   return (
-    <View
+    <>
+      {/* <View
       className="h-8 mb-12 relative "
       style={{
         width: item.id === arrLength - 1 ? 0 : 10,
@@ -23,12 +24,7 @@ const MoonTimeSticks = ({
         borderLeftColor: item.id % 12 === 0 ? "white" : colors.mediumGray,
       }}
     >
-      {/* {item.id % 12 === 0 && item.id < arrLength - 1 && (
-        <View className="absolute bottom-[-30px] left-12">
-          <DefaultText>{item.weekday}</DefaultText>
-        </View>
-      )} */}
-
+      
       {item.id % 12 === 0 && Math.floor(item.id / 12) === daysSincePrevMonth ? (
         <View className="absolute bottom-[-30px] left-12 w-20">
           <DefaultText className="font-semibold">Today</DefaultText>
@@ -40,7 +36,42 @@ const MoonTimeSticks = ({
       ) : (
         <View className="absolute" />
       )}
-    </View>
+    </View> */}
+      <View
+        className="h-8 mb-12 relative "
+        style={{
+          width: 10,
+          borderWidth: 2,
+          borderLeftColor: "white",
+        }}
+      />
+
+      {Array(11)
+        .fill(0)
+        .map((val, idx) => {
+          return (
+            <View
+              key={idx}
+              className="h-8 mb-12 relative "
+              style={{
+                width: 10,
+                borderWidth: 2,
+                borderLeftColor: colors.mediumGray,
+              }}
+            ></View>
+          );
+        })}
+      {item.id === arrLength - 1 && (
+        <View
+          className="h-8 mb-12 relative "
+          style={{
+            width: 10,
+            borderWidth: 2,
+            borderLeftColor: "white",
+          }}
+        />
+      )}
+    </>
   );
 };
 

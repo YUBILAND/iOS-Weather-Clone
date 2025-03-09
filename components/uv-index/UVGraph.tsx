@@ -25,7 +25,7 @@ import ToolTip from "../graphs/victoryComponents/Tooltip";
 import { getGraphData } from "../graphs/utils/getGraphData";
 import { getOddUVIndex } from "./utils/getOddUVIndex";
 
-interface TemperatureGraphProps {
+interface UVGraphProps {
   cityName: string;
   state: ChartPressState<{
     x: number;
@@ -51,7 +51,7 @@ const UVGraph = ({
   strokeWidth,
   yAxisLabel,
   currentIndex,
-}: TemperatureGraphProps) => {
+}: UVGraphProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { location } = data[cityName];
 
@@ -92,6 +92,8 @@ const UVGraph = ({
   const areaColorBottom = "rgba(81, 255, 115, 0.2)";
   const areaDarkTop = "rgba(0,0,0,0.2)";
   const areaDarkBottom = "rgba(0,0,0,0.3)";
+
+  console.log("RERENDERED");
 
   return (
     <View style={{ height: graphHeight }}>

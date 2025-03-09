@@ -33,6 +33,7 @@ interface WindGraphProps {
       currentLineTop: number;
       currentLineBottom: number;
       currentPosition: number;
+      secondLine: number;
     };
   }>;
   isActive: boolean;
@@ -59,15 +60,14 @@ const WindGraph = ({
   const weekMaxWind = getWeekMaxWind(data[cityName]);
   const weekMinWind = 0;
 
-  console.log(weekMaxWind);
-
   const graphData = getGraphData(
     data[cityName],
     weekMaxWind,
     weekMinWind,
     currentIndex,
     "windSpeed",
-    "wind_mph"
+    "wind_mph",
+    "gust_mph"
   );
 
   const cutoff = getCurrentHour(location!.tz_id);
@@ -92,6 +92,7 @@ const WindGraph = ({
           "currentLineTop",
           "currentLineBottom",
           "currentPosition",
+          "secondLine",
         ]}
         padding={{ left: 0, right: 20 }} // doesn't affect position outside
         axisOptions={{
@@ -124,6 +125,13 @@ const WindGraph = ({
             (point) => (point.xValue! as number) <= cutoff
           ); // Left side (x <= 0)
           const rightPoints = points.windSpeed.filter(
+            (point) => (point.xValue! as number) >= cutoff
+          ); // Right side (x >= 0)
+
+          const secondLeftPoints = points.secondLine.filter(
+            (point) => (point.xValue! as number) <= cutoff
+          ); // Left side (x <= 0)
+          const secondRightPoints = points.secondLine.filter(
             (point) => (point.xValue! as number) >= cutoff
           ); // Right side (x >= 0)
 
@@ -165,6 +173,17 @@ const WindGraph = ({
                   />
                 </Area>
               </>
+              {/* Second right side of graph */}
+              <>
+                <Line
+                  points={
+                    currentIndex === 0 ? secondRightPoints : points.secondLine
+                  }
+                  color={colors.bgGreen(0.3)}
+                  strokeWidth={6}
+                  curveType="natural"
+                />
+              </>
 
               {currentIndex === 0 && (
                 <>
@@ -192,6 +211,19 @@ const WindGraph = ({
                         colors={[areaColorTop, areaColorBottom]}
                       />
                     </Area>
+                  </>
+
+                  {/* Second Left side of graph*/}
+                  <>
+                    <Line
+                      points={secondLeftPoints}
+                      // color="rgba(124,197,227,0.5)"
+                      color={colors.bgGreen(0.3)}
+                      strokeWidth={6}
+                      curveType="natural"
+                    >
+                      <DashPathEffect intervals={[10, 10]} />
+                    </Line>
                   </>
 
                   {/* Vertical Line */}

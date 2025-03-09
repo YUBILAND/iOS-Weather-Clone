@@ -8,6 +8,10 @@ import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 import { colors } from "@/assets/colors/colors";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
+import CardTitle from "../atoms/CardTitle";
+import CardStat from "../atoms/CardStat";
+import CardText from "../atoms/CardBottomText";
+import CardBottomText from "../atoms/CardBottomText";
 
 interface PrecipitationCardProps {
   cityName: string;
@@ -37,27 +41,20 @@ const PrecipitationCard = ({
           showModal();
         }}
       >
-        <View className="flex-row items-center  gap-x-2 opacity-40">
-          <FontAwesome6
-            name="cloud-showers-heavy"
-            size={iconSize}
-            color={"white"}
-          />
-          <DefaultText className="text-base uppercase font-semibold">
-            Precipitation
-          </DefaultText>
-        </View>
-        <DefaultText
-          className="font-semibold"
-          style={{ fontSize: 30, lineHeight: 30 }}
-        >
-          {precipTemp}
-        </DefaultText>
-        <DefaultText
-          style={{ fontSize: 14, lineHeight: 14, color: colors.lightGray }}
-        >
-          {message}
-        </DefaultText>
+        <CardTitle
+          title={"Precipitation"}
+          icon={
+            <FontAwesome6
+              name="cloud-showers-heavy"
+              size={iconSize}
+              color={"white"}
+            />
+          }
+        />
+
+        <CardStat stat={precipTemp} />
+
+        <CardBottomText text={message} />
 
         <DefaultText style={{ fontSize: 14, lineHeight: 14 }}>
           {message2}

@@ -1,7 +1,7 @@
 import { colors } from "@/assets/colors/colors";
 import React from "react";
 import { View } from "react-native";
-import DefaultText from "../atoms/DefaultText";
+import DefaultText from "../../atoms/DefaultText";
 
 interface WindCardInfoItemProps {
   windSpeed: number;

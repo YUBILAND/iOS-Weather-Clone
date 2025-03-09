@@ -1,5 +1,5 @@
 import { WeatherData } from "@/constants/constants";
-import React from "react";
+import React, { memo } from "react";
 import { TextInputProps, View } from "react-native";
 import { AnimatedProps } from "react-native-reanimated";
 import { ChartPressState } from "victory-native";
@@ -40,6 +40,9 @@ interface RenderConditionsGraphsProps {
   item: { id: number };
 }
 
+const TemperatureGraphMemo = memo(TemperatureGraph);
+const ChanceOfRainGraphMemo = memo(ChanceOfRainGraph);
+
 const RenderConditionsGraphs = ({
   data,
   cityName,
@@ -64,7 +67,7 @@ const RenderConditionsGraphs = ({
         currentIndex={currentIndex}
         leftSide={<TitleTemp data={data} item={item} />}
       >
-        <TemperatureGraph
+        <TemperatureGraphMemo
           cityName={cityName}
           state={tempState}
           isActive={tempIsActive}
@@ -91,7 +94,7 @@ const RenderConditionsGraphs = ({
           </View>
         }
       >
-        <ChanceOfRainGraph
+        <ChanceOfRainGraphMemo
           cityName={cityName}
           state={rainState}
           isActive={rainIsActive}

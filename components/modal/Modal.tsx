@@ -73,6 +73,23 @@ type ModalProps = {
   openModalOnIndexRef: MutableRefObject<boolean>;
 };
 
+const RenderConditionsGraphsMemo = memo(RenderConditionsGraphs);
+const ConditionsModalDescriptionMemo = memo(ConditionsModalDescription);
+const GraphContainerMemo = memo(GraphContainer);
+const UVGraphMemo = memo(UVGraph);
+const UVModalDescriptionMemo = memo(UVModalDescription);
+const WindGraphMemo = memo(WindGraph);
+const WindModalDescriptionMemo = memo(WindModalDescription);
+const WindChillGraphMemo = memo(WindChillGraph);
+const WindChillModalDescriptionMemo = memo(WindChillModalDescription);
+const PrecipitationGraphMemo = memo(PrecipitationGraph);
+const PrecipitationModalDescriptionMemo = memo(PrecipitationModalDescription);
+const VisibilityGraphMemo = memo(VisibilityGraph);
+const VisibilityModalDescriptionMemo = memo(VisibilityModalDescription);
+const HumidityGraphMemo = memo(HumidityGraph);
+const HumidityModalDescriptionMemo = memo(HumidityModalDescription);
+const ModalDropdownContainerMemo = memo(ModalDropdownContainer);
+
 const Modal = ({
   cityName,
   currentIndex,
@@ -82,6 +99,8 @@ const Modal = ({
   setSelectedModal,
   openModalOnIndexRef,
 }: ModalProps) => {
+  const { data } = useSelector((state: RootState) => state.weather);
+
   const { state: tempState, isActive: tempIsActive } = useChartPressState({
     x: 0,
     y: {
@@ -116,6 +135,7 @@ const Modal = ({
       currentLineTop: 0,
       currentLineBottom: 0,
       currentPosition: 0,
+      secondLine: 0,
     },
   });
   const { state: windChillState, isActive: windChillIsActive } =
@@ -179,10 +199,28 @@ const Modal = ({
     };
   });
   const windScrollInfoBold = useAnimatedProps(() => {
-    const windSpeed = `${Math.round(windState.y.windSpeed.value.value)}mph`;
+    const speedAtIndex = windState.y.windSpeed.value.value;
+    const hour = data[cityName].forecast.forecastday[currentIndex].hour;
+    const index = windState.x.value.value;
+    const windSpeed = `${Math.round(speedAtIndex)} ${
+      index < 24 ? hour[index].wind_dir : hour[23].wind_dir
+    }`;
     return {
       text: windSpeed,
       value: windSpeed,
+    };
+  });
+  const belowWindScroll = useAnimatedProps(() => {
+    const index = windState.x.value.value;
+    const hour = data[cityName].forecast.forecastday[currentIndex].hour;
+    const gustSpeed = `Gusts: ${
+      index < 24
+        ? Math.round(hour[index].gust_mph)
+        : Math.round(hour[23].gust_mph)
+    } mph`;
+    return {
+      text: gustSpeed,
+      value: gustSpeed,
     };
   });
   const windChillScrollInfoBold = useAnimatedProps(() => {
@@ -234,9 +272,6 @@ const Modal = ({
     });
   }, []);
 
-  const { data } = useSelector((state: RootState) => state.weather);
-  const { location, forecast, current } = data[cityName];
-
   const flatlistRef = useRef<FlatList>(null);
 
   const flatlistRenderAmount: { id: number }[] = useMemo(() => {
@@ -246,7 +281,6 @@ const Modal = ({
   }, []);
 
   const { width } = useWindowDimensions();
-  // const scrollX = React.useRef(new RNAnimated.Value(0)).current;
 
   const flatlistProps = {
     horizontal: true,
@@ -255,10 +289,6 @@ const Modal = ({
     snapToAlignment: "center" as const,
     showsHorizontalScrollIndicator: false,
     pagingEnabled: true,
-    // onScroll: RNAnimated.event(
-    //   [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-    //   { useNativeDriver: false }
-    // ),
   };
 
   const currentlyScrollingRef = useRef<boolean>(true);
@@ -267,14 +297,14 @@ const Modal = ({
 
   // If user is scrolling, animate the scroll
   if (flatlistRef.current && currentlyScrollingRef.current) {
-    console.log("current index is ", currentIndex);
+    // console.log("current index is ", currentIndex);
     flatlistRef.current.scrollToIndex({ animated: true, index: currentIndex });
     currentlyScrollingRef.current = true;
     buttonScrollActiveRef.current = true;
   }
 
   if (flatlistRef.current && openModalOnIndexRef.current) {
-    console.log("current index is ", currentIndex);
+    // console.log("current index is ", currentIndex);
     flatlistRef.current.scrollToIndex({ animated: false, index: currentIndex });
     openModalOnIndexRef.current = false;
   }
@@ -298,10 +328,10 @@ const Modal = ({
 
   const renderItem = ({ item }: { item: { id: number } }) => {
     return (
-      <View className="w-screen">
+      <View className="w-screen" key={item.id}>
         {selectedModal === "temperature" ? (
-          <>
-            <RenderConditionsGraphs
+          <React.Fragment key={"temperature"}>
+            <RenderConditionsGraphsMemo
               data={data[cityName]}
               cityName={cityName}
               tempState={tempState}
@@ -317,9 +347,9 @@ const Modal = ({
               data={data[cityName]}
               currentIndex={item.id}
             />
-          </>
+          </React.Fragment>
         ) : selectedModal === "uv" ? (
-          <>
+          <React.Fragment key={"uv"}>
             <GraphContainer
               cityName={cityName}
               state={uvState}
@@ -328,7 +358,7 @@ const Modal = ({
               currentIndex={currentIndex}
               leftSide={<GraphLeftText data={data[cityName]} item={item} />}
             >
-              <UVGraph
+              <UVGraphMemo
                 cityName={cityName}
                 state={uvState}
                 isActive={uvIsActive}
@@ -339,18 +369,19 @@ const Modal = ({
               />
             </GraphContainer>
             <UVModalDescription data={data[cityName]} currentIndex={item.id} />
-          </>
+          </React.Fragment>
         ) : selectedModal === "wind" ? (
-          <>
+          <React.Fragment key={"wind"}>
             <GraphContainer
               cityName={cityName}
               state={windState}
               isActive={windIsActive}
               scrollInfoBold={windScrollInfoBold}
+              belowScrollInfo={belowWindScroll}
               currentIndex={currentIndex}
               leftSide={<WindLeftText data={data[cityName]} item={item} />}
             >
-              <WindGraph
+              <WindGraphMemo
                 cityName={cityName}
                 state={windState}
                 isActive={windIsActive}
@@ -364,9 +395,9 @@ const Modal = ({
               data={data[cityName]}
               currentIndex={item.id}
             />
-          </>
+          </React.Fragment>
         ) : selectedModal === "windChill" ? (
-          <>
+          <React.Fragment key={"windChill"}>
             <GraphContainer
               cityName={cityName}
               state={windChillState}
@@ -375,7 +406,7 @@ const Modal = ({
               currentIndex={currentIndex}
               leftSide={<WindChillLeftText data={data[cityName]} item={item} />}
             >
-              <WindChillGraph
+              <WindChillGraphMemo
                 cityName={cityName}
                 state={windChillState}
                 isActive={windChillIsActive}
@@ -389,9 +420,9 @@ const Modal = ({
               data={data[cityName]}
               currentIndex={item.id}
             />
-          </>
+          </React.Fragment>
         ) : selectedModal === "precipitation" ? (
-          <>
+          <React.Fragment key={"precipication"}>
             <GraphContainer
               cityName={cityName}
               state={precipState}
@@ -400,7 +431,7 @@ const Modal = ({
               currentIndex={currentIndex}
               leftSide={<WindChillLeftText data={data[cityName]} item={item} />}
             >
-              <PrecipitationGraph
+              <PrecipitationGraphMemo
                 cityName={cityName}
                 state={precipState}
                 isActive={precipIsActive}
@@ -414,9 +445,9 @@ const Modal = ({
               data={data[cityName]}
               currentIndex={item.id}
             />
-          </>
+          </React.Fragment>
         ) : selectedModal === "visibility" ? (
-          <>
+          <React.Fragment key={"visibility"}>
             <GraphContainer
               cityName={cityName}
               state={visState}
@@ -427,7 +458,7 @@ const Modal = ({
                 <VisibilityLeftText data={data[cityName]} item={item} />
               }
             >
-              <VisibilityGraph
+              <VisibilityGraphMemo
                 cityName={cityName}
                 state={visState}
                 isActive={visIsActive}
@@ -454,9 +485,9 @@ const Modal = ({
               data={data[cityName]}
               currentIndex={item.id}
             />
-          </>
+          </React.Fragment>
         ) : selectedModal === "humidity" ? (
-          <>
+          <React.Fragment key={"humidity"}>
             <GraphContainer
               cityName={cityName}
               state={humidityState}
@@ -465,7 +496,7 @@ const Modal = ({
               currentIndex={currentIndex}
               leftSide={<HumidityLeftText data={data[cityName]} item={item} />}
             >
-              <HumidityGraph
+              <HumidityGraphMemo
                 cityName={cityName}
                 state={humidityState}
                 isActive={humidityIsActive}
@@ -479,7 +510,7 @@ const Modal = ({
               data={data[cityName]}
               currentIndex={item.id}
             />
-          </>
+          </React.Fragment>
         ) : (
           <View></View>
         )}

@@ -1,68 +1,25 @@
-import {
-  View,
-  Text,
-  Animated,
-  TextInput,
-  Pressable,
-  FlatList,
-} from "react-native";
-import React, {
-  RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
 import { colors } from "@/assets/colors/colors";
-import DefaultText from "../atoms/DefaultText";
-import { CalendarDaysIcon } from "react-native-heroicons/outline";
+import { RootState } from "@/state/store";
 import {
-  Area,
-  CartesianChart,
-  ChartPressState,
-  Line,
-  PointsArray,
-  PolarChart,
-  Scatter,
-  useChartPressState,
-} from "victory-native";
-import {
-  Circle,
-  Color,
+  Group,
+  Mask,
   Rect,
-  useFont,
-  Text as SkiaText,
-  LinearGradient,
-  vec,
-  Skia,
   Image as SkiaImage,
+  useFont,
   useImage,
 } from "@shopify/react-native-skia";
-import SpaceMono from "../../assets/fonts/SpaceMono-Regular.ttf";
-import {
-  runOnJS,
-  SharedValue,
-  useAnimatedGestureHandler,
-  useAnimatedReaction,
-  useDerivedValue,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
-import { RootState } from "@/state/store";
+import React, { useMemo } from "react";
+import { View } from "react-native";
 import { useSelector } from "react-redux";
-import OpacityCard from "../atoms/OpacityCard";
-import { getChordLength, getCurrentTime, militaryHour } from "@/hooks/hooks";
-import Cursor from "../graphs/victoryComponents/Cursor";
+import { Area, CartesianChart, ChartPressState } from "victory-native";
+import SpaceMono from "../../assets/fonts/SpaceMono-Regular.ttf";
+import DefaultText from "../atoms/DefaultText";
 
-import ToolTip from "../graphs/victoryComponents/Tooltip";
-import MoonSVG from "./MoonSVG";
-import { SvgXml } from "react-native-svg";
+import { MoonPhase, TICKS_PER_DAY } from "./utils/constants";
 import { getMoonGraphLumin } from "./utils/getMoonGraphLumin";
-import { getMoonRotationDegress } from "./utils/getMoonRotationDegrees";
-import { MoonPhase } from "./utils/constants";
-import { getRemoveAnimationRef } from "./utils/getRemoveAnimationRef";
 import { getMoonPhaseGraphData } from "./utils/getMoonPhaseGraphData";
+import { getMoonRotationDegress } from "./utils/getMoonRotationDegrees";
+import { getRemoveAnimationRef } from "./utils/getRemoveAnimationRef";
 
 const MoonPhaseGraph = ({
   cityName,
@@ -71,7 +28,9 @@ const MoonPhaseGraph = ({
   addLines = false,
   initialScrollPosition,
   userScrolledIndex,
-  currentPhase,
+  currentMoonPhase,
+  scaleDown = 0,
+  showPercent = false,
 }: {
   cityName: string;
   state: ChartPressState<{
@@ -86,20 +45,26 @@ const MoonPhaseGraph = ({
   addLines?: boolean;
   initialScrollPosition: number;
   userScrolledIndex: number;
-  currentPhase: MoonPhase;
+  currentMoonPhase: MoonPhase;
+  scaleDown?: number;
+  showPercent?: boolean;
 }) => {
   const font = useFont(SpaceMono, 12);
 
   const { data } = useSelector((state: RootState) => state.weather);
 
   const image = useImage(require("../../assets/images/moon.png"));
-  const MOON_IMAGE_SIZE = 200;
   // Graph overflows a bit on the right so when rotated is offset to the right. Add some right padding to recenter it
-  const GRAPH_PADDING_TO_RECENTER = 12;
+  const GRAPH_XPADDING_TO_RECENTER = addLines ? 12 : 0;
+  const GRAPH_YPADDING_TO_RECENTER = addLines ? 14 : 0;
+  // const halfSize = -120;
+  const halfSize = -scaleDown;
+
+  const MOON_IMAGE_SIZE = addLines ? 230 + halfSize : 260 + halfSize;
 
   const moonGraphLumin = getMoonGraphLumin(
     data[cityName],
-    userScrolledIndex - initialScrollPosition / 120
+    userScrolledIndex - initialScrollPosition / (TICKS_PER_DAY * 10)
   );
 
   const MoonPhaseData = useMemo(() => {
@@ -107,27 +72,33 @@ const MoonPhaseGraph = ({
   }, [moonGraphLumin]);
 
   // Remove Animation when transitioning in reverse to prevent flicker
-  const removeAnimationRef = getRemoveAnimationRef(currentPhase);
+  const removeAnimationRef = getRemoveAnimationRef(currentMoonPhase);
 
-  const moonRotation = getMoonRotationDegress(currentPhase, moonGraphLumin);
+  const moonRotation = getMoonRotationDegress(currentMoonPhase, moonGraphLumin);
 
   return (
     <>
+      {showPercent && (
+        <View className="absolute w-full items-start">
+          <DefaultText className="font-bold text-4xl">
+            {currentMoonPhase === "waxing"
+              ? Math.round(moonGraphLumin) + "%"
+              : 100 - Math.round(moonGraphLumin) + "%"}
+          </DefaultText>
+        </View>
+      )}
       {/* Chart */}
-      <View className="absolute w-full items-start">
-        <DefaultText className="font-bold text-4xl">
-          {currentPhase === "waxing"
-            ? Math.round(moonGraphLumin) + "%"
-            : 100 - Math.round(moonGraphLumin) + "%"}
-        </DefaultText>
-      </View>
 
       <View
-        style={{ overflow: "hidden", paddingRight: GRAPH_PADDING_TO_RECENTER }}
+        style={{
+          overflow: "hidden",
+          height: 260 + halfSize,
+          width: 260 + halfSize,
+        }}
       >
         <View
           style={{
-            height: graphHeight,
+            height: "100%",
             width: "100%",
             transform: [{ rotate: moonRotation + "deg" }],
             overflow: "hidden",
@@ -152,44 +123,93 @@ const MoonPhaseGraph = ({
             frame={{
               lineColor: "transparent",
             }}
-            domain={{ y: [-12, 12] }}
+            viewport={{ x: [-7.5, 7.5] }}
+            domain={{ y: [-10, 10] }}
             chartPressState={state}
-            padding={{ bottom: addLines ? 10 : 0 }}
+            padding={{ bottom: addLines ? 10 : -8, left: addLines ? 0 : -4 }}
           >
             {({ points, chartBounds, canvasSize }) => {
+              const moonCenterX =
+                canvasSize.width / 2 +
+                GRAPH_XPADDING_TO_RECENTER -
+                MOON_IMAGE_SIZE / 2;
+              const moonCenterY =
+                canvasSize.height / 2 -
+                GRAPH_YPADDING_TO_RECENTER -
+                MOON_IMAGE_SIZE / 2;
               return (
                 <>
+                  <Mask
+                    mode="luminance"
+                    mask={
+                      <Group>
+                        <SkiaImage
+                          image={image}
+                          rect={{
+                            x: moonCenterX,
+                            y: moonCenterY,
+                            width: MOON_IMAGE_SIZE,
+                            height: MOON_IMAGE_SIZE,
+                          }}
+                        />
+                        <Area
+                          points={points.moonPath}
+                          y0={
+                            currentMoonPhase === "waxing"
+                              ? chartBounds.bottom
+                              : chartBounds.top
+                          }
+                          color={colors.bgBlack(0.8)}
+                          animate={{
+                            type: "timing",
+                            duration: removeAnimationRef.current ? 0 : 300,
+                          }}
+                        />
+                      </Group>
+                    }
+                    children={
+                      <Rect
+                        x={0}
+                        y={0}
+                        width={256}
+                        height={256}
+                        color={colors.bgWhite(1)}
+                      />
+                    }
+                  />
                   <>
-                    <SkiaImage
+                    {/* <SkiaImage
                       image={image}
                       rect={{
-                        x: canvasSize.width / 2 + 8 - MOON_IMAGE_SIZE / 2,
-                        y: canvasSize.height / 2 - 4 - MOON_IMAGE_SIZE / 2,
+                        x:
+                          canvasSize.width / 2 +
+                          GRAPH_XPADDING_TO_RECENTER -
+                          MOON_IMAGE_SIZE / 2,
+                        y:
+                          canvasSize.height / 2 -
+                          GRAPH_YPADDING_TO_RECENTER -
+                          MOON_IMAGE_SIZE / 2,
                         width: MOON_IMAGE_SIZE,
                         height: MOON_IMAGE_SIZE,
                       }}
-                    />
-                    <>
-                      {/* <Line
-                        points={points.moonPath}
-                        color={colors.bgWhite(0.5)}
-                        strokeWidth={strokeWidth}
-                        curveType="natural"
-                      /> */}
+                    /> */}
 
-                      <Area
-                        points={points.moonPath}
-                        y0={
-                          currentPhase === "waxing"
-                            ? chartBounds.bottom
-                            : chartBounds.top
-                        }
-                        color={colors.bgBlack(0.6)}
-                        animate={{
-                          type: "timing",
-                          duration: removeAnimationRef.current ? 0 : 300,
-                        }}
-                      />
+                    <>
+                      {/* Dark area of moon */}
+                      {/* <Area
+                          points={points.moonPath}
+                          y0={
+                            currentMoonPhase === "waxing"
+                              ? chartBounds.bottom
+                              : chartBounds.top
+                          }
+                          color={colors.bgBlack(0.6)}
+                          animate={{
+                            type: "timing",
+                            duration: removeAnimationRef.current ? 0 : 300,
+                          }}
+                          mask={moonPath}
+                        /> */}
 
                       {/* Day time */}
                       {/* <Line

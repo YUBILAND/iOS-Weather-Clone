@@ -8,6 +8,10 @@ import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 import { colors } from "@/assets/colors/colors";
 import { FontAwesome } from "@expo/vector-icons";
+import CardTitle from "../atoms/CardTitle";
+import CardStat from "../atoms/CardStat";
+import CardText from "../atoms/CardBottomText";
+import CardBottomText from "../atoms/CardBottomText";
 
 interface VisibilityCardProps {
   cityName: string;
@@ -35,23 +39,14 @@ const VisibilityCard = ({
           showModal();
         }}
       >
-        <View className="flex-row items-center  gap-x-2 opacity-40">
-          <EyeIcon size={iconSize} color={"white"} />
-          <DefaultText className="text-base uppercase font-semibold">
-            Visibility
-          </DefaultText>
-        </View>
-        <DefaultText
-          className="font-semibold"
-          style={{ fontSize: 30, lineHeight: 30 }}
-        >
-          {currentVisibility}
-        </DefaultText>
-        <DefaultText
-          style={{ fontSize: 14, lineHeight: 14, color: colors.lightGray }}
-        >
-          {message}
-        </DefaultText>
+        <CardTitle
+          title={"Visibility"}
+          icon={<EyeIcon size={iconSize} color={"white"} />}
+        />
+
+        <CardStat stat={currentVisibility} />
+
+        <CardBottomText text={message} />
       </Pressable>
     </OpacityCard>
   );

@@ -8,6 +8,9 @@ import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 import { colors } from "@/assets/colors/colors";
 import { FontAwesome } from "@expo/vector-icons";
+import CardTitle from "../atoms/CardTitle";
+import CardStat from "../atoms/CardStat";
+import CardBottomText from "../atoms/CardBottomText";
 
 interface WindChillCardProps {
   cityName: string;
@@ -35,27 +38,20 @@ const WindChillCard = ({
           showModal();
         }}
       >
-        <View className="flex-row items-center  gap-x-2 opacity-40">
-          <FontAwesome
-            name="thermometer-empty"
-            color={"white"}
-            size={iconSize}
-          />
-          <DefaultText className="text-base uppercase font-semibold">
-            Wind Chill
-          </DefaultText>
-        </View>
-        <DefaultText
-          className="font-semibold"
-          style={{ fontSize: 30, lineHeight: 30 }}
-        >
-          {windChillTemp}
-        </DefaultText>
-        <DefaultText
-          style={{ fontSize: 14, lineHeight: 14, color: colors.lightGray }}
-        >
-          {message}
-        </DefaultText>
+        <CardTitle
+          title={"Wind Chill"}
+          icon={
+            <FontAwesome
+              name="thermometer-empty"
+              color={"white"}
+              size={iconSize}
+            />
+          }
+        />
+
+        <CardStat stat={windChillTemp} />
+
+        <CardBottomText text={message} />
       </Pressable>
     </OpacityCard>
   );
