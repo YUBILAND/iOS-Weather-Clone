@@ -19,9 +19,9 @@ const WindCardInfo = ({ data }: WindCardInfoProps) => {
   );
   return (
     <View className="">
-      <WindCardInfoItem windSpeed={windSpeed} measurement={"Wind Speed"} />
+      <WindCardInfoItem windSpeed={windSpeed} measurement={"Wind"} />
       <HorizontalLine />
-      <WindCardInfoItem windSpeed={maxWindSpeed} measurement={"Max Gust"} />
+      <WindCardInfoItem windSpeed={maxWindSpeed} measurement={"Gusts"} />
     </View>
   );
 };

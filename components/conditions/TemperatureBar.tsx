@@ -22,9 +22,9 @@ const TemperatureBar = ({
   tempLow,
 }: TemperatureBarProps) => {
   return (
-    <View className="flex-row justify-between items-center gap-x-4">
+    <View className="flex-row justify-between items-center gap-x-1">
       {/* Daily Low */}
-      <View className="w-8">
+      <View className="w-10">
         <RoundedTemperature
           className="text-xl font-semibold"
           temperature={Math.round(tempLow)}
@@ -45,7 +45,7 @@ const TemperatureBar = ({
       </View>
 
       {/* Daily High */}
-      <View className="w-8">
+      <View className="w-10">
         <RoundedTemperature
           className="text-xl font-semibold "
           temperature={Math.round(tempHigh)}

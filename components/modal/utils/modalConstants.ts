@@ -1,9 +1,20 @@
+import {
+  AirPressureIcon,
+  ConditionsIcon,
+  HumidityIcon,
+  PrecipitationIcon,
+  UVIcon,
+  VisibilityIcon,
+  FeelsLikeIcon,
+  WindIcon,
+} from "./icons";
+
 export type SelectModal =
-  | "temperature"
+  | "conditions"
   | "uv"
   | "wind"
   | "precipitation"
-  | "windChill"
+  | "feelsLike"
   | "humidity"
   | "visibility"
   | "airPressure"
@@ -29,8 +40,8 @@ export type ModalDropdownObjectsType = {
 };
 
 export const modalDropdownObjects: ModalDropdownObjectsType = {
-  temperature: {
-    label: "Temperature",
+  conditions: {
+    label: "Conditions",
     id: 0,
     imageName: "cloudy-night-outline",
   },
@@ -49,8 +60,8 @@ export const modalDropdownObjects: ModalDropdownObjectsType = {
     id: 3,
     imageName: "water-outline",
   },
-  windChill: {
-    label: "Wind Chill",
+  feelsLike: {
+    label: "Feels Like",
     id: 4,
     imageName: "thermometer-outline",
   },
@@ -80,4 +91,26 @@ export const modalDropdownObjects: ModalDropdownObjectsType = {
     id: 9,
     imageName: "cloudy-night-outline",
   },
+};
+
+export interface IconProps {
+  size?: number;
+  color?: string;
+}
+
+export type IconObject = {
+  [key in SelectModal]: React.ComponentType<IconProps>;
+};
+
+export const iconMap: IconObject = {
+  conditions: ConditionsIcon,
+  uv: UVIcon,
+  wind: WindIcon,
+  precipitation: PrecipitationIcon,
+  feelsLike: FeelsLikeIcon,
+  humidity: HumidityIcon,
+  visibility: VisibilityIcon,
+  airPressure: AirPressureIcon,
+  sunPhase: ConditionsIcon,
+  moonPhase: ConditionsIcon,
 };

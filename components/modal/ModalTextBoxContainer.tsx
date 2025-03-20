@@ -17,7 +17,7 @@ const ModalTextBoxContainer = ({
         borderRadius: 10,
         backgroundColor: colors.mediumGray,
         paddingHorizontal: removeHorizontalPadding ? 0 : 16,
-        paddingVertical: 16,
+        paddingVertical: 12,
         gap: 12,
       }}
     >

@@ -13,6 +13,8 @@ import ModalOption from "../modal/ModalOption";
 import ModalTransparentTextBox from "../modal/ModalTransparentTextBox";
 import { getUVArr } from "./utils/getUVArr";
 import HorizontalBar from "./HorizontalBar";
+import { getCurrentTime, stringToTime } from "@/hooks/hooks";
+import { useAmericanTime } from "@/hooks/useAmericanTime";
 
 interface UVModalDescriptionProps {
   data: WeatherData;
@@ -23,6 +25,7 @@ const UVModalDescription = ({
   data,
   currentIndex,
 }: UVModalDescriptionProps) => {
+  const americanTime = useAmericanTime();
   const todaysUVArr = getUVArr(data, 0);
   const todaysUVHigh = Math.round(Math.max(...todaysUVArr));
 
@@ -34,16 +37,21 @@ const UVModalDescription = ({
   return (
     <View className="px-4">
       <ModalTransparentTextBox
-        title={currentIndex === 0 ? "Currently, 7:24" : "2025, Mar 4th"}
+        title={
+          currentIndex === 0
+            ? "Now, " +
+              stringToTime(americanTime, getCurrentTime(data.location.tz_id))
+            : "2025, Mar 4th"
+        }
         description="It is currently weak. From 10 to 2, it will become mid level."
       />
 
       {currentIndex === 0 ? (
         <>
-          <ModalTextBox title="Compared to yesterday" removeHorizontalPadding>
+          <ModalTextBox title="Daily Summary" removeHorizontalPadding>
             <View className="gap-y-2 px-4">
               <DefaultText>
-                Today's UV index is similtar to yesterdays
+                The peak UV index today is similar to tomorrow.
               </DefaultText>
             </View>
 
@@ -65,7 +73,7 @@ const UVModalDescription = ({
             </View>
           </ModalTextBox>
 
-          <ModalTextBox title={"UV Information"}>
+          <ModalTextBox title={"About the UV Index"}>
             <DefaultText>
               It is currently 10 and cloudy. It is sunny from 8 to 10. At 4 pm
               it will become sunny. Today's temperature range from 8-20.
@@ -74,7 +82,7 @@ const UVModalDescription = ({
         </>
       ) : (
         <>
-          <ModalTextBox title={"UV Information"}>
+          <ModalTextBox title={"About the UV Index"}>
             <DefaultText>
               It is currently 10 and cloudy. It is sunny from 8 to 10. At 4 pm
               it will become sunny. Today's temperature range from 8-20.

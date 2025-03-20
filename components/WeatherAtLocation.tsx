@@ -1,75 +1,59 @@
-import { Location } from "@/constants/constants";
-import { RootState } from "@/state/store";
-import React, { RefObject, useMemo, useRef, useState } from "react";
-import { FlatList, ScrollView, TextInput, View } from "react-native";
-import { useSelector } from "react-redux";
-import AirQualityCard from "./air-quality/AirQualityCard";
-import HighsAndLows from "./atoms/HighsAndLows";
-import LocationName from "./atoms/LocationName";
-import RoundedTemperature from "./atoms/RoundedTemperature";
-import Search from "./atoms/Search";
-import WeatherName from "./atoms/WeatherName";
-import DailyForecast from "./daily-forecast/DailyForecastCard";
-import HourlyForecast from "./hourly-forecast/HourlyForecastCard";
-import SunPhaseCard from "./sun-phase/SunPhaseCard";
-import UVIndexCard from "./uv-index/UVIndexCard";
-import DropdownComponent from "./modal/dropdown/DropdownComponent";
-import WindCard from "./wind-forecast/card/WindCard";
-import DailyForecastCard from "./daily-forecast/DailyForecastCard";
-import HourlyForecastCard from "./hourly-forecast/HourlyForecastCard";
-import ModalContainer from "./modal/ModalContainer";
-import {
-  modalDropdownObjects,
-  SelectModal,
-} from "./modal/utils/modalConstants";
-import Modal from "./modal/Modal";
-import SunPhaseModal from "./sun-phase/SunPhaseModal";
-import { getCurrentTime, getRemainingTimeUntilNextPhase } from "@/hooks/hooks";
-import { getNextPhaseTime } from "./sun-phase/utils/getNextPhaseTime";
-import WindChillCard from "./wind-chill/WindChillCard";
-import PrecipitationCard from "./precipitation/PrecipitationCard";
-import VisibilityCard from "./visibility/VisibilityCard";
-import HumidityCard from "./humidity/HumidityCard";
-import MoonPhaseCard from "./moon-phase/MoonPhaseCard";
-import MoonPhaseModal from "./moon-phase/MoonPhaseModal";
 import { colors } from "@/assets/colors/colors";
-import MoonPhaseGraph from "./moon-phase/MoonPhaseGraph";
+import { getCurrentTime } from "@/hooks/hooks";
+import { RootState } from "@/state/store";
 import { Ionicons } from "@expo/vector-icons";
-import { useChartPressState } from "victory-native";
+import React, { useMemo, useRef, useState } from "react";
+import { FlatList, ScrollView, TextInput, TextStyle, View } from "react-native";
 import Animated, {
   useAnimatedProps,
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
+import { useSelector } from "react-redux";
+import { useChartPressState } from "victory-native";
+import AirPressureCard from "./air-pressure/AirPressureCard";
+import AirQualityCard from "./air-quality/AirQualityCard";
+import CardsContainer from "./atoms/CardsContainer";
+import HighsAndLows from "./atoms/HighsAndLows";
+import LocationName from "./atoms/LocationName";
+import RoundedTemperature from "./atoms/RoundedTemperature";
+import TwoCards from "./atoms/TwoCards";
+import WeatherName from "./atoms/WeatherName";
+import DailyForecastCard from "./daily-forecast/DailyForecastCard";
+import HourlyForecastCard from "./hourly-forecast/HourlyForecastCard";
+import HumidityCard from "./humidity/HumidityCard";
+import Modal from "./modal/Modal";
+import ModalContainer from "./modal/ModalContainer";
+import {
+  modalDropdownObjects,
+  SelectModal,
+} from "./modal/utils/modalConstants";
+import MoonPhaseCard from "./moon-phase/MoonPhaseCard";
+import MoonPhaseGraph from "./moon-phase/MoonPhaseGraph";
+import MoonPhaseModal from "./moon-phase/MoonPhaseModal";
 import { OFFSETX_PER_TICK, TICKS_PER_DAY } from "./moon-phase/utils/constants";
 import { getCurrentMoonPhase } from "./moon-phase/utils/getCurrentMoonPhase";
 import { getDaysSincePrevMonth } from "./moon-phase/utils/getDaysSincePrevMonth";
-import TwoCards from "./atoms/TwoCards";
-import CardTitle from "./atoms/CardTitle";
-import DefaultText from "./atoms/DefaultText";
+import PrecipitationCard from "./precipitation/PrecipitationCard";
+import SunPhaseCard from "./sun-phase/SunPhaseCard";
+import SunPhaseModal from "./sun-phase/SunPhaseModal";
+import { getNextPhaseTime } from "./sun-phase/utils/getNextPhaseTime";
+import UVIndexCard from "./uv-index/UVIndexCard";
+import VisibilityCard from "./visibility/VisibilityCard";
+import WindChillCard from "./wind-chill/WindChillCard";
+import WindCard from "./wind-forecast/card/WindCard";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import { useAmericanTime } from "@/hooks/useAmericanTime";
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 export interface WeatherAtLocationProps {
-  handleTextDebounce: (value: string) => void;
-  showSearch: boolean;
-  toggleSearch: (textInputRef: RefObject<TextInput>) => void;
-  searchResultLocations: Location[];
-  handleLocation: (location: Location) => void;
   cityName: string;
 }
 
-const WeatherAtLocation = ({
-  handleTextDebounce,
-  showSearch,
-  toggleSearch,
-  searchResultLocations,
-  handleLocation,
-  cityName,
-}: WeatherAtLocationProps) => {
-  const { data, loading, error } = useSelector(
-    (state: RootState) => state.weather
-  );
+const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
+  const data = useWeatherData();
+  const americanTime = useAmericanTime();
 
   const { location, forecast, current } = data[cityName];
 
@@ -78,8 +62,6 @@ const WeatherAtLocation = ({
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const currentIndexRef = useRef<number>(0);
   const [selectedModal, setSelectedModal] = useState<SelectModal | null>(null);
-
-  const { americanTime } = useSelector((state: RootState) => state.settings);
 
   const currentTime = getCurrentTime(location?.tz_id);
   const nextPhaseTime = getNextPhaseTime(
@@ -136,28 +118,36 @@ const WeatherAtLocation = ({
     initialScrollIndex
   );
 
+  const initialMoonPhase = getCurrentMoonPhase(
+    data[cityName],
+    initialScrollIndex,
+    initialScrollIndex
+  );
+
   const showThisModal = (modalName: SelectModal) => {
     setSelectedModal(modalName);
     setCurrentIndex(0);
     setModalVisible(true);
   };
 
+  console.log("Flatlist rerendered");
+
+  const textShadowStyle: TextStyle = {
+    textShadowColor: "rgba(0, 0, 0, 0.5)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
+  };
+
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="w-screen">
-      {/* Search Section */}
-      <View className="mx-4 relative z-50 h-fit">
-        <Search
-          handleTextDebounce={handleTextDebounce}
-          showSearch={showSearch}
-          toggleSearch={toggleSearch}
-          searchResultLocations={searchResultLocations}
-          handleLocation={handleLocation}
-        />
-      </View>
       {/* Forecast section */}
       <View className="mx-4 flex justify-around flex-1 mb-2">
-        <View className="mb-8">
-          <LocationName location={location} className="text-center text-5xl" />
+        <View className="mb-8 pt-14">
+          <LocationName
+            location={location}
+            className="text-center text-5xl"
+            style={textShadowStyle}
+          />
 
           <RoundedTemperature
             temperature={parseInt(current?.temp_c!)}
@@ -167,25 +157,26 @@ const WeatherAtLocation = ({
               fontSize: 128,
               lineHeight: 128,
               marginBottom: -20,
+              ...textShadowStyle,
             }}
           />
 
           <WeatherName
             weatherName={current?.condition.text}
             className="text-center text-2xl tracking-widest"
+            style={textShadowStyle}
           />
 
           <HighsAndLows
             high={
-              Math.round(forecast?.forecastday[0].day.maxtemp_c).toString() ??
-              "undefined"
+              Math.round(forecast?.forecastday[0].day.maxtemp_c) ?? undefined
             }
             low={
-              Math.round(forecast?.forecastday[0].day.mintemp_c).toString() ??
-              "undefined"
+              Math.round(forecast?.forecastday[0].day.mintemp_c) ?? undefined
             }
             className="flex-row gap-x-2 justify-center items-center "
             textClasses="text-2xl font-semibold"
+            style={textShadowStyle}
           />
         </View>
 
@@ -195,7 +186,7 @@ const WeatherAtLocation = ({
             modalVisible={modalVisible}
             setModalVisible={setModalVisible}
             title={"Sun Phase"}
-            iconName="sun-o"
+            selectedModal={selectedModal}
           >
             <SunPhaseModal cityName={cityName} nextPhaseTime={nextPhaseTime} />
           </ModalContainer>
@@ -204,7 +195,7 @@ const WeatherAtLocation = ({
             modalVisible={modalVisible}
             setModalVisible={setModalVisible}
             title={"Moon Phase"}
-            iconName="moon-o"
+            selectedModal={selectedModal}
             backgroundColor={colors.darkGray}
             putMoonHere={
               <View
@@ -220,7 +211,7 @@ const WeatherAtLocation = ({
                     cityName={cityName}
                     state={state}
                     graphHeight={250}
-                    initialScrollPosition={initialScrollPosition}
+                    initialScrollIndex={initialScrollIndex}
                     userScrolledIndex={userScrolledIndex}
                     currentMoonPhase={currentMoonPhase}
                     showPercent
@@ -303,7 +294,7 @@ const WeatherAtLocation = ({
             modalVisible={modalVisible}
             setModalVisible={(visible: boolean) => setModalVisible(visible)}
             title={modalDropdownObjects[selectedModal].label}
-            iconName="cloud"
+            selectedModal={selectedModal}
           >
             <Modal
               cityName={cityName}
@@ -319,18 +310,17 @@ const WeatherAtLocation = ({
           <View></View>
         )}
 
-        <View className="gap-y-2">
-          {/* Hourly Forecast */}
+        <CardsContainer className="gap-y-2">
           <HourlyForecastCard
             cityName={cityName}
-            showModal={() => showThisModal("temperature")}
+            showModal={() => showThisModal("conditions")}
           />
 
           <DailyForecastCard
             cityName={cityName}
             iconSize={iconSize}
             showModal={() => {
-              setSelectedModal("temperature");
+              setSelectedModal("conditions");
               setModalVisible(true);
             }}
             setCurrentIndex={(index: number) => setCurrentIndex(index)}
@@ -368,7 +358,7 @@ const WeatherAtLocation = ({
               <WindChillCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => showThisModal("windChill")}
+                showModal={() => showThisModal("feelsLike")}
               />
             }
             rightCard={
@@ -380,35 +370,52 @@ const WeatherAtLocation = ({
             }
           />
 
-          <View className="flex-row gap-x-2 h-48">
-            <View className="flex-[0.5]">
+          <TwoCards
+            leftCard={
               <VisibilityCard
                 cityName={cityName}
                 iconSize={iconSize}
                 showModal={() => showThisModal("visibility")}
               />
-            </View>
-            <View className="flex-[0.5]">
+            }
+            rightCard={
               <HumidityCard
                 cityName={cityName}
                 iconSize={iconSize}
                 showModal={() => showThisModal("humidity")}
               />
-            </View>
-          </View>
+            }
+          />
 
           <MoonPhaseCard
             cityName={cityName}
             iconSize={iconSize}
-            userScrolledIndex={userScrolledIndex}
-            currentMoonPhase={currentMoonPhase}
-            initialScrollPosition={initialScrollPosition}
+            userScrolledIndex={initialScrollIndex}
+            currentMoonPhase={initialMoonPhase}
+            initialScrollIndex={initialScrollIndex}
             showModal={() => showThisModal("moonPhase")}
           />
-        </View>
+
+          <TwoCards
+            leftCard={
+              <VisibilityCard
+                cityName={cityName}
+                iconSize={iconSize}
+                showModal={() => showThisModal("visibility")}
+              />
+            }
+            rightCard={
+              <AirPressureCard
+                cityName={cityName}
+                iconSize={iconSize}
+                showModal={() => showThisModal("airPressure")}
+              />
+            }
+          />
+        </CardsContainer>
       </View>
     </ScrollView>
   );
 };
 
-export default WeatherAtLocation;
+export default React.memo(WeatherAtLocation);

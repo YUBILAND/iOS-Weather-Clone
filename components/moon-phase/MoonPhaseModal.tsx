@@ -62,6 +62,7 @@ import { getCurrentMoonPhase } from "./utils/getCurrentMoonPhase";
 import { getDaysSincePrevMonth } from "./utils/getDaysSincePrevMonth";
 import { getRemoveAnimationRef } from "./utils/getRemoveAnimationRef";
 import { formatScrollPosDate } from "./utils/formatScrollPosDate";
+import { useWeatherData } from "@/hooks/useWeatherData";
 
 type MoonPhaseModalProps = {
   cityName: string;
@@ -84,7 +85,7 @@ const MoonPhaseModal = ({
   currentMoonPhase,
   daysSincePrevMonth,
 }: MoonPhaseModalProps) => {
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
   const { width } = Dimensions.get("window");
 
   const { whiteTicks, totalTicks } = useMemo(() => getTicksAmount(), []);
@@ -127,7 +128,6 @@ const MoonPhaseModal = ({
 
   const handleHaptic = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     offsetX.value = event.nativeEvent.contentOffset.x;
-    // console.log(offsetX.value);
     const scrollPosToDateString = getScrolledDate(
       data[cityName],
       offsetX.value,
@@ -233,7 +233,12 @@ const MoonPhaseModal = ({
         </View>
       </View>
 
-      <MoonPhaseModalInfo data={data[cityName]} />
+      <MoonPhaseModalInfo
+        data={data[cityName]}
+        userScrolledIndex={userScrolledIndex}
+        initialScrollIndex={TICKS_PER_DAY * daysSincePrevMonth}
+        currentMoonPhase={currentMoonPhase}
+      />
 
       <MoonPhaseCalendar
         data={data[cityName]}

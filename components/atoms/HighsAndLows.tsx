@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, TextStyle } from "react-native";
 import React from "react";
 import DefaultText from "./DefaultText";
 import RoundedTemperature from "./RoundedTemperature";
@@ -8,19 +8,21 @@ const HighsAndLows = ({
   low,
   className,
   textClasses,
+  style,
 }: {
-  high: string;
-  low: string;
+  high: number;
+  low: number;
   className: string;
   textClasses: string;
+  style?: TextStyle;
 }) => {
   return (
     <View className={className}>
-      <DefaultText className={textClasses}>
+      <DefaultText className={textClasses} style={style}>
         H:
         <RoundedTemperature temperature={high} />
       </DefaultText>
-      <DefaultText className={textClasses}>
+      <DefaultText className={textClasses} style={style}>
         L:
         <RoundedTemperature temperature={low} />
       </DefaultText>

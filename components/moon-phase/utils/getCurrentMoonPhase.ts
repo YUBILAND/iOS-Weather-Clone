@@ -1,24 +1,26 @@
 import { WeatherData } from "@/constants/constants";
 import { MoonPhase } from "./constants";
+import { getDaysSincePrevFullMoon } from "./getDaysSincePrevFullMoon";
 
 export const getCurrentMoonPhase = (
   data: WeatherData,
   userScrolledIndex: number,
   initialScrollIndex: number
 ) => {
-  const currentMoonIllumination =
-    data.forecast?.forecastday[0].astro.moon_illumination;
+  const daysSincePrevFullMoon = getDaysSincePrevFullMoon();
 
-  const startingMoonIllumination =
-    (parseInt(currentMoonIllumination) / 100) * 15;
+  const distanceUserScrolledFromInitial =
+    userScrolledIndex - initialScrollIndex;
 
   const currentMoonPhase: MoonPhase =
     Math.abs(
       Math.floor(
-        (userScrolledIndex - initialScrollIndex + startingMoonIllumination) / 15
+        // (userScrolledIndex - initialScrollIndex + startingMoonIllumination) / 15
+        (daysSincePrevFullMoon + distanceUserScrolledFromInitial) / 15
       ) % 2
     ) === 0
-      ? "waxing"
-      : "waning";
+      ? "waning" // From Full Moon Starting Point, the waning phase will always be first since it is transitioning from full moon to new moon
+      : "waxing";
+
   return currentMoonPhase;
 };

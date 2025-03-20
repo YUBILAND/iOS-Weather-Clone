@@ -19,7 +19,7 @@ const WindCardInfoItem = ({
       </View>
 
       <View className="justify-center flex-[0.7]">
-        <DefaultText style={{ color: colors.lightGray }}>mph</DefaultText>
+        <DefaultText style={{ color: colors.lightGray }}>MPH</DefaultText>
         <DefaultText className="font-semibold">{measurement}</DefaultText>
       </View>
     </View>

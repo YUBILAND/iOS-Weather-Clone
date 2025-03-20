@@ -1,8 +1,6 @@
 import { colors } from "@/assets/colors/colors";
-import { weatherKey } from "@/constants/constants";
 import { RootState } from "@/state/store";
-import { weatherPNG } from "@/utils/exampleForecast";
-import React, { useRef } from "react";
+import React from "react";
 import {
   Image,
   ImageSourcePropType,
@@ -12,16 +10,12 @@ import {
 } from "react-native";
 import Animated, {
   AnimatedProps,
-  measure,
-  runOnUI,
-  SharedValue,
   useAnimatedProps,
-  useAnimatedRef,
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSelector } from "react-redux";
-import { getConditionArray } from "./utils/getConditionArray";
 import { ChartPressState } from "victory-native";
+import { getConditionArray } from "./utils/getConditionArray";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
@@ -61,10 +55,9 @@ const GraphContainer = <Key extends string>({
   belowScrollInfo,
 }: GraphContainerProps<Key>) => {
   const { data } = useSelector((state: RootState) => state.weather);
-  const { forecast } = data[cityName];
 
   // Dynamically show time
-  const animatedTime = useAnimatedProps(() => {
+  const draggedTime = useAnimatedProps(() => {
     const time = `${state.x.value.value % 24}:00`;
     return {
       text: time,
@@ -75,7 +68,7 @@ const GraphContainer = <Key extends string>({
   const stopLeftScrollOnXValue = 4;
 
   //Translate X so time follows user drag
-  const animatedStyle = useAnimatedStyle(() => {
+  const draggedTimeStyle = useAnimatedStyle(() => {
     const xPosition = state.x.position.value;
     const xValue = state.x.value.value;
     return {
@@ -106,18 +99,16 @@ const GraphContainer = <Key extends string>({
             xValue < stopLeftScrollOnXValue
               ? hackyWeatherImage
                 ? 10
-                : 30
+                : -20
               : hackyWeatherImage
               ? xPosition - 10 - 20
-              : xPosition - 10,
+              : xPosition - 60,
         },
       ],
     };
   });
 
   const conditionArray = getConditionArray(data[cityName], currentIndex);
-
-  console.log(currentIndex);
 
   return (
     <View className=" w-full px-4 relative z-0">
@@ -132,17 +123,19 @@ const GraphContainer = <Key extends string>({
         >
           {/* Shows user hovered time */}
           <AnimatedTextInput
+            textAlign={"center"}
             editable={false}
             underlineColorAndroid={"transparent"}
             style={[
               {
                 fontSize: 14,
-                width: 1,
+                width: 100,
                 color: colors.lightGray,
+                marginLeft: -35,
               },
-              animatedStyle,
+              draggedTimeStyle,
             ]}
-            animatedProps={animatedTime}
+            animatedProps={draggedTime}
           />
 
           {/* Shows user hovered weather image and temperature */}
@@ -171,16 +164,18 @@ const GraphContainer = <Key extends string>({
                 ))}
               </>
             )}
+
             <AnimatedTextInput
+              textAlign={hackyWeatherImage ? undefined : "center"}
               editable={false}
               underlineColorAndroid={"transparent"}
               style={[
                 {
                   fontSize: smallBold ? 20 : 25,
                   color: "white",
-                  width: 10,
+                  width: 200,
                   // backgroundColor: colors.bgWhite(0.2),
-                  marginLeft: hackyWeatherImage ? 40 : -20,
+                  marginLeft: hackyWeatherImage ? 40 : -40,
                   fontWeight: 600,
                 },
               ]}

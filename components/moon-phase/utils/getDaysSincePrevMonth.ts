@@ -23,8 +23,8 @@ export const getDaysSincePrevMonth = (dateObject: Date = new Date()) => {
     : isMiddleMonth
     ? additionalDaysInPrevMonth + parseInt(currentDay)
     : additionalDaysInPrevMonth + daysInMiddleMonth + parseInt(currentDay);
-  console.log(daysSincePrevMonth);
-  console.log(additionalDaysInPrevMonth + daysInMiddleMonth);
+  // console.log(daysSincePrevMonth);
+  // console.log(additionalDaysInPrevMonth + daysInMiddleMonth);
 
   return daysSincePrevMonth;
 };

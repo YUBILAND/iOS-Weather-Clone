@@ -20,10 +20,11 @@ import { getNextPhaseTime } from "./utils/getNextPhaseTime";
 import CardTitle from "../atoms/CardTitle";
 import CardBottomText from "../atoms/CardBottomText";
 import CardStat from "../atoms/CardStat";
+import { useWeatherData } from "@/hooks/useWeatherData";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
-type SunPhaseModalProps = {
+type SunPhaseCardProps = {
   cityName: string;
   graphHeight: number;
   showModal: () => void;
@@ -35,13 +36,13 @@ const SunPhaseCard = ({
   graphHeight,
   showModal,
   iconSize,
-}: SunPhaseModalProps) => {
+}: SunPhaseCardProps) => {
   const { state, isActive } = useChartPressState({
     x: 0,
     y: { sunPath: 0, sunPosition: 0, phaseLine: 0 },
   });
 
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
   const { location } = data[cityName];
 
   const { americanTime } = useSelector((state: RootState) => state.settings);
@@ -53,10 +54,20 @@ const SunPhaseCard = ({
     americanTime
   );
 
-  const remainingTime = getRemainingTimeUntilNextPhase(
-    currentTime,
-    nextPhaseTime
+  const nextNextPhaseTime = getNextPhaseTime(
+    data[cityName],
+    nextPhaseTime,
+    americanTime
   );
+
+  // const remainingTime = getRemainingTimeUntilNextPhase(
+  //   currentTime,
+  //   nextPhaseTime
+  // );
+
+  const nextSunPhase = data[cityName].current.is_day ? "Sunset" : "Sunrise";
+
+  const nextNextSunPhase = data[cityName].current.is_day ? "Sunrise" : "Sunset";
 
   return (
     <OpacityCard className="h-full">
@@ -67,7 +78,7 @@ const SunPhaseCard = ({
       >
         <View className="px-4 gap-y-2">
           <CardTitle
-            title={"Sun Phase"}
+            title={nextSunPhase}
             icon={<FontAwesome name="sun-o" color="white" size={iconSize} />}
           />
           <CardStat stat={nextPhaseTime} />
@@ -78,14 +89,16 @@ const SunPhaseCard = ({
           state={state}
           isActive={isActive}
           graphHeight={graphHeight}
+          domain={{ top: 800, bottom: -800 }}
           strokeWidth={4}
           removePress
         />
         <CardBottomText
           className="px-4"
-          text={`in ${remainingTime.split(":")[0]} hrs ${
-            remainingTime.split(":")[1]
-          } mins`}
+          // text={`${nextSunPhase}: ${remainingTime.split(":")[0]} hrs ${
+          //   remainingTime.split(":")[1]
+          // } mins`}
+          text={`${nextNextSunPhase}: ${nextNextPhaseTime}`}
         />
       </Pressable>
     </OpacityCard>

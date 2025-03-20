@@ -1,46 +1,34 @@
-import { View, Text, Animated, TextInput } from "react-native";
-import React, { useCallback, useMemo } from "react";
 import { colors } from "@/assets/colors/colors";
-import DefaultText from "../atoms/DefaultText";
-import { CalendarDaysIcon } from "react-native-heroicons/outline";
+import { getChordLength, getCurrentTime } from "@/hooks/hooks";
+import { RootState } from "@/state/store";
+import {
+  BlurStyle,
+  Color,
+  LinearGradient,
+  Skia,
+  useFont,
+  vec,
+} from "@shopify/react-native-skia";
+import React from "react";
+import { View } from "react-native";
+import { useSelector } from "react-redux";
 import {
   Area,
   CartesianChart,
   ChartPressState,
   Line,
-  PointsArray,
   Scatter,
-  useChartPressState,
 } from "victory-native";
-import {
-  Circle,
-  Color,
-  Rect,
-  useFont,
-  Text as SkiaText,
-  LinearGradient,
-  vec,
-} from "@shopify/react-native-skia";
 import SpaceMono from "../../assets/fonts/SpaceMono-Regular.ttf";
-import {
-  SharedValue,
-  useDerivedValue,
-  useSharedValue,
-} from "react-native-reanimated";
-import { RootState } from "@/state/store";
-import { useSelector } from "react-redux";
-import OpacityCard from "../atoms/OpacityCard";
-import { getChordLength, getCurrentTime, militaryHour } from "@/hooks/hooks";
-import Cursor from "../graphs/victoryComponents/Cursor";
-import { getSunPathPercentage } from "./utils/getSunPathPercentage";
-import { useSunPhaseData } from "./utils/useSunPhaseData";
-import { getXOffset } from "./utils/getXOffset";
-import { getYShift } from "./utils/getYShift";
+import ToolTip from "../graphs/victoryComponents/Tooltip";
 import {
   getFirstIntersectionPostOffset,
   getSecondIntersectionPostOffset,
 } from "./utils/getIntersectionOffset";
-import ToolTip from "../graphs/victoryComponents/Tooltip";
+import { getSunPathPercentage } from "./utils/getSunPathPercentage";
+import { getXOffset } from "./utils/getXOffset";
+import { getYShift } from "./utils/getYShift";
+import { useSunPhaseData } from "./utils/useSunPhaseData";
 
 const SunPhaseGraph = ({
   cityName,
@@ -51,6 +39,7 @@ const SunPhaseGraph = ({
   strokeWidth,
   addBackground = false,
   addLines = false,
+  domain = { top: 1200, bottom: -1200 },
 }: {
   cityName: string;
   state: ChartPressState<{
@@ -67,6 +56,7 @@ const SunPhaseGraph = ({
   strokeWidth: number;
   addBackground?: boolean;
   addLines?: boolean;
+  domain?: { top: number; bottom: number };
 }) => {
   const font = useFont(SpaceMono, 12);
 
@@ -136,11 +126,12 @@ const SunPhaseGraph = ({
             font: addLines ? font : null,
             labelColor: addLines ? colors.lightGray : "transparent",
             lineColor: addLines ? "white" : "transparent",
+            tickValues: [0, 6, 12, 18, 24],
           }}
           frame={{
             lineColor: "transparent",
           }}
-          domain={{ y: [-1400, 1400] }}
+          domain={{ y: [domain.bottom, domain.top] }}
           chartPressState={state}
           padding={{ bottom: addLines ? 10 : 0 }}
         >
@@ -162,6 +153,28 @@ const SunPhaseGraph = ({
                 (point.xValue! as number) >=
                 secondIntersectionPostOffset / (xTicks / 24)
             );
+
+            // const paint = Skia.Paint();
+            // // Set the paint color to white
+            // paint.setColor(Skia.Color("white"));
+            // const sigma = 6; // adjust for stronger or softer glow
+            // const maskFilter = Skia.MaskFilter.MakeBlur(
+            //   BlurStyle.Solid,
+            //   sigma,
+            //   true
+            // );
+            // paint.setMaskFilter(maskFilter);
+
+            const paint = Skia.Paint();
+            // Set the paint color to white
+            paint.setColor(Skia.Color("white"));
+            const sigma = 2; // adjust for stronger or softer glow
+            const maskFilter = Skia.MaskFilter.MakeBlur(
+              data[cityName].current.is_day ? BlurStyle.Solid : BlurStyle.Outer,
+              sigma,
+              true
+            );
+            paint.setMaskFilter(maskFilter);
 
             return (
               <>
@@ -243,7 +256,9 @@ const SunPhaseGraph = ({
                     shape="circle"
                     radius={strokeWidth + 2}
                     style="fill"
-                    color="white"
+                    // color="white"
+                    // @ts-ignore doesn't recognize paint as prop but it works, add glow effect
+                    paint={paint}
                   />
                 </>
                 {isActive && !removePress ? (

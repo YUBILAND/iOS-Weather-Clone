@@ -30,9 +30,9 @@ const ModalDropdownContainer = ({
         />
         {openModalDropdown && (
           <BlurView
-            //   intensity={50}
+            // intensity={50}
             style={{ backgroundColor: colors.bgMediumGray(0.8) }}
-            className="absolute top-[100%] mt-2 right-0   w-72 rounded-2xl overflow-hidden "
+            className="absolute top-[100%] mt-2 right-0 w-72 rounded-2xl overflow-hidden "
           >
             {Object.entries(modalDropdownObjects).map(([key, item], index) => {
               const itemProps = {

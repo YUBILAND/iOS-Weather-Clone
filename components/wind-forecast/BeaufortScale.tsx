@@ -94,7 +94,7 @@ const BeaufortScale = () => {
           <DefaultText className="font-semibold">bft</DefaultText>
         </View>
         <View style={{ flex: 0.6 }}>
-          <DefaultText className="font-semibold">Explanation</DefaultText>
+          <DefaultText className="font-semibold">Description</DefaultText>
         </View>
         <View style={{ flex: 0.2 }}>
           <DefaultText className="font-semibold">mph</DefaultText>

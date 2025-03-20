@@ -184,10 +184,13 @@ export type Current = {
   precip_in: number;
   gust_mph: number;
   vis_miles: number;
+  pressure_in: number;
+  dewpoint_c: number;
 };
 
 export type Condition = {
   text: WeatherType;
+  code: number;
 };
 
 export type Location = {
@@ -195,6 +198,7 @@ export type Location = {
   id: number;
   name: string;
   tz_id: string; // region / city
+  localtime: string;
 };
 
 export type Forecast = {
@@ -223,7 +227,7 @@ export type ForecastObject = {
   hour: HourObject[];
 };
 
-export type HourObject = WeatherData["current"] & {
+export type HourObject = Omit<WeatherData["current"], "air_quality"> & {
   time: string;
   chance_of_rain: number;
   temp_c: number;
@@ -238,21 +242,32 @@ export type HourObject = WeatherData["current"] & {
   vis: number;
 };
 
-// Would have used HourObject for Graph.tsx but union doesn't seem to work, so have to declare explicitly
-
-export type GraphKeyType = {
-  chance_of_rain: number;
+export interface GraphKeyType {
   temp_c: number;
-  wind_mph: number;
-  humidity: number;
+  chance_of_rain: number;
   uv: number;
+  wind_mph: number;
+  gust_mph: number;
   wind_degree: number;
   windchill_c: number;
   precip_in: number;
-  gust_mph: number;
   vis_miles: number;
+  humidity: number;
+  pressure_in: number;
+  dewpoint_c: number;
+}
+
+export interface ChartPressStateNames {
+  celsius: number;
+  chanceOfRain: number;
+  uvIndex: number;
+  windSpeed: number;
+  windChill: number;
+  precip: number;
   vis: number;
-};
+  humidity: number;
+  airPressure: number;
+}
 
 export const weekday = [
   "Monday",

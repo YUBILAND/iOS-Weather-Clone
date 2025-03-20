@@ -6,6 +6,9 @@ import {
   DashPathEffect,
   LinearGradient,
   vec,
+  Image,
+  useImage,
+  Text,
 } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
@@ -15,54 +18,83 @@ import {
   Bar,
   CartesianChart,
   ChartPressState,
+  CurveType,
   Line,
   Scatter,
 } from "victory-native";
 import ToolTip from "../graphs/victoryComponents/Tooltip";
 import { regularTimeOnXAxis } from "../sun-phase/utils/getRegularTimeOnXAxis";
-import { GraphKeyType } from "@/constants/constants";
+import { ChartPressStateNames, GraphKeyType } from "@/constants/constants";
+import { getOddConditionImages } from "../hourly-forecast/utils/getOddConditionImages";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import { getGraphImageAndCoord } from "./utils/getGraphImageAndCoord";
+import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
+import { getGraphData } from "./utils/getGraphData";
 
-interface GraphProps<Key extends keyof GraphKeyType> {
+// interface GraphConfig {
+//   graphHeight: number;
+//   strokeWidth: number;
+//   yAxisLabel: string;
+//   customColor: Colors;
+//   addImages: boolean;
+//   removeArea?: boolean;
+//   curveType?: CurveType;
+//   areaDarkTop?: string;
+//   areaDarkBottom?: string;
+// }
+
+interface GraphProps<Key extends keyof ChartPressStateNames> {
   cityName: string;
   state: ChartPressState<{
     x: number;
-    y: Record<
-      "currentLineTop" | "currentLineBottom" | "currentPosition",
-      number
-    > &
-      Pick<GraphKeyType, Key>;
+    y: {
+      currentLineTop: number;
+      currentLineBottom: number;
+      currentPosition: number;
+    } & Pick<ChartPressStateNames, Key>;
   }>;
-
   isActive: boolean;
-  graphHeight: number;
-  strokeWidth: number;
+  graphHeight?: number;
+  strokeWidth?: number;
   yAxisLabel: string;
-  currentIndex: number;
+  loadedIndex: number;
   apiObjectString: keyof GraphKeyType;
-  domainBottom: number;
-  domainTop: number;
-  customColor: Colors;
+  domainBottom?: number;
+  domainTop?: number;
+  customColor?: Colors;
+  addWeatherImages?: boolean | { amount?: number };
+  addWeatherText?: boolean | { amount?: number; unit: string };
+  removeArea: boolean;
+  curveType: CurveType;
+  areaDarkTop: string;
+  areaDarkBottom: string;
 }
 
-const Graph = <Key extends keyof GraphKeyType>({
+const Graph = <Key extends keyof ChartPressStateNames>({
   cityName,
   state,
   isActive,
-  graphHeight,
-  strokeWidth,
+  graphHeight = 250,
+  strokeWidth = 4,
   yAxisLabel,
-  currentIndex,
+  loadedIndex,
   apiObjectString,
-  domainBottom,
-  domainTop,
-  customColor,
+  domainBottom = 0,
+  domainTop = 120,
+  customColor = "bgBlue",
+  addWeatherImages,
+  addWeatherText,
+  removeArea = false,
+  curveType = "linear",
+  areaDarkTop = "rgba(0,0,0,0.2)",
+  areaDarkBottom = "rgba(0,0,0,0.3)",
 }: GraphProps<Key>) => {
-  const { data } = useSelector((state: RootState) => state.weather);
-  const { location, forecast } = data[cityName];
+  const data = useWeatherData();
+  const { location } = data[cityName];
 
   const font = getFont();
 
-  // To discrern which y axis key was passed
+  // Which y axis key was passed
   const yAxisKey = Object.keys(state.y).find(
     (key) =>
       key !== "currentLineTop" &&
@@ -70,45 +102,62 @@ const Graph = <Key extends keyof GraphKeyType>({
       key !== "currentPosition"
   ) as Key;
 
-  const currentHour = militaryHour(
-    new Date().toLocaleTimeString("en-US", { timeZone: location?.tz_id })
+  // Get Graph Data
+  const graphData = getGraphData(
+    data[cityName],
+    100,
+    0,
+    loadedIndex,
+    yAxisKey,
+    apiObjectString
   );
 
-  // Add midnight value
-  const todaysForecast = forecast?.forecastday[currentIndex].hour;
-  const addMidnightWeather = [
-    ...todaysForecast,
-    {
-      [apiObjectString]:
-        todaysForecast[todaysForecast.length - 1][
-          apiObjectString as keyof GraphKeyType
-        ],
-    },
-  ];
+  const imageAmount =
+    typeof addWeatherImages === "boolean"
+      ? 12
+      : addWeatherImages?.amount
+      ? addWeatherImages.amount
+      : 0;
 
-  const currentTime = getCurrentTime(location?.tz_id);
+  // Display image at the top of graph
+  const { timeArr, imageArr } = getGraphImageAndCoord(
+    data[cityName],
+    loadedIndex,
+    imageAmount,
+    "condition.code"
+  );
+  const weatherImageArr = imageArr.map((code, index) =>
+    useImage(
+      weatherNameToImage(
+        getWeatherName(parseInt(code)),
+        data[cityName].forecast.forecastday[loadedIndex].hour[timeArr[index]]
+          .is_day
+      )
+    )
+  );
 
-  const xPosition = Math.floor(regularTimeOnXAxis(currentTime));
+  const textAmount =
+    typeof addWeatherText === "boolean" ||
+    (addWeatherText?.amount === undefined && addWeatherText?.unit !== undefined)
+      ? 12
+      : addWeatherText?.amount
+      ? addWeatherText.amount
+      : 0;
 
-  const hourlyData = addMidnightWeather.map((hour, index) => ({
-    hour: index,
-    [yAxisKey]: hour[apiObjectString as keyof GraphKeyType],
-    currentLineTop: index === currentHour ? 100 : undefined,
-    currentLineBottom: index === currentHour ? 0 : undefined,
-    currentPosition: index === xPosition ? hour[apiObjectString] : undefined,
-  }));
+  const textUnit =
+    typeof addWeatherText === "boolean" ? "" : addWeatherText?.unit;
 
-  const cutoff = getCurrentHour(location!.tz_id);
-
-  const areaDarkTop = "rgba(0,0,0,0.2)";
-  const areaDarkBottom = "rgba(0,0,0,0.3)";
-
-  const curveType = "linear";
+  const { timeArr: timeArr2, imageArr: imageArr2 } = getGraphImageAndCoord(
+    data[cityName],
+    loadedIndex,
+    textAmount,
+    apiObjectString
+  );
 
   return (
     <View style={{ height: graphHeight }} className="relative z-0">
       <CartesianChart
-        data={hourlyData!}
+        data={graphData!}
         xKey="hour"
         yKeys={[
           yAxisKey,
@@ -140,41 +189,81 @@ const Graph = <Key extends keyof GraphKeyType>({
         chartPressState={state}
       >
         {({ points, chartBounds }) => {
-          // 👇 and we'll use the Line component to render a line path.
+          const cutoff = getCurrentHour(location!.tz_id);
           const leftPoints = points[yAxisKey].filter(
             (point) => (point.xValue! as number) <= cutoff
-          ); // Left side (x <= 0)
+          );
           const rightPoints = points[yAxisKey].filter(
             (point) => (point.xValue! as number) >= cutoff
-          ); // Right side (x >= 0)
+          );
+
+          const graphSize = chartBounds.right - chartBounds.left;
+
+          const imageSize = 18;
+          const imageStartOffset = imageSize / 2;
+          const textStartOffset = 12 / 2;
+
           return (
             <>
+              {/* Top of graph */}
+              <>
+                {addWeatherImages &&
+                  weatherImageArr.map((img, index) => (
+                    <Image
+                      key={index}
+                      image={img}
+                      fit="contain"
+                      x={-imageStartOffset + (timeArr[index] / 24) * graphSize}
+                      y={10}
+                      width={imageSize}
+                      height={imageSize}
+                    />
+                  ))}
+
+                {addWeatherText !== undefined &&
+                  imageArr2.map((text, index) => (
+                    <Text
+                      key={index}
+                      x={
+                        -textStartOffset / 2 +
+                        (timeArr2[index] / 24) * graphSize
+                      }
+                      y={15}
+                      font={font}
+                      text={text + textUnit}
+                      color={"white"}
+                    />
+                  ))}
+              </>
+
               {/* Right side of graph*/}
               <>
                 <Line
-                  points={currentIndex === 0 ? rightPoints : points[yAxisKey]}
+                  points={loadedIndex === 0 ? rightPoints : points[yAxisKey]}
                   color={colors[customColor](1)}
                   strokeWidth={6}
                   curveType={curveType}
                 />
-                <Area
-                  points={currentIndex === 0 ? rightPoints : points[yAxisKey]}
-                  y0={chartBounds.bottom}
-                  animate={{ type: "timing", duration: 300 }}
-                  curveType={curveType}
-                >
-                  <LinearGradient
-                    start={vec(chartBounds.bottom, 40)}
-                    end={vec(chartBounds.bottom, chartBounds.bottom)}
-                    colors={[
-                      colors[customColor](0.1),
-                      colors[customColor](0.3),
-                      colors[customColor](0.6),
-                    ]}
-                  />
-                </Area>
+                {!removeArea && (
+                  <Area
+                    points={loadedIndex === 0 ? rightPoints : points[yAxisKey]}
+                    y0={chartBounds.bottom}
+                    animate={{ type: "timing", duration: 300 }}
+                    curveType={curveType}
+                  >
+                    <LinearGradient
+                      start={vec(chartBounds.bottom, 40)}
+                      end={vec(chartBounds.bottom, chartBounds.bottom)}
+                      colors={[
+                        colors[customColor](0.1),
+                        colors[customColor](0.3),
+                        colors[customColor](0.6),
+                      ]}
+                    />
+                  </Area>
+                )}
               </>
-              {currentIndex === 0 && (
+              {loadedIndex === 0 && (
                 <>
                   {/* Left side of graph*/}
                   <>
@@ -186,23 +275,26 @@ const Graph = <Key extends keyof GraphKeyType>({
                     >
                       <DashPathEffect intervals={[10, 10]} />
                     </Line>
-                    <Area
-                      points={leftPoints}
-                      y0={chartBounds.bottom}
-                      color={colors[customColor](0.6)}
-                      animate={{ type: "timing", duration: 300 }}
-                      curveType={curveType}
-                    >
-                      <LinearGradient
-                        start={vec(chartBounds.bottom, 40)}
-                        end={vec(chartBounds.bottom, chartBounds.bottom)}
-                        colors={[
-                          colors[customColor](0.1),
-                          colors[customColor](0.3),
-                          colors[customColor](0.6),
-                        ]}
-                      />
-                    </Area>
+
+                    {!removeArea && (
+                      <Area
+                        points={leftPoints}
+                        y0={chartBounds.bottom}
+                        color={colors[customColor](0.6)}
+                        animate={{ type: "timing", duration: 300 }}
+                        curveType={curveType}
+                      >
+                        <LinearGradient
+                          start={vec(chartBounds.bottom, 40)}
+                          end={vec(chartBounds.bottom, chartBounds.bottom)}
+                          colors={[
+                            colors[customColor](0.1),
+                            colors[customColor](0.3),
+                            colors[customColor](0.6),
+                          ]}
+                        />
+                      </Area>
+                    )}
                   </>
 
                   {/* Vertical Line */}
@@ -249,7 +341,7 @@ const Graph = <Key extends keyof GraphKeyType>({
                     <Scatter
                       points={points.currentPosition}
                       shape="circle"
-                      radius={strokeWidth + 4}
+                      radius={strokeWidth + 2}
                       style="fill"
                       color="black"
                     />
@@ -257,7 +349,7 @@ const Graph = <Key extends keyof GraphKeyType>({
                     <Scatter
                       points={points.currentPosition}
                       shape="circle"
-                      radius={strokeWidth}
+                      radius={strokeWidth - 1}
                       style="fill"
                       color="white"
                     />

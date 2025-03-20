@@ -1,8 +1,14 @@
 import { View, Text, Pressable } from "react-native";
 import React from "react";
-import { Ionicons } from "@expo/vector-icons";
 import DefaultText from "../../atoms/DefaultText";
+import { Ionicons } from "@expo/vector-icons";
+import Feather from "@expo/vector-icons/Feather";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+
 import {
+  iconMap,
+  IconObject,
   ModalDropdownObject,
   modalDropdownObjects,
   SelectModal,
@@ -33,6 +39,8 @@ const ModalDropdownItem = ({
     setOpenModalDropdown(false);
   };
 
+  const IconComponent = iconMap[modalName];
+
   return (
     <Pressable onPress={pressDropdownItem}>
       <View className="flex-row items-center " style={{ paddingVertical: 8 }}>
@@ -45,8 +53,17 @@ const ModalDropdownItem = ({
         <DefaultText className=" flex-[0.7] text-lg font-semibold text-white px-2">
           {item.label}
         </DefaultText>
-        <View className="flex-[0.2]">
-          <Ionicons name={item.imageName} size={18} color={"white"} />
+        <View className="flex-[0.3]">
+          {/* // @ts.ignore, icon name union doesn't seem to be working */}
+
+          {/* <IconComponent
+            name={iconMap[modalName].name}
+            size={iconMap[modalName].size}
+            color={iconMap[modalName].color}
+          /> */}
+          <View className="items-center">
+            <IconComponent />
+          </View>
         </View>
       </View>
 

@@ -1,6 +1,6 @@
-import { WeatherData, weatherKey, WeatherType } from "@/constants/constants";
+import { WeatherData } from "@/constants/constants";
+import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
 import { useImage } from "@shopify/react-native-skia";
-import { weatherPNG } from "@/utils/exampleForecast";
 
 export const getOddConditionImages = (
   data: WeatherData,
@@ -10,14 +10,7 @@ export const getOddConditionImages = (
     data.forecast &&
     data.forecast?.forecastday[currentIndex]?.hour.map((hour) => {
       return useImage(
-        weatherKey[
-          weatherPNG(
-            hour.wind_mph >= 15
-              ? ("windy" as WeatherType)
-              : (hour.condition.text.toLowerCase() as WeatherType),
-            hour.is_day
-          )
-        ]
+        weatherNameToImage(getWeatherName(hour?.condition.code), hour?.is_day)
       );
     });
 

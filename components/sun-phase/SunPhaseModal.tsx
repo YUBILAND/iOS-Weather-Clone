@@ -1,27 +1,17 @@
 import { colors } from "@/assets/colors/colors";
-import {
-  getChordLength,
-  getCurrentTime,
-  getRemainingTimeUntilNextPhase,
-  militaryHour,
-  removeZeroFromTimeString,
-  stringToTime,
-} from "@/hooks/hooks";
+import { getCurrentTime, getRemainingTimeUntilNextPhase } from "@/hooks/hooks";
+import { useWeatherData } from "@/hooks/useWeatherData";
 import { RootState } from "@/state/store";
-import React, { useState } from "react";
-import { Dimensions, Text, TextInput, View } from "react-native";
-import Animated, {
-  useAnimatedProps,
-  useAnimatedStyle,
-} from "react-native-reanimated";
+import React from "react";
+import { View } from "react-native";
 import { useSelector } from "react-redux";
 import { useChartPressState } from "victory-native";
-import DefaultText from "../atoms/DefaultText";
-import SunPhaseGraph from "./SunPhaseGraph";
-import { getSunPhaseInfo } from "./utils/getSunPhaseInfo";
 import SunPhaseDraggableTime from "./SunPhaseDraggableTime";
-import SunPhaseInfo from "./SunPhaseInfo";
+import SunPhaseGraph from "./SunPhaseGraph";
 import SunPhaseHeader from "./SunPhaseHeader";
+import SunPhaseInfo from "./SunPhaseInfo";
+import { getSunPhaseInfo } from "./utils/getSunPhaseInfo";
+import { useAmericanTime } from "@/hooks/useAmericanTime";
 
 type SunPhaseModalProps = {
   cityName: string;
@@ -34,10 +24,10 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
     y: { sunPath: 0, sunPosition: 0, phaseLine: 0 },
   });
 
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
   const { location } = data[cityName];
 
-  const { americanTime } = useSelector((state: RootState) => state.settings);
+  const americanTime = useAmericanTime();
 
   const currentTime = getCurrentTime(location?.tz_id);
 
@@ -60,6 +50,7 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
           />
 
           <SunPhaseDraggableTime
+            data={data[cityName]}
             americanTime={americanTime}
             state={state}
             isActive={isActive}

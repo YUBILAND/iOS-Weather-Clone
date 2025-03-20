@@ -15,7 +15,7 @@ export const getGraphData = (
     new Date().toLocaleTimeString("en-US", { timeZone: data.location?.tz_id })
   );
 
-  // Add midnight value
+  // Fill in missing 24:00 or 0:00 time. Just a copy of 23:00 data
   const todaysForecast = data.forecast?.forecastday[currentIndex]?.hour;
   const addMidnightWeather = [
     ...todaysForecast,

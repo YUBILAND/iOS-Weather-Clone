@@ -2,6 +2,8 @@ import { View, Text } from "react-native";
 import React from "react";
 import DefaultText from "../atoms/DefaultText";
 import { colors } from "@/assets/colors/colors";
+import HrAndMinSmaller from "../atoms/HrAndMinSmaller";
+import { removeZeroFromTimeString } from "@/hooks/hooks";
 
 interface SunPhaseInfoProps {
   sunPhaseInfo: {
@@ -27,7 +29,17 @@ const SunPhaseInfo = ({ sunPhaseInfo }: SunPhaseInfoProps) => {
                 className="px-4 py-2 text-lg font-semibold"
                 style={{ color: colors.bgWhite(0.6) }}
               >
-                {val}
+                {key === "Sunlight" ? (
+                  <HrAndMinSmaller
+                    hour={val.split("HR")[0]}
+                    minute={removeZeroFromTimeString(
+                      val.split(" ")[1].split("MIN")[0]
+                    )}
+                    fontSize={12}
+                  />
+                ) : (
+                  val
+                )}
               </DefaultText>
             </View>
 

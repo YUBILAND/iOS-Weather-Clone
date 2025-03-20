@@ -9,7 +9,7 @@ export const getMoonPhaseGraphData = (moonGraphLumin: number) =>
 
       return {
         day: x,
-        moonPath: -A * Math.pow(Math.cos((x * Math.PI) / (2 * r)), 1 / 2.2),
+        moonPath: A * Math.pow(Math.cos((x * Math.PI) / (2 * r)), 1 / 2.2),
         sunPosition: 0,
         phaseLine: 0,
       };

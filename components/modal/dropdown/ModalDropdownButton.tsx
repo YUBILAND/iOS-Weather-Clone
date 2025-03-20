@@ -2,7 +2,22 @@ import { View, Text, Pressable, Image } from "react-native";
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/assets/colors/colors";
-import { modalDropdownObjects, SelectModal } from "../utils/modalConstants";
+import {
+  iconMap,
+  IconObject,
+  modalDropdownObjects,
+  SelectModal,
+} from "../utils/modalConstants";
+import {
+  AirPressureIcon,
+  ConditionsIcon,
+  HumidityIcon,
+  PrecipitationIcon,
+  UVIcon,
+  VisibilityIcon,
+  WindChillIcon,
+  WindIcon,
+} from "../utils/icons";
 
 interface ModalDropdownButtonProps {
   openModalDropdown: boolean;
@@ -17,6 +32,8 @@ const ModalDropdownButton = ({
   isAnyActive,
   selectedModal,
 }: ModalDropdownButtonProps) => {
+  const IconComponent = iconMap[selectedModal];
+
   return (
     <Pressable
       onPress={() => setOpenModalDropdown(!openModalDropdown)}
@@ -27,11 +44,7 @@ const ModalDropdownButton = ({
       }}
       className="flex-row items-center px-4 py-2 rounded-full gap-x-2 "
     >
-      <Ionicons
-        name={modalDropdownObjects[selectedModal].imageName}
-        size={22}
-        color={"white"}
-      />
+      <IconComponent />
 
       <Ionicons name="chevron-down-outline" size={22} color={"white"} />
     </Pressable>

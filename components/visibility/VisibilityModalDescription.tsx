@@ -1,23 +1,13 @@
+import { WeatherData } from "@/constants/constants";
 import React from "react";
 import { View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
-import ModalBoxTitle from "../modal/ModalBoxTitle";
-import ModalTextBoxContainer from "../modal/ModalTextBoxContainer";
-import { colors } from "@/assets/colors/colors";
-import { WeatherData } from "@/constants/constants";
-import Dot from "../modal/Dot";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
-import ModalTextBox from "../modal/ModalTextBox";
 import ModalOption from "../modal/ModalOption";
-import RoundedTemperature from "../atoms/RoundedTemperature";
-import ProgressBar from "../progress-bar/ProgressBar";
-import { getDailyTempArr } from "../daily-forecast/utils/getDailyTempArr";
-import { getWeekTempArr } from "../daily-forecast/utils/getWeekTempArr";
-import TemperatureBar from "../conditions/TemperatureBar";
-import { getWeekVisibilityArr } from "./utils/getWeekVisibilityArr";
-import { getDailyVisibilityArr } from "./utils/getDailyVisibilityArr";
+import ModalTextBox from "../modal/ModalTextBox";
 import HorizontalBar from "../uv-index/HorizontalBar";
+import { getDailyVisibilityArr } from "./utils/getDailyVisibilityArr";
+import { getWeekVisibilityArr } from "./utils/getWeekVisibilityArr";
 
 interface VisibilityModalDescriptionProps {
   data: WeatherData;

@@ -1,16 +1,15 @@
-import { View, Text } from "react-native";
+import { useWeatherData } from "@/hooks/useWeatherData";
 import React from "react";
-import WindCardInfo from "./WindCardInfo";
+import { View } from "react-native";
 import WindCardCompass from "./WindCardCompass";
-import { useSelector } from "react-redux";
-import { RootState } from "@/state/store";
+import WindCardInfo from "./WindCardInfo";
 
 interface WindCardContentProps {
   cityName: string;
 }
 
 const WindCardContent = ({ cityName }: WindCardContentProps) => {
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
 
   return (
     <>

@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import React, { PropsWithChildren } from "react";
 import { colors } from "@/assets/colors/colors";
+import { BlurView } from "expo-blur";
 
 const OpacityCard = ({
   children,
@@ -10,11 +11,10 @@ const OpacityCard = ({
   className?: string;
 }) => {
   return (
-    <View
-      className={`rounded-xl py-4 ${className}`}
-      style={{ backgroundColor: colors.bgWhite(0.15) }}
-    >
-      {children}
+    <View className="rounded-xl overflow-hidden">
+      <BlurView className={`py-4 ${className}`} intensity={60} tint="dark">
+        {children}
+      </BlurView>
     </View>
   );
 };

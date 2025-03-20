@@ -1,17 +1,12 @@
-import { RootState } from "@/state/store";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import { FontAwesome6 } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, View } from "react-native";
-import { CalendarDaysIcon } from "react-native-heroicons/outline";
-import { useSelector } from "react-redux";
-import ColoredBar from "../atoms/ColoredBar";
+import { Pressable } from "react-native";
+import CardBottomText from "../atoms/CardBottomText";
+import CardStat from "../atoms/CardStat";
+import CardTitle from "../atoms/CardTitle";
 import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
-import { colors } from "@/assets/colors/colors";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
-import CardTitle from "../atoms/CardTitle";
-import CardStat from "../atoms/CardStat";
-import CardText from "../atoms/CardBottomText";
-import CardBottomText from "../atoms/CardBottomText";
 
 interface PrecipitationCardProps {
   cityName: string;
@@ -24,13 +19,13 @@ const PrecipitationCard = ({
   showModal,
   iconSize,
 }: PrecipitationCardProps) => {
-  const { data } = useSelector((state: RootState) => state.weather);
-  const { forecast, current } = data[cityName];
+  const data = useWeatherData();
+  const { forecast } = data[cityName];
 
   const precipTemp =
     Math.round(forecast.forecastday[0].day.totalprecip_in).toString() + '"';
 
-  const message = "Past 24 hours";
+  const message = "in last 24h";
   const message2 = "Later there will be more rain or something";
 
   return (

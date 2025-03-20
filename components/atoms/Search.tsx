@@ -3,14 +3,7 @@ import React, { RefObject, useRef } from "react";
 import { colors } from "@/assets/colors/colors";
 import { MagnifyingGlassIcon } from "react-native-heroicons/outline";
 import { MapPinIcon } from "react-native-heroicons/solid";
-import { Location } from "@/app";
-import Animated, {
-  useSharedValue,
-  withSpring,
-  useAnimatedStyle,
-  withTiming,
-  Easing,
-} from "react-native-reanimated";
+import { Location } from "@/constants/constants";
 
 interface SearchProps {
   handleTextDebounce: (value: string) => void;
@@ -32,7 +25,7 @@ const Search: React.FC<SearchProps> = ({
   return (
     <>
       <View
-        className="flex-row justify-end items-center rounded-full"
+        className=" relative flex-row justify-end items-center rounded-full"
         style={{
           backgroundColor: showSearch ? colors.bgWhite(0.2) : "transparent",
         }}

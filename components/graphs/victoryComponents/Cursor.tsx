@@ -15,8 +15,8 @@ const Cursor = ({ x, y, width }: CursorProps) => {
   return (
     <>
       <Rect x={rectX} y={0} width={width} height={500} color="white" />
-      <Circle cx={x} cy={y} r={10} color="black" />
-      <Circle cx={x} cy={y} r={8} color="white" />
+      <Circle cx={x} cy={y} r={7} color="black" />
+      <Circle cx={x} cy={y} r={6} color="white" />
     </>
   );
 };

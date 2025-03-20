@@ -4,11 +4,14 @@ import {
   Group,
   Mask,
   Rect,
+  Skia,
   Image as SkiaImage,
+  SkImage,
   useFont,
   useImage,
+  Invalidate,
 } from "@shopify/react-native-skia";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
 import { useSelector } from "react-redux";
 import { Area, CartesianChart, ChartPressState } from "victory-native";
@@ -20,13 +23,18 @@ import { getMoonGraphLumin } from "./utils/getMoonGraphLumin";
 import { getMoonPhaseGraphData } from "./utils/getMoonPhaseGraphData";
 import { getMoonRotationDegress } from "./utils/getMoonRotationDegrees";
 import { getRemoveAnimationRef } from "./utils/getRemoveAnimationRef";
+import { WeatherData } from "@/constants/constants";
+import { getInitialMoonPhase } from "./utils/getInitialMoonPhase";
+import { loadImage } from "skia-canvas";
+import { Asset } from "expo-asset";
+import { useSharedValue } from "react-native-reanimated";
 
 const MoonPhaseGraph = ({
   cityName,
   state,
   graphHeight,
   addLines = false,
-  initialScrollPosition,
+  initialScrollIndex,
   userScrolledIndex,
   currentMoonPhase,
   scaleDown = 0,
@@ -43,17 +51,18 @@ const MoonPhaseGraph = ({
   }>;
   graphHeight: number;
   addLines?: boolean;
-  initialScrollPosition: number;
+  initialScrollIndex: number;
   userScrolledIndex: number;
   currentMoonPhase: MoonPhase;
   scaleDown?: number;
   showPercent?: boolean;
 }) => {
+  const moonImage = useImage(require("../../assets/images/moon.png"));
+
   const font = useFont(SpaceMono, 12);
 
   const { data } = useSelector((state: RootState) => state.weather);
 
-  const image = useImage(require("../../assets/images/moon.png"));
   // Graph overflows a bit on the right so when rotated is offset to the right. Add some right padding to recenter it
   const GRAPH_XPADDING_TO_RECENTER = addLines ? 12 : 0;
   const GRAPH_YPADDING_TO_RECENTER = addLines ? 14 : 0;
@@ -63,8 +72,7 @@ const MoonPhaseGraph = ({
   const MOON_IMAGE_SIZE = addLines ? 230 + halfSize : 260 + halfSize;
 
   const moonGraphLumin = getMoonGraphLumin(
-    data[cityName],
-    userScrolledIndex - initialScrollPosition / (TICKS_PER_DAY * 10)
+    userScrolledIndex - initialScrollIndex
   );
 
   const MoonPhaseData = useMemo(() => {
@@ -76,12 +84,57 @@ const MoonPhaseGraph = ({
 
   const moonRotation = getMoonRotationDegress(currentMoonPhase, moonGraphLumin);
 
+  // asynchonous problem, won't load on first render
+  // const [moonImage, setMoonImage] = useState<SkImage>();
+
+  // temp fix for loading moon image
+  // useEffect(() => {
+  //   const loadImage = async (): Promise<SkImage | null> => {
+  //     try {
+  //       const asset = Asset.fromModule(require("../../assets/images/moon.png"));
+  //       await asset.downloadAsync(); // Ensures it's available in the file system
+
+  //       const imageData = await Skia.Data.fromURI(asset.localUri!);
+  //       const image = Skia.Image.MakeImageFromEncoded(imageData);
+
+  //       if (image) {
+  //         console.log("Image loaded successfully!");
+  //         return image;
+  //       } else {
+  //         console.log("Failed to create Skia image");
+  //         return null;
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to load image:", error);
+  //       return null;
+  //     }
+  //   };
+  //   const fetchImage = async () => {
+  //     const image = await loadImage();
+  //     if (image) {
+  //       setTimeout(() => {
+  //         setMoonImage(image);
+  //       }, 800);
+  //     }
+  //   };
+
+  //   fetchImage();
+  // }, []);
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+
+  //   }, 800)
+  // },[])
+
+  const initialMoonPhase = getInitialMoonPhase();
+
   return (
     <>
       {showPercent && (
         <View className="absolute w-full items-start">
           <DefaultText className="font-bold text-4xl">
-            {currentMoonPhase === "waxing"
+            {currentMoonPhase === initialMoonPhase
               ? Math.round(moonGraphLumin) + "%"
               : 100 - Math.round(moonGraphLumin) + "%"}
           </DefaultText>
@@ -137,6 +190,7 @@ const MoonPhaseGraph = ({
                 canvasSize.height / 2 -
                 GRAPH_YPADDING_TO_RECENTER -
                 MOON_IMAGE_SIZE / 2;
+
               return (
                 <>
                   <Mask
@@ -144,7 +198,7 @@ const MoonPhaseGraph = ({
                     mask={
                       <Group>
                         <SkiaImage
-                          image={image}
+                          image={moonImage}
                           rect={{
                             x: moonCenterX,
                             y: moonCenterY,
@@ -155,6 +209,7 @@ const MoonPhaseGraph = ({
                         <Area
                           points={points.moonPath}
                           y0={
+                            // don't change this because it designates the direction of the shadow
                             currentMoonPhase === "waxing"
                               ? chartBounds.bottom
                               : chartBounds.top
@@ -177,77 +232,6 @@ const MoonPhaseGraph = ({
                       />
                     }
                   />
-                  <>
-                    {/* <SkiaImage
-                      image={image}
-                      rect={{
-                        x:
-                          canvasSize.width / 2 +
-                          GRAPH_XPADDING_TO_RECENTER -
-                          MOON_IMAGE_SIZE / 2,
-                        y:
-                          canvasSize.height / 2 -
-                          GRAPH_YPADDING_TO_RECENTER -
-                          MOON_IMAGE_SIZE / 2,
-                        width: MOON_IMAGE_SIZE,
-                        height: MOON_IMAGE_SIZE,
-                      }}
-                    /> */}
-
-                    <>
-                      {/* Dark area of moon */}
-                      {/* <Area
-                          points={points.moonPath}
-                          y0={
-                            currentMoonPhase === "waxing"
-                              ? chartBounds.bottom
-                              : chartBounds.top
-                          }
-                          color={colors.bgBlack(0.6)}
-                          animate={{
-                            type: "timing",
-                            duration: removeAnimationRef.current ? 0 : 300,
-                          }}
-                          mask={moonPath}
-                        /> */}
-
-                      {/* Day time */}
-                      {/* <Line
-                      points={dayTime}
-                      color={colors.bgWhite(0.5)}
-                      strokeWidth={strokeWidth}
-                      curveType="natural"
-                    /> */}
-
-                      {/* Night time right side */}
-                      {/* <Line
-                      points={nightTime2}
-                      color={colors.bgBlack(0.5)}
-                      strokeWidth={strokeWidth}
-                      curveType="natural"
-                    /> */}
-                    </>
-
-                    {/* Phase Line */}
-                    {/* <Line
-                      points={points.phaseLine}
-                      color={colors.bgWhite(0.5)}
-                      strokeWidth={strokeWidth - 3}
-                      curveType="natural"
-                    /> */}
-
-                    {/* Sun Position */}
-                    {/* <Scatter
-                    points={points.sunPosition}
-                    shape="circle"
-                    radius={strokeWidth + 2}
-                    style="fill"
-                    color="white"
-                  /> */}
-                  </>
-                  {/* {isActive && !removePress ? (
-                  <ToolTip x={state.x.position} y={state.y.moonPath.position} />
-                ) : null} */}
                 </>
               );
             }}

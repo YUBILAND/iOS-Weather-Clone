@@ -3,6 +3,8 @@ import React from "react";
 import DefaultText from "../atoms/DefaultText";
 import { colors } from "@/assets/colors/colors";
 import { WeatherData } from "@/constants/constants";
+import { removeZeroFromTimeString } from "@/hooks/hooks";
+import HrAndMinSmaller from "../atoms/HrAndMinSmaller";
 
 interface SunPhaseHeader {
   data: WeatherData;
@@ -17,6 +19,15 @@ const SunPhaseHeader = ({
   nextPhaseTime,
   remainingTime,
 }: SunPhaseHeader) => {
+  // const totalDaylightHours = data.current?.is_day
+  //   ? "Daylight remaining:"
+  //   : "Nighttime remaining:" +
+  //     remainingTime.split(":")[0] +
+  //     "HR" +
+  //     removeZeroFromTimeString(remainingTime.split(":")[1]) +
+  //     "MIN";
+
+  // console.log(remainingTime);
   return (
     <>
       <DefaultText
@@ -29,9 +40,11 @@ const SunPhaseHeader = ({
         className="text-base font-semibold"
         style={{ opacity: isActive ? 0 : 100, color: colors.lightGray }}
       >
-        {`${data.current?.is_day ? "Sunset" : "Sunrise"} in ${
-          remainingTime.split(":")[0]
-        } hrs ${remainingTime.split(":")[1]} mins`}
+        {data.current?.is_day ? "Daylight remaining:" : "Nighttime remaining:"}{" "}
+        <HrAndMinSmaller
+          hour={remainingTime.split(":")[0]}
+          minute={removeZeroFromTimeString(remainingTime.split(":")[1])}
+        />
       </DefaultText>
     </>
   );

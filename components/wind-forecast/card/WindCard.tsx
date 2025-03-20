@@ -18,8 +18,6 @@ interface WindCardProps {
 }
 
 const WindCard = ({ cityName, showModal, iconSize }: WindCardProps) => {
-  const { data } = useSelector((state: RootState) => state.weather);
-
   return (
     <OpacityCard className="px-4 gap-y-2">
       <Pressable

@@ -2,8 +2,10 @@ import { View, Text, Image } from "react-native";
 import React from "react";
 import DefaultText from "../../atoms/DefaultText";
 import { WeatherData, weatherKey } from "@/constants/constants";
-import { weatherPNG } from "@/utils/exampleForecast";
+
 import { colors } from "@/assets/colors/colors";
+import { getDayArr } from "@/components/precipitation/utils/getDayArr";
+import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
 
 interface TitleTemp {
   data: WeatherData;
@@ -11,27 +13,29 @@ interface TitleTemp {
 }
 
 const TitleTemp = ({ data, item }: TitleTemp) => {
-  const { location, forecast, current } = data;
+  const { forecast, current } = data;
 
-  const hourlyTempMap = forecast?.forecastday[0].hour.map((hour) =>
-    Math.round(parseFloat(hour.temp_c))
-  );
-  const maxCelsius = Math.max(...hourlyTempMap);
-  const minCelsius = Math.min(...hourlyTempMap);
+  const hourlyTempMap = getDayArr(data, 0, "temp_c");
+  const maxCelsius = Math.round(Math.max(...hourlyTempMap));
+  const minCelsius = Math.round(Math.min(...hourlyTempMap));
 
   const currentTemperature = Math.round(parseFloat(current?.temp_c));
   const maxTemperature = Math.round(
-    parseFloat(forecast?.forecastday[item.id].day.maxtemp_c)
+    forecast?.forecastday[item.id].day.maxtemp_c
   );
   const minTemperature = Math.round(
-    parseFloat(forecast?.forecastday[item.id].day.mintemp_c)
+    forecast?.forecastday[item.id].day.mintemp_c
   );
 
-  const currentWeatherImage =
-    weatherKey[weatherPNG(current?.condition.text, current?.is_day)];
+  const currentWeatherImage = weatherNameToImage(
+    getWeatherName(current?.condition.code),
+    current?.is_day
+  );
 
-  const DailyWeatherImage =
-    weatherKey[weatherPNG(forecast?.forecastday[item.id].day.condition.text)];
+  const DailyWeatherImage = weatherNameToImage(
+    getWeatherName(forecast?.forecastday[item.id].day.condition.code),
+    true
+  );
 
   return (
     <View className="flex-row justify-between items-center">
@@ -62,8 +66,8 @@ const TitleTemp = ({ data, item }: TitleTemp) => {
         </View>
 
         {item.id === 0 ? (
-          <DefaultText style={{ color: colors.lightGray }}>
-            H: {maxCelsius}&#176; L: {minCelsius}&#176;
+          <DefaultText style={{ color: colors.lightGray, fontWeight: 500 }}>
+            H:{maxCelsius}&#176; L:{minCelsius}&#176;
           </DefaultText>
         ) : (
           <DefaultText style={{ color: colors.lightGray }}>Celsius</DefaultText>

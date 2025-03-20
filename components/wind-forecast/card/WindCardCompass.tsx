@@ -10,8 +10,7 @@ interface WindCardCompassProps {
 }
 
 const WindCardCompass = ({ data }: WindCardCompassProps) => {
-  const rotationDegrees = (data.current.wind_degree - 90).toString() + "deg";
-
+  const rotationDegrees = (data.current.wind_degree + 90).toString() + "deg";
   return (
     <View className="items-center ">
       <View

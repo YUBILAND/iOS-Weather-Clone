@@ -1,16 +1,22 @@
-import { View, Text } from "react-native";
+import { View, Text, TextStyle } from "react-native";
 import React from "react";
-import { Location } from "@/app";
 import DefaultText from "./DefaultText";
+import { Location } from "@/constants/constants";
 
 const LocationName = ({
   location,
   className,
+  style,
 }: {
   location?: Location;
   className: string;
+  style?: TextStyle;
 }) => {
-  return <DefaultText className={className}>{location?.name}</DefaultText>;
+  return (
+    <DefaultText style={style} className={className}>
+      {location?.name}
+    </DefaultText>
+  );
 };
 
 export default LocationName;

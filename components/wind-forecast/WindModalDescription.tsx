@@ -41,16 +41,14 @@ const WindModalDescription = ({
   const dailyOverviewMessage = "Current wind speed is coming from the";
   return (
     <View className="px-4">
-      <ModalTextBox title="Daily Overview">
+      <ModalTextBox title="Daily Summary">
         <DefaultText>{dailyOverviewMessage}</DefaultText>
       </ModalTextBox>
       {currentIndex === 0 && (
         <>
-          <ModalTextBox title="Compared to yesterday" removeHorizontalPadding>
+          <ModalTextBox title="Daily Comparison" removeHorizontalPadding>
             <View className="gap-y-2 px-4">
-              <DefaultText>
-                Today's UV index is similar to yesterdays
-              </DefaultText>
+              <DefaultText>Today's Wind is similar to tomorrows</DefaultText>
             </View>
 
             <HorizontalLine />
@@ -73,17 +71,17 @@ const WindModalDescription = ({
         </>
       )}
 
-      <ModalTextBox title={"Wind Information"}>
+      <ModalTextBox title={"About Wind Speed and Gusts"}>
         <DefaultText>Wind is wind</DefaultText>
       </ModalTextBox>
 
-      <ModalTextBox title={"Beaufort Wind Scale"} removeHorizontalPadding>
+      <ModalTextBox title={"Beaufort Scale"} removeHorizontalPadding>
         <View className="gap-y-3">
           <BeaufortScale />
         </View>
       </ModalTextBox>
 
-      <ModalTextBox title={"About Beaufort Wind Scale"}>
+      <ModalTextBox title={"About the Beaufort Wind Scale"}>
         <DefaultText
           className=""
           style={{ lineHeight: 18, letterSpacing: 0.2 }}

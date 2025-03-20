@@ -1,5 +1,5 @@
 import { WeatherData, weatherKey } from "@/constants/constants";
-import { weatherPNG } from "@/utils/exampleForecast";
+import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
 
 export const getConditionArray = (data: WeatherData, currentIndex: number) => {
   // Add midnight value
@@ -9,6 +9,7 @@ export const getConditionArray = (data: WeatherData, currentIndex: number) => {
     {
       condition: {
         text: todaysForecast[todaysForecast.length - 1].condition.text,
+        code: todaysForecast[todaysForecast.length - 1].condition.code,
       },
       is_day: todaysForecast[todaysForecast.length - 1].is_day,
     },
@@ -18,7 +19,10 @@ export const getConditionArray = (data: WeatherData, currentIndex: number) => {
   const conditionArray =
     data.forecast &&
     addMidnightWeather.map((hour) => {
-      return weatherKey[weatherPNG(hour.condition.text, hour.is_day)];
+      return weatherNameToImage(
+        getWeatherName(hour?.condition.code),
+        hour?.is_day
+      );
     });
   return conditionArray;
 };

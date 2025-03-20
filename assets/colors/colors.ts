@@ -5,6 +5,7 @@ export const colors = {
 
   bgBlue: (opacity: number = 1) => `rgba(124,197,227, ${opacity})`,
   bgGreen: (opacity: number = 1) => `rgba(72, 227, 82, ${opacity})`,
+  bgPurple: (opacity: number = 1) => `rgba(255, 0, 255, ${opacity})`,
 
   // lightGray: "#777679",
   lightGray: `rgba(255,255,255, 0.6)`,
@@ -14,4 +15,10 @@ export const colors = {
   green: "rgb(72, 227, 82)",
 };
 
-export type Colors = "bgWhite" | "bgBlack" | "bgMediumGray" | "bgBlue";
+export type Colors =
+  | "bgWhite"
+  | "bgBlack"
+  | "bgMediumGray"
+  | "bgBlue"
+  | "bgGreen"
+  | "bgPurple";

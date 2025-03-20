@@ -13,6 +13,7 @@ import CardTitle from "../atoms/CardTitle";
 import MoonPhaseGraph from "./MoonPhaseGraph";
 import { useChartPressState } from "victory-native";
 import { MoonPhase } from "./utils/constants";
+import { useWeatherData } from "@/hooks/useWeatherData";
 
 interface MoonPhaseCardProps {
   cityName: string;
@@ -20,7 +21,7 @@ interface MoonPhaseCardProps {
   iconSize: number;
   userScrolledIndex: number;
   currentMoonPhase: MoonPhase;
-  initialScrollPosition: number;
+  initialScrollIndex: number;
 }
 
 const MoonPhaseCard = ({
@@ -29,16 +30,18 @@ const MoonPhaseCard = ({
   iconSize,
   userScrolledIndex,
   currentMoonPhase,
-  initialScrollPosition,
+  initialScrollIndex,
 }: MoonPhaseCardProps) => {
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
 
   const { state } = useChartPressState({
     x: 0,
     y: { moonPath: 0, sunPosition: 0, phaseLine: 0 },
   });
 
-  const graphHeight = 250;
+  const actualCurrentMoonPhase =
+    data[cityName].forecast.forecastday[0].astro.moon_phase;
+
   return (
     <OpacityCard className="px-4 gap-y-2">
       <Pressable
@@ -47,7 +50,7 @@ const MoonPhaseCard = ({
         }}
       >
         <CardTitle
-          title={"Moon Phase"}
+          title={actualCurrentMoonPhase}
           icon={<MoonIcon color="white" size={iconSize} />}
         />
 
@@ -60,10 +63,10 @@ const MoonPhaseCard = ({
               <MoonPhaseGraph
                 cityName={cityName}
                 state={state}
-                graphHeight={graphHeight}
+                graphHeight={250}
                 userScrolledIndex={userScrolledIndex}
                 currentMoonPhase={currentMoonPhase}
-                initialScrollPosition={initialScrollPosition}
+                initialScrollIndex={initialScrollIndex}
                 scaleDown={130}
               />
             </View>

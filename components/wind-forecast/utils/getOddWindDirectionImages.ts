@@ -1,7 +1,5 @@
-import { WeatherData, weatherKey, WeatherType } from "@/constants/constants";
+import { WeatherData } from "@/constants/constants";
 import { useImage } from "@shopify/react-native-skia";
-import { weatherPNG } from "@/utils/exampleForecast";
-import { Ionicons } from "@expo/vector-icons";
 import { getArrowFromDegree } from "./getArrowFromDegree";
 
 export const getOddWindDirectionImages = (
@@ -11,7 +9,8 @@ export const getOddWindDirectionImages = (
   const windDirectionArray =
     data.forecast &&
     data.forecast?.forecastday[currentIndex]?.hour.map((hour) => {
-      return useImage(getArrowFromDegree(hour.wind_degree));
+      //north means from north to south so direcition of north should be pointing down, so add 180
+      return useImage(getArrowFromDegree((hour.wind_degree + 180) % 360));
     });
 
   const oddWindDirectionImages = windDirectionArray.filter((img, index) => {

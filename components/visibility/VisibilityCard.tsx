@@ -1,17 +1,12 @@
 import { RootState } from "@/state/store";
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable } from "react-native";
 import { EyeIcon } from "react-native-heroicons/outline";
 import { useSelector } from "react-redux";
-import ColoredBar from "../atoms/ColoredBar";
-import DefaultText from "../atoms/DefaultText";
-import OpacityCard from "../atoms/OpacityCard";
-import { colors } from "@/assets/colors/colors";
-import { FontAwesome } from "@expo/vector-icons";
-import CardTitle from "../atoms/CardTitle";
-import CardStat from "../atoms/CardStat";
-import CardText from "../atoms/CardBottomText";
 import CardBottomText from "../atoms/CardBottomText";
+import CardStat from "../atoms/CardStat";
+import CardTitle from "../atoms/CardTitle";
+import OpacityCard from "../atoms/OpacityCard";
 
 interface VisibilityCardProps {
   cityName: string;
@@ -27,7 +22,7 @@ const VisibilityCard = ({
   const { data } = useSelector((state: RootState) => state.weather);
   const { current } = data[cityName];
 
-  const currentVisibility = Math.round(current.vis_miles).toString() + "mi";
+  const currentVisibility = Math.round(current.vis_miles).toString() + " mi";
 
   const message = "random message";
 

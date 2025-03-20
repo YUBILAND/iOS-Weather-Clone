@@ -23,13 +23,13 @@ const MoonPhaseInfo = ({ data }: MoonPhaseInfoProps) => {
 
   const timeUntilFormatted =
     Math.floor(daysUntilFullMoon) >= 1
-      ? Math.floor(daysUntilFullMoon).toString() + " days"
-      : Math.floor(daysUntilFullMoon * 24) + " hrs";
+      ? Math.floor(daysUntilFullMoon).toString() + " DAYS"
+      : Math.floor(daysUntilFullMoon * 24) + " HRS";
 
   return (
     <View className="">
       <MoonPhaseInfoItem
-        text={"Moon Illumination"}
+        text={"Illumination"}
         value={currentMoonIllumination + "%"}
       />
       <HorizontalLine />

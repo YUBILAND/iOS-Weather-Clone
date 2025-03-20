@@ -1,42 +1,49 @@
 import { StatusBar } from "expo-status-bar";
-import React, { RefObject, useCallback, useEffect, useState } from "react";
+import React, {
+  RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
-  Text,
-  View,
+  Animated,
+  FlatList,
   Image,
   SafeAreaView,
   TextInput,
-  ImageBackground,
-  FlatList,
-  Animated,
+  View,
+  ViewToken,
 } from "react-native";
 
-import { createTamagui, TamaguiProvider } from "tamagui";
-import { defaultConfig } from "@tamagui/config/v4"; // for quick config install this
-
-import { debounce } from "lodash";
 import { fetchLocations } from "@/api/weather";
-import { getData } from "@/utils/asyncStorage";
 import Spinner from "@/components/atoms/Spinner";
+import { getData } from "@/utils/asyncStorage";
+import { debounce } from "lodash";
 import "../global.css";
-import { Ionicons } from "@expo/vector-icons";
-import { FontAwesome6 } from "@expo/vector-icons";
 
-import { useWindowDimensions } from "react-native";
 import WeatherAtLocation, {
   WeatherAtLocationProps,
 } from "@/components/WeatherAtLocation";
+import { useWindowDimensions } from "react-native";
 
-import { ExpandingDot } from "react-native-animated-pagination-dots";
-import { colors } from "@/assets/colors/colors";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/state/store";
-import { fetchWeatherData } from "@/state/api/apiSlice";
+import BottomFooter from "@/components/atoms/BottomFooter";
+import LocationModal from "@/components/LocationModal/LocationModal";
 import { Location } from "@/constants/constants";
+import { fetchWeatherData } from "@/state/api/apiSlice";
+import { AppDispatch, RootState } from "@/state/store";
+import { getWeatherName, weatherNameToCardBg } from "@/utils/exampleForecast";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useDispatch, useSelector } from "react-redux";
+
+import { CrossfadeImage } from "react-native-crossfade-image";
 
 const App = () => {
-  // AsyncStorage.clear();
+  const resetWeatherScreens = false;
+  if (resetWeatherScreens) {
+    AsyncStorage.clear();
+  }
   const dispatch = useDispatch<AppDispatch>();
   const { data, loading, error } = useSelector(
     (state: RootState) => state.weather
@@ -46,32 +53,33 @@ const App = () => {
   const [searchResultLocations, setSearchResultLocations] = useState<
     Location[]
   >([]);
-  const [weatherScreens, setWeatherScreens] = useState([]);
+  const [weatherScreens, setWeatherScreens] = useState<string[]>([]);
   const [update, setUpdate] = useState(false);
 
   const FirstCity = async () => {
     const cityArray = await getData("city");
-    console.log(cityArray);
+    // console.log(cityArray);
     setWeatherScreens(cityArray);
   };
 
   // Fetch the weather data when the component mounts
+  // useEffect(() => {
+  //   dispatch(fetchWeatherData());
+  //   FirstCity();
+  // }, [update]);
   useEffect(() => {
     dispatch(fetchWeatherData());
     FirstCity();
   }, [update]);
 
-  const currentCity = weatherScreens[0];
-  const cityData = data[currentCity];
-
-  // add new location
+  // Add New Weather Location
   const handleLocation = async (location: Location) => {
     try {
-      await dispatch(fetchWeatherData(location.name));
-
       setShowSearch(false);
       setSearchResultLocations([]);
       setUpdate(!update);
+      setShowLocationModal(false);
+      await dispatch(fetchWeatherData(location.name));
     } catch (error) {
       console.error("Error fetching weather data:", error);
     }
@@ -83,7 +91,7 @@ const App = () => {
     if (value.length > autoCompleteMinimumLength) {
       fetchLocations(value).then((data) => {
         setSearchResultLocations(data);
-        console.log(data);
+        // console.log(data);
       });
     }
   };
@@ -92,27 +100,11 @@ const App = () => {
 
   const toggleSearch = (textInputRef: RefObject<TextInput>) => {
     setShowSearch((prevState) => !prevState);
-
     !showSearch ? textInputRef.current?.focus() : textInputRef.current?.blur();
   };
 
   const { width } = useWindowDimensions();
   const scrollX = React.useRef(new Animated.Value(0)).current;
-
-  if (loading) {
-    return (
-      <View className="flex-1 relative">
-        <StatusBar style="light" />
-        <Image
-          blurRadius={70}
-          className="absolute h-full w-full"
-          source={require("../assets/images/bg.png")}
-        />
-
-        <Spinner />
-      </View>
-    );
-  }
 
   // if (!cityData) {
   //   return (
@@ -129,20 +121,42 @@ const App = () => {
   //   );
   // }
 
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
+  const flatlistRef = useRef<FlatList>(null);
+
+  const handleShowWeatherScreen = (index: number) => {
+    flatlistRef.current?.scrollToIndex({ index: index });
+    setShowLocationModal(false);
+  };
+
+  const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
+
+  const currentCityName = weatherScreens[currentCardIndex];
+
+  const background = weatherNameToCardBg(
+    getWeatherName(data[currentCityName]?.current.condition.code),
+    data[currentCityName]?.current.is_day
+  );
+
   const props = {
     handleTextDebounce,
     showSearch,
     toggleSearch,
     searchResultLocations,
     handleLocation,
+    currentCardIndex,
   };
 
-  const dataProp: Array<{ id: string } & WeatherAtLocationProps> =
-    weatherScreens.map((city, index) => ({
-      id: city,
-      ...props,
-      cityName: city,
-    }));
+  const dataProp: Array<{ id: string } & WeatherAtLocationProps> = useMemo(
+    () =>
+      weatherScreens.map((city, index) => ({
+        id: city,
+        ...props,
+        cityName: city,
+      })),
+    [weatherScreens]
+  );
 
   const flatlistProps = {
     horizontal: true,
@@ -157,29 +171,33 @@ const App = () => {
     ),
   };
 
-  const expandingDotProps = {
-    expandingDotWidth: 10,
-    scrollX: scrollX,
-    inActiveDotOpacity: 0.6,
-    activeDotColor: colors.bgWhite(0.8),
-    inActiveDotColor: colors.bgWhite(0.5),
-
-    dotStyle: {
-      width: 10,
-      height: 10,
-      borderRadius: 5,
-      marginHorizontal: 5,
+  const handleViewableItemsChanged = useCallback(
+    ({
+      viewableItems,
+      changed,
+    }: {
+      viewableItems: ViewToken[];
+      changed: ViewToken[];
+    }) => {
+      const currentIndex = viewableItems[0].index;
+      // console.log(currentIndex);
+      if (currentIndex != null) {
+        setCurrentCardIndex(currentIndex);
+      }
     },
-    containerStyle: {
-      position: "relative" as const,
-      top: 0,
+    [weatherScreens]
+  );
+
+  const handleRenderItem = useCallback(
+    ({ item }: { item: { id: string } & WeatherAtLocationProps }) => {
+      const { id, ...restProps } = item;
+      return <WeatherAtLocation {...restProps} />;
     },
-  };
+    []
+  );
 
-  const config = createTamagui(defaultConfig);
-
-  return (
-    <TamaguiProvider config={config}>
+  if (loading) {
+    return (
       <View className="flex-1 relative">
         <StatusBar style="light" />
         <Image
@@ -187,43 +205,60 @@ const App = () => {
           className="absolute h-full w-full"
           source={require("../assets/images/bg.png")}
         />
+        <Spinner />
+      </View>
+    );
+  }
 
-        <SafeAreaView className="flex flex-1 ">
-          <View className="relative pb-10 h-full">
-            {/* Bottom Footer */}
-            <ImageBackground
-              className="w-full h-10 absolute bottom-0 right-0 "
-              source={require("../assets/images/bg.png")}
-              imageStyle={{ resizeMode: "cover", top: -700 }}
-              blurRadius={70}
-            >
-              <View className="mx-4 mt-3 flex-row justify-between">
-                <Ionicons name="map-outline" size={25} color={"white"} />
+  return (
+    <View className="flex-1 relative">
+      <StatusBar style="light" />
 
-                <ExpandingDot {...expandingDotProps} data={dataProp} />
+      <CrossfadeImage
+        style={{ width: "100%", height: "100%", position: "absolute" }}
+        source={background}
+        resizeMode="cover"
+      />
 
-                <FontAwesome6 name="list-ul" size={20} color={"white"} />
-              </View>
-            </ImageBackground>
-
-            {/* Weather at location */}
-            <FlatList
-              {...flatlistProps}
-              data={dataProp}
-              keyExtractor={(item: { id: string }) => item.id}
-              renderItem={({
-                item,
-              }: {
-                item: { id: string } & WeatherAtLocationProps;
-              }) => {
-                const { id, ...restProps } = item;
-                return <WeatherAtLocation {...restProps} />;
-              }}
+      <SafeAreaView className="flex flex-1 ">
+        <View className="relative pb-10 h-full">
+          {/* Bottom Footer */}
+          <View className="w-full h-10 absolute bottom-0 right-0 ">
+            <BottomFooter
+              scrollX={scrollX}
+              weatherScreens={weatherScreens}
+              setShowLocationModal={(visible: boolean) =>
+                setShowLocationModal(visible)
+              }
             />
           </View>
-        </SafeAreaView>
-      </View>
-    </TamaguiProvider>
+
+          <LocationModal
+            showLocationModal={showLocationModal}
+            handleTextDebounce={handleTextDebounce}
+            showSearch={showSearch}
+            toggleSearch={toggleSearch}
+            searchResultLocations={searchResultLocations}
+            handleLocation={handleLocation}
+            weatherScreens={weatherScreens}
+            goToWeatherScreen={(index: number) =>
+              handleShowWeatherScreen(index)
+            }
+          />
+
+          {/* Weather at location */}
+          <FlatList
+            onViewableItemsChanged={handleViewableItemsChanged}
+            viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
+            ref={flatlistRef}
+            data={dataProp}
+            keyExtractor={(item: { id: string }) => item.id}
+            renderItem={handleRenderItem}
+            {...flatlistProps}
+          />
+        </View>
+      </SafeAreaView>
+    </View>
   );
 };
 export default App;

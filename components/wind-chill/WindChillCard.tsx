@@ -11,6 +11,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import CardTitle from "../atoms/CardTitle";
 import CardStat from "../atoms/CardStat";
 import CardBottomText from "../atoms/CardBottomText";
+import { useWeatherData } from "@/hooks/useWeatherData";
 
 interface WindChillCardProps {
   cityName: string;
@@ -23,7 +24,7 @@ const WindChillCard = ({
   showModal,
   iconSize,
 }: WindChillCardProps) => {
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
   const { current } = data[cityName];
 
   const windChillTemp = Math.round(current.windchill_c).toString() + "°";
@@ -39,7 +40,7 @@ const WindChillCard = ({
         }}
       >
         <CardTitle
-          title={"Wind Chill"}
+          title={"Feels Like"}
           icon={
             <FontAwesome
               name="thermometer-empty"

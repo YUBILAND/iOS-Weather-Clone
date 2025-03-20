@@ -7,7 +7,9 @@ export const getSunPhaseInfo = (data: WeatherData, americanTime: boolean) => {
 
   const sunlightTime = getChordLength(sunriseTime, sunsetTime, true);
   const sunlightHours = sunlightTime.toString().split(".")[0];
-  const sunlightMinutes = parseInt(sunlightTime.toString().split(".")[1]);
+  const sunlightMinutes = Math.floor(
+    (parseInt(sunlightTime.toString().split(".")[1]) / 100) * 60
+  );
 
   return {
     Dawn: stringToTime(
@@ -32,8 +34,6 @@ export const getSunPhaseInfo = (data: WeatherData, americanTime: boolean) => {
       28
     ),
     Sunlight:
-      sunlightHours +
-      " hrs " +
-      (sunlightMinutes ? sunlightMinutes + " mins" : ""),
+      sunlightHours + "HR " + (sunlightMinutes ? sunlightMinutes + "MIN" : ""),
   };
 };

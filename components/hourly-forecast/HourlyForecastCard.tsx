@@ -8,6 +8,8 @@ import OpacityCard from "../atoms/OpacityCard";
 import HourlyForecastItem from "./HourlyForecastItem";
 import { DailyStats } from "./utils/constants";
 import { getHourlyForecastObject } from "./utils/getHourlyForecast";
+import { useAmericanTime } from "@/hooks/useAmericanTime";
+import { useWeatherData } from "@/hooks/useWeatherData";
 
 interface HourlyForecastProps {
   cityName: string;
@@ -15,8 +17,8 @@ interface HourlyForecastProps {
 }
 
 const HourlyForecast = ({ cityName, showModal }: HourlyForecastProps) => {
-  const { americanTime } = useSelector((state: RootState) => state.settings);
-  const { data } = useSelector((state: RootState) => state.weather);
+  const americanTime = useAmericanTime();
+  const data = useWeatherData();
   const { location, forecast } = data[cityName];
 
   const [dailyArr, setDailyArr] = useState<DailyStats[]>([]);

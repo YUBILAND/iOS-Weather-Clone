@@ -70,6 +70,8 @@ export function getCalendarDate(timeZone: string, incrementBy: number) {
 }
 
 export function militaryHour(timeString: string) {
+  "worklet";
+
   // my logic is to find pm and add the hour to 12 but 12pm is an edge case
   const containsTwelve = timeString.split(":")[0] === "12";
 
@@ -183,8 +185,12 @@ export function stringToTime(
   const date = new Date();
   date.setHours(militaryHour(timeString));
   date.setMinutes(parseInt(minutes));
-  const time = removeZeroFromTimeString(
-    date.toLocaleTimeString("en-US", timeFormat(americanTime, removeMinutes))
+  // const time = removeZeroFromTimeString(
+  //   date.toLocaleTimeString("en-US", timeFormat(americanTime, removeMinutes))
+  // );
+  const time = date.toLocaleTimeString(
+    "en-US",
+    timeFormat(americanTime, removeMinutes)
   );
   return time;
 }

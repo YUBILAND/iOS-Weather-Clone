@@ -44,13 +44,13 @@ const WindChillModalDescription = ({
   const dailyOverviewMessage = "random message";
   return (
     <View className="px-4">
-      <ModalTextBox title="Daily Overview">
+      <ModalTextBox title="Daily Summary">
         <DefaultText>{dailyOverviewMessage}</DefaultText>
       </ModalTextBox>
 
       {currentIndex === 0 && (
         <>
-          <ModalTextBox title="Compared to yesterday" removeHorizontalPadding>
+          <ModalTextBox title="Compared to tomorrow" removeHorizontalPadding>
             <View className="gap-y-2 px-4">
               <DefaultText>Today is colder than tomorrow</DefaultText>
             </View>
@@ -86,14 +86,14 @@ const WindChillModalDescription = ({
         </>
       )}
 
-      <ModalTextBox title="About Wind Chill">
+      <ModalTextBox title="About the Feels Like Temperature">
         <DefaultText>
           Wind chill is the sensation of cold produced by the wind for a given
           ambient air temperature on exposed skin as the air motion accelerates
           the rate of heat transfer from the body to the surrounding atmosphere.
         </DefaultText>
       </ModalTextBox>
-      <ModalOption title={"Option"} />
+      <ModalOption />
     </View>
   );
 };

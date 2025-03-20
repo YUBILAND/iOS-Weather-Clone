@@ -6,7 +6,6 @@ import {
   WeatherType,
 } from "@/constants/constants";
 import { getDate } from "@/hooks/hooks";
-import { weatherPNG } from "@/utils/exampleForecast";
 import React, { MutableRefObject } from "react";
 import { Image, Pressable, View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
@@ -17,6 +16,7 @@ import { getShortWeekday } from "./utils/getShortWeekday";
 import { getWeekTempArr } from "./utils/getWeekTempArr";
 import TemperatureBar from "../conditions/TemperatureBar";
 import HorizontalLine from "../atoms/HorizontalLine";
+import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
 
 interface DailyForecastItemProp {
   data: WeatherData;
@@ -70,15 +70,11 @@ const DailyForecastItem = ({
           </DefaultText>
 
           <Image
-            source={
-              weatherKey[
-                weatherPNG(
-                  isWindyDay
-                    ? ("windy" as WeatherType)
-                    : (item?.day.condition.text.toLowerCase() as WeatherType)
-                )
-              ]
-            }
+            //Weather image will always show day time weather so true
+            source={weatherNameToImage(
+              getWeatherName(item?.day.condition?.code),
+              true
+            )}
             className="h-8 w-8"
           />
         </View>
