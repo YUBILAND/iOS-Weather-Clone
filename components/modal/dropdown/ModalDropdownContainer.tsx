@@ -1,36 +1,33 @@
 import { colors } from "@/assets/colors/colors";
 import { BlurView } from "expo-blur";
-import React, { useState } from "react";
+import React from "react";
 import { View } from "react-native";
-import ModalDropdownButton from "./ModalDropdownButton";
 import { modalDropdownObjects, SelectModal } from "../utils/modalConstants";
 import ModalDropdownItem from "./ModalDropdownItem";
 
 interface ModalDropdownProps {
   selectedModal: SelectModal;
   setSelectedModal: (modal: SelectModal) => void;
-  isAnyActive: boolean;
+  isOpen: boolean;
+  handleIsOpen: (visible: boolean) => void;
+  currentIndex: number;
+  id: number;
 }
 
 const ModalDropdownContainer = ({
   selectedModal,
   setSelectedModal,
-  isAnyActive,
+  isOpen,
+  handleIsOpen,
+  currentIndex,
+  id,
 }: ModalDropdownProps) => {
-  const [openModalDropdown, setOpenModalDropdown] = useState<boolean>(false);
-
   return (
-    <View className="absolute right-4 top-5">
-      <View className="relative">
-        <ModalDropdownButton
-          selectedModal={selectedModal}
-          isAnyActive={isAnyActive}
-          openModalDropdown={openModalDropdown}
-          setOpenModalDropdown={(open: boolean) => setOpenModalDropdown(open)}
-        />
-        {openModalDropdown && (
+    <>
+      {/* View pushes modal dropdown up which looks better than without */}
+      <View className="">
+        {isOpen && (
           <BlurView
-            // intensity={50}
             style={{ backgroundColor: colors.bgMediumGray(0.8) }}
             className="absolute top-[100%] mt-2 right-0 w-72 rounded-2xl overflow-hidden "
           >
@@ -46,17 +43,15 @@ const ModalDropdownContainer = ({
                   key={item.id}
                   {...itemProps}
                   modalName={key as SelectModal}
-                  setOpenModalDropdown={(open: boolean) =>
-                    setOpenModalDropdown(open)
-                  }
+                  handleIsOpen={(open: boolean) => handleIsOpen(open)}
                 />
               );
             })}
           </BlurView>
         )}
       </View>
-    </View>
+    </>
   );
 };
 
-export default ModalDropdownContainer;
+export default React.memo(ModalDropdownContainer);

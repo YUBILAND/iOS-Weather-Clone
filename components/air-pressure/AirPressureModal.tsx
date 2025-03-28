@@ -1,6 +1,6 @@
 import { RootState } from "@/state/store";
 import React, { useEffect } from "react";
-import { useAnimatedProps } from "react-native-reanimated";
+import { SharedValue, useAnimatedProps } from "react-native-reanimated";
 import { useSelector } from "react-redux";
 import { useChartPressState } from "victory-native";
 import Graph from "../graphs/Graph";
@@ -9,20 +9,26 @@ import GraphContainer from "../modal/GraphContainer";
 import { getDayArr } from "../precipitation/utils/getDayArr";
 import AirPressureModalDescription from "./AirPressureModalDescription";
 import { getArr } from "./utils/getAirPressureArr";
+import { LeftTextType } from "../modal/Modal";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
+import { updateLeftText } from "../modal/utils/updateLeftText";
 
 interface AirPressureModalProps {
   cityName: string;
   currentIndex: number;
   id: number;
-  handleActivePress: (active: boolean) => void;
+  updateShared: (leftText: LeftTextType, id: number) => void;
+  isActiveShared: SharedValue<boolean>;
 }
 const AirPressureModal = ({
   cityName,
   currentIndex,
   id,
-  handleActivePress,
+  updateShared,
+  isActiveShared,
 }: AirPressureModalProps) => {
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
 
   const { state: airPressureState, isActive: airPressureIsActive } =
     useChartPressState({
@@ -42,18 +48,30 @@ const AirPressureModal = ({
     };
   });
 
+  useSyncAnimatedValue(airPressureIsActive, isActiveShared);
+
   const airPressureArr = getArr(data[cityName], "pressure_in");
 
   const maxRange = Math.max(...airPressureArr);
   const minRange = Math.min(...airPressureArr);
 
-  useEffect(() => {
-    handleActivePress(airPressureIsActive);
-  }, [airPressureIsActive]);
-
   const currentAirPressure = data[cityName].current.pressure_in;
   const dailyAirPressureArr = getDayArr(data[cityName], id, "pressure_in");
   const average = getArrAverage(dailyAirPressureArr);
+
+  const currentText: LeftTextType = {
+    topText: twoDecimals(currentAirPressure).toString(),
+    topTextSmall: "inHg",
+    bottomText: "Steady",
+  };
+
+  const otherText: LeftTextType = {
+    topText: twoDecimals(average).toString(),
+    topTextSmall: "inHg",
+    bottomText: "Steady",
+  };
+
+  updateLeftText(id, updateShared, currentText, otherText);
 
   return (
     <>
@@ -63,15 +81,7 @@ const AirPressureModal = ({
         isActive={airPressureIsActive}
         scrollInfoBold={airPressureScrollInfoBold}
         currentIndex={currentIndex}
-        leftSide={
-          <GraphLeftText
-            id={id}
-            currentTopText={twoDecimals(currentAirPressure).toString() + "inHg"}
-            otherTopText={twoDecimals(average).toString() + "inHg"}
-            currentBottomText="Steady"
-            otherBottomText="Steady"
-          />
-        }
+        leftSide={<></>}
       >
         <Graph
           cityName={cityName}
@@ -87,8 +97,6 @@ const AirPressureModal = ({
           removeArea
         />
       </GraphContainer>
-
-      <AirPressureModalDescription data={data[cityName]} currentIndex={id} />
     </>
   );
 };

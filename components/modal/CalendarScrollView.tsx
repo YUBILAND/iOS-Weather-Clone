@@ -1,9 +1,8 @@
 import { colors } from "@/assets/colors/colors";
 import { getCalendarDate, getCurrentDate, getScrollDates } from "@/hooks/hooks";
-import { RootState } from "@/state/store";
-import React, { MutableRefObject, useEffect, useMemo, useState } from "react";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import React, { memo, MutableRefObject, useEffect, useMemo } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import { useSelector } from "react-redux";
 import DefaultText from "../atoms/DefaultText";
 
 interface CalendarScrollViewProps {
@@ -12,6 +11,8 @@ interface CalendarScrollViewProps {
   setCurrentIndex: (index: number) => void;
   currentIndexRef: MutableRefObject<number>;
   scrollRef: MutableRefObject<boolean>;
+  handleOpenModalDropdown: (visible: boolean) => void;
+  // animateFade: (onFadeOutComplete?: () => void) => void;
 }
 
 const CalendarScrollView = ({
@@ -20,8 +21,10 @@ const CalendarScrollView = ({
   setCurrentIndex,
   currentIndexRef,
   scrollRef,
-}: CalendarScrollViewProps) => {
-  const { data } = useSelector((state: RootState) => state.weather);
+  handleOpenModalDropdown,
+}: // animateFade,
+CalendarScrollViewProps) => {
+  const data = useWeatherData();
   const { location } = data[cityName];
 
   // Change selected calendar date
@@ -53,54 +56,62 @@ const CalendarScrollView = ({
           paddingHorizontal: 12,
         }}
       >
-        {scrollWeekdayLetters.map((val, index) => (
-          <Pressable
-            key={index}
-            className="gap-y-1 items-center"
-            onPress={() => {
-              if (index !== currentIndex) {
-                setCurrentIndex(index);
-                // console.log("index is", index);
-                // why is this true?
-                scrollRef.current = true;
-              }
-            }}
-          >
-            <DefaultText key={index} className="font-semibold">
-              {val}
-            </DefaultText>
+        {scrollWeekdayLetters.map((val, index) => {
+          const calendarDateColor =
+            index === currentIndex
+              ? colors.darkGray
+              : index === 0
+              ? colors.blue
+              : "white";
 
-            <View
-              className="items-center justify-center"
-              style={{
-                width: 40,
-                height: 40,
-                backgroundColor:
-                  index === currentIndex
-                    ? index === 0
-                      ? colors.blue
-                      : colors.lightGray
-                    : undefined,
-                borderRadius: index === currentIndex ? 20 : undefined,
-              }}
+          const calendarDateBackgroundColor =
+            index === currentIndex
+              ? index === 0
+                ? colors.blue
+                : colors.lightGray
+              : "transparent";
+
+          const handleNewIndex = () => {
+            if (index !== currentIndex) {
+              setCurrentIndex(index);
+              handleOpenModalDropdown(false);
+              // why is this true?
+              scrollRef.current = true;
+            }
+          };
+
+          return (
+            <Pressable
+              key={index}
+              className="gap-y-1 items-center"
+              onPress={() => handleNewIndex()}
             >
-              <DefaultText
-                key={index}
-                className="text-2xl font-semibold"
+              <DefaultText key={index} className="font-semibold">
+                {val}
+              </DefaultText>
+
+              <View
+                className="items-center justify-center"
                 style={{
-                  color:
-                    index === currentIndex
-                      ? colors.darkGray
-                      : index === 0
-                      ? colors.blue
-                      : "white",
+                  width: 40,
+                  height: 40,
+                  backgroundColor: calendarDateBackgroundColor,
+                  borderRadius: index === currentIndex ? 20 : undefined,
                 }}
               >
-                {scrollDates[index]}
-              </DefaultText>
-            </View>
-          </Pressable>
-        ))}
+                <DefaultText
+                  key={index}
+                  className="text-2xl font-semibold"
+                  style={{
+                    color: calendarDateColor,
+                  }}
+                >
+                  {scrollDates[index]}
+                </DefaultText>
+              </View>
+            </Pressable>
+          );
+        })}
       </ScrollView>
 
       <View className="items-center ">
@@ -119,4 +130,4 @@ const CalendarScrollView = ({
   );
 };
 
-export default CalendarScrollView;
+export default React.memo(CalendarScrollView);

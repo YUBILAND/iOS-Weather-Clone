@@ -9,6 +9,8 @@ interface LocationCardItemContainerProps {
   idx: number;
   weatherScreens: string[];
   goToWeatherScreen: (index: number) => void;
+  closeSetting: () => void;
+  drag?: () => void;
 }
 
 const LocationCardItemContainer = ({
@@ -16,6 +18,8 @@ const LocationCardItemContainer = ({
   weatherScreens,
   idx,
   goToWeatherScreen,
+  closeSetting,
+  drag,
 }: LocationCardItemContainerProps) => {
   const data = useWeatherData();
   const background = weatherNameToCardBg(
@@ -23,9 +27,15 @@ const LocationCardItemContainer = ({
     data[weatherScreens[idx]]?.current.is_day
   );
   // const background = require("../../assets/weather-image/clear.png");
+
+  const handlePress = () => {
+    goToWeatherScreen(idx);
+    closeSetting();
+  };
   return (
     <Pressable
-      onPress={() => goToWeatherScreen(idx)}
+      onLongPress={drag ?? null}
+      onPress={handlePress}
       className="bg-red-400 h-28 rounded-2xl overflow-hidden"
     >
       <ImageBackground

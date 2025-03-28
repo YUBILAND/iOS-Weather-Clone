@@ -60,4 +60,4 @@ const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
   );
 };
 
-export default DailyForecastCard;
+export default React.memo(DailyForecastCard);

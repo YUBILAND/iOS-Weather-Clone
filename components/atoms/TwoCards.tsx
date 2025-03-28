@@ -15,4 +15,4 @@ const TwoCards = ({ leftCard, rightCard }: TwoCardsProps) => {
   );
 };
 
-export default TwoCards;
+export default React.memo(TwoCards);

@@ -1,29 +1,19 @@
 import { colors } from "@/assets/colors/colors";
-import { FontAwesome } from "@expo/vector-icons";
 import React from "react";
 import {
   Dimensions,
   Modal,
-  ScrollView,
   SafeAreaView,
-  Text,
+  ScrollView,
   View,
 } from "react-native";
 import Animated from "react-native-reanimated";
-import ModalHeader from "./ModalHeader";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import ModalHeader from "./ModalHeader";
 import { iconMap, SelectModal } from "./utils/modalConstants";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
-type IconName =
-  | "sun-o"
-  | "moon-o"
-  | "cloud"
-  | "coffee"
-  | "user"
-  | "home"
-  | "search";
 type ConditionModalProps = {
   modalVisible: boolean;
   setModalVisible: (visible: boolean) => void;
@@ -74,4 +64,4 @@ const ModalContainer = ({
   );
 };
 
-export default ModalContainer;
+export default React.memo(ModalContainer);

@@ -1,10 +1,10 @@
-import { View, Text, TextProps, TextStyle } from "react-native";
+import { View, Text, TextProps, TextStyle, StyleProp } from "react-native";
 import React, { PropsWithChildren } from "react";
 import clsx from "clsx";
 import { twMerge } from "tailwind-merge";
 
 type DefaultTextProps = TextProps & {
-  style?: TextStyle; // Optional style prop for custom styles
+  style?: StyleProp<TextStyle>; // Optional style prop for custom styles
   className?: string;
 };
 

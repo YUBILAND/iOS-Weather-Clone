@@ -58,4 +58,4 @@ const WindChillCard = ({
   );
 };
 
-export default WindChillCard;
+export default React.memo(WindChillCard);

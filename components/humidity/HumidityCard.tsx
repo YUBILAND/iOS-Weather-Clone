@@ -48,4 +48,4 @@ const HumidityCard = ({ cityName, showModal, iconSize }: HumidityCardProps) => {
   );
 };
 
-export default HumidityCard;
+export default React.memo(HumidityCard);

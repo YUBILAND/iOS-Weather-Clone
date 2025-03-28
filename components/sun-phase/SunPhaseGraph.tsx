@@ -3,13 +3,15 @@ import { getChordLength, getCurrentTime } from "@/hooks/hooks";
 import { RootState } from "@/state/store";
 import {
   BlurStyle,
+  Canvas,
   Color,
   LinearGradient,
+  Path,
   Skia,
   useFont,
   vec,
 } from "@shopify/react-native-skia";
-import React from "react";
+import React, { useMemo } from "react";
 import { View } from "react-native";
 import { useSelector } from "react-redux";
 import {
@@ -29,6 +31,7 @@ import { getSunPathPercentage } from "./utils/getSunPathPercentage";
 import { getXOffset } from "./utils/getXOffset";
 import { getYShift } from "./utils/getYShift";
 import { useSunPhaseData } from "./utils/useSunPhaseData";
+import Animated from "react-native-reanimated";
 
 const SunPhaseGraph = ({
   cityName,
@@ -154,17 +157,6 @@ const SunPhaseGraph = ({
                 secondIntersectionPostOffset / (xTicks / 24)
             );
 
-            // const paint = Skia.Paint();
-            // // Set the paint color to white
-            // paint.setColor(Skia.Color("white"));
-            // const sigma = 6; // adjust for stronger or softer glow
-            // const maskFilter = Skia.MaskFilter.MakeBlur(
-            //   BlurStyle.Solid,
-            //   sigma,
-            //   true
-            // );
-            // paint.setMaskFilter(maskFilter);
-
             const paint = Skia.Paint();
             // Set the paint color to white
             paint.setColor(Skia.Color("white"));
@@ -175,6 +167,10 @@ const SunPhaseGraph = ({
               true
             );
             paint.setMaskFilter(maskFilter);
+
+            // console.log(
+            //   points.sunPosition.filter((arr, idx) => arr.yValue)[0].yValue
+            // );
 
             return (
               <>
@@ -254,6 +250,9 @@ const SunPhaseGraph = ({
                   <Scatter
                     points={points.sunPosition}
                     shape="circle"
+                    // shape={(props) => (
+                    //   <SemiCircle x={props.x} y={props.y} radius={1000} />
+                    // )}
                     radius={strokeWidth + 2}
                     style="fill"
                     // color="white"
@@ -270,6 +269,31 @@ const SunPhaseGraph = ({
         </CartesianChart>
       </View>
     </>
+  );
+};
+
+const SemiCircle = ({
+  x,
+  y,
+  radius,
+}: {
+  x: number;
+  y: number;
+  radius: number;
+}) => {
+  // Create a Skia Path for a semicircle
+  const skiaPath = useMemo(() => {
+    const path = Skia.Path.Make();
+    path.moveTo(x - radius, y);
+    path.rArcTo(radius * 2, radius * 2, 0, false, true, radius * 2, 0);
+    path.close();
+    return path;
+  }, [x, y, radius]);
+
+  return (
+    <Canvas style={{ width: radius * 2, height: radius, position: "absolute" }}>
+      <Path path={skiaPath} color="blue" />
+    </Canvas>
   );
 };
 

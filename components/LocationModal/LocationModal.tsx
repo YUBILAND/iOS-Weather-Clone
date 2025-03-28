@@ -8,8 +8,9 @@ import {
   TextInput,
   FlatList,
   ScrollView,
+  TouchableOpacity,
 } from "react-native";
-import React, { RefObject } from "react";
+import React, { RefObject, useCallback, useRef, useState } from "react";
 import DefaultText from "../atoms/DefaultText";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/assets/colors/colors";
@@ -25,6 +26,16 @@ import { useWeatherData } from "@/hooks/useWeatherData";
 import { useAmericanTime } from "@/hooks/useAmericanTime";
 import { removeZeroFromTimeString } from "@/hooks/hooks";
 import { getDayArr } from "../precipitation/utils/getDayArr";
+import SettingsDropdown from "./SettingsDropdown";
+import { SelectSetting } from "../modal/utils/modalConstants";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import DraggableFlatList from "react-native-draggable-flatlist";
+import ExampleDragDrop from "./ExampleDragDrop";
+import { getLocationCardData } from "./utils/getLocationCardData";
+import { Item, LocationCardFlatlist } from "./LocationCardFlatlist";
+import VisibleText from "./VisibleText";
+import TitleBar from "./TitleBar";
 
 interface LocationModalProps {
   showLocationModal: boolean;
@@ -36,6 +47,36 @@ interface LocationModalProps {
   handleLocation: (location: Location) => void;
   weatherScreens: string[];
 }
+const ListHeader = ({
+  hasCrossedPoint,
+  showSearch,
+  searchProps,
+}: {
+  hasCrossedPoint: boolean;
+  showSearch: boolean;
+  searchProps: any;
+}) => {
+  console.log("rerendering?");
+  return (
+    <>
+      {/* Hides when scrolled up  */}
+      <VisibleText
+        text="Weather"
+        visible={hasCrossedPoint}
+        exists={!showSearch}
+        fontSize={32}
+      />
+
+      <BlurView
+        // intensity={100}
+        className=" py-4 relative z-40 flex-row items-center gap-x-2"
+        style={{ opacity: hasCrossedPoint ? 0 : 1 }}
+      >
+        <Search {...searchProps} />
+      </BlurView>
+    </>
+  );
+};
 const LocationModal = ({
   showLocationModal,
   goToWeatherScreen,
@@ -54,84 +95,221 @@ const LocationModal = ({
 
   // Calculate the height (subtract 47 pixels)
   const calculatedHeight = screenHeight - insets.top;
-  console.log(weatherScreens);
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  const handleSettingsModal = useCallback(() => {
+    setIsSettingsOpen(true);
+  }, []);
+
+  const handleIsOpen = useCallback((open: boolean) => {
+    setIsSettingsOpen(open);
+  }, []);
+
+  const closeSetting = useCallback(() => {
+    setIsSettingsOpen(false);
+  }, []);
+
+  const [hasCrossedPoint, setHasCrossedPoint] = useState(false);
+
+  // const handleScroll = useCallback(
+  //   (event: any) => {
+  //     const THRESHOLD = 38;
+  //     const scrollY = event.nativeEvent.contentOffset.y;
+  //     if (scrollY >= THRESHOLD && !hasCrossedPoint) {
+  //       setHasCrossedPoint(true);
+  //       console.log("Threshold crossed!");
+  //     } else if (scrollY <= THRESHOLD && hasCrossedPoint) {
+  //       setHasCrossedPoint(false);
+  //       console.log("Threshold NOT crossed!");
+  //     }
+  //     console.log(scrollY);
+  //   },
+  //   [hasCrossedPoint]
+  // );
+
+  const handleScroll = useCallback(
+    (scrollOffset: any) => {
+      const THRESHOLD = 50;
+      const scrollY = scrollOffset;
+      if (scrollY >= THRESHOLD && !hasCrossedPoint) {
+        setHasCrossedPoint(true);
+        console.log("Threshold crossed!");
+      } else if (scrollY <= THRESHOLD && hasCrossedPoint) {
+        setHasCrossedPoint(false);
+        console.log("Threshold NOT crossed!");
+      }
+      console.log(scrollY);
+    },
+    [hasCrossedPoint]
+  );
+
+  const textInputRef = useRef<TextInput>(null);
+  const handleToggleSearch = useCallback(() => {
+    toggleSearch(textInputRef);
+  }, [textInputRef]);
+
+  const flatlistRef = useRef<FlatList<Item>>(null);
+
+  const handleCancel = useCallback(() => {
+    if (flatlistRef.current !== null) {
+      flatlistRef.current.scrollToOffset({ animated: false, offset: 0 });
+    }
+    handleToggleSearch();
+  }, [flatlistRef]);
+
+  const searchProps = {
+    handleTextDebounce,
+    showSearch,
+    handleToggleSearch,
+    searchResultLocations,
+    handleLocation,
+    textInputRef,
+    handleCancel,
+  };
+
+  // const ListHeader = React.memo(() => {
+  //   console.log("rerendering?");
+  //   return (
+  //     <>
+  //       {/* Hides when scrolled up  */}
+  //       <VisibleText
+  //         text="Weather"
+  //         visible={hasCrossedPoint}
+  //         exists={!showSearch}
+  //         fontSize={32}
+  //       />
+
+  //       <BlurView
+  //         // intensity={100}
+  //         className=" py-4 relative z-40 flex-row items-center gap-x-2"
+  //         style={{ opacity: hasCrossedPoint ? 0 : 1 }}
+  //       >
+  //         <Search {...searchProps} />
+  //       </BlurView>
+  //     </>
+  //   );
+  // });
+
+  const StickyHeader = React.memo(() => {
+    return (
+      <ListHeader
+        hasCrossedPoint={hasCrossedPoint}
+        showSearch={showSearch}
+        searchProps={searchProps}
+      />
+    );
+  });
+
   return (
-    <Modal visible={showLocationModal} transparent animationType="slide">
-      <SafeAreaView>
+    <>
+      <Modal visible={showLocationModal} transparent animationType="slide">
+        {/* <SafeAreaView> */}
+
         <View
           style={{
-            height: calculatedHeight,
-            backgroundColor: colors.darkGray,
+            // height: calculatedHeight,
+            backgroundColor: colors.bgBlack(1),
           }}
-          className="px-4 pt-4"
+          className="px-4 h-screen"
         >
-          {/* <Pressable onPress={closeModal} className="bg-red-400 h-20 w-20" /> */}
-          <View className="w-full items-end">
-            <Ionicons
-              name="information-circle-outline"
-              size={24}
-              color="white"
+          {/* Absolute View that registers presses for hiding dropdown */}
+          {isSettingsOpen && (
+            <Pressable
+              onPressIn={closeSetting}
+              className="absolute w-screen h-screen z-30"
             />
+          )}
+
+          {/* <View className="relative">
+            {!showSearch && (
+              <BlurView
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  height: 60,
+                  backgroundColor: hasCrossedPoint ? "transparent" : "black",
+                }}
+                className="w-full flex-row justify-between z-30 items-end"
+              >
+                <MaterialCommunityIcons
+                  name="dots-horizontal-circle-outline"
+                  size={24}
+                  color="transparent"
+                  onPress={handleSettingsModal}
+                />
+                <DefaultText
+                  style={{ opacity: hasCrossedPoint ? 1 : 0 }}
+                  className="text-lg"
+                >
+                  Weather
+                </DefaultText>
+                <MaterialCommunityIcons
+                  name="dots-horizontal-circle-outline"
+                  size={24}
+                  color={"white"}
+                  onPress={handleSettingsModal}
+                />
+              </BlurView>
+            )}
+          </View> */}
+
+          <View className="relative">
+            <BlurView
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+
+                backgroundColor: hasCrossedPoint ? "transparent" : "black",
+                display: !showSearch ? "flex" : "none",
+                zIndex: 30,
+              }}
+            >
+              <TitleBar
+                text="Weather"
+                visible={hasCrossedPoint}
+                handleSettingsModal={handleSettingsModal}
+              />
+              {hasCrossedPoint && (
+                <View className="py-4 ">
+                  <Search {...searchProps} />
+                </View>
+              )}
+            </BlurView>
           </View>
-          <View>
-            <DefaultText className="text-4xl font-semibold">
-              Weather
-            </DefaultText>
-          </View>
-          <View className="pb-4 relative z-10">
-            <Search
-              handleTextDebounce={handleTextDebounce}
-              showSearch={showSearch}
-              toggleSearch={toggleSearch}
-              searchResultLocations={searchResultLocations}
-              handleLocation={handleLocation}
+
+          <View className="z-30" style={{ paddingBottom: showSearch ? 0 : 44 }}>
+            <SettingsDropdown
+              isOpen={isSettingsOpen}
+              handleIsOpen={handleIsOpen}
             />
           </View>
 
-          <ScrollView className="relative z-0">
-            <LocationCardContainer>
-              {weatherScreens.map((city, idx) => {
-                const currentTemp = parseFloat(data[city].current.temp_c);
-                const currentTimeZone = data[city].location.tz_id;
-                const cityTime = removeZeroFromTimeString(
-                  new Date().toLocaleTimeString("en-US", {
-                    timeZone: currentTimeZone,
-                    hour12: americanTime,
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })
-                );
-                const currentWeatherCondition =
-                  data[city].current.condition.text;
-                const dailyTempArr = getDayArr(data[city], 0, "temp_c");
-                const currentHigh = Math.max(...dailyTempArr);
-                const currentLow = Math.min(...dailyTempArr);
-
-                return (
-                  <React.Fragment key={idx}>
-                    <LocationCardItemContainer
-                      weatherScreens={weatherScreens}
-                      idx={idx}
-                      goToWeatherScreen={goToWeatherScreen}
-                    >
-                      <LocationCardItem
-                        currentCity={city}
-                        currentTemp={Math.round(currentTemp)}
-                        currentTime={cityTime}
-                        currentWeatherCondition={currentWeatherCondition}
-                        currentHigh={Math.round(currentHigh)}
-                        currentLow={Math.round(currentLow)}
-                      />
-                    </LocationCardItemContainer>
-                  </React.Fragment>
-                );
-              })}
-            </LocationCardContainer>
-          </ScrollView>
-          {/* Locations picked */}
+          {/* Flatlist */}
+          <View
+            // className="absolute top-24 left-0 w-screen"
+            style={{ zIndex: 10 }}
+          >
+            {/* fix unfocus problem, removing flatlist solves it */}
+            {/* <Search {...searchProps} /> */}
+            {/* <ExampleDragDrop stickyElement={ListHeader} /> */}
+            <LocationCardFlatlist
+              stickyElement={StickyHeader}
+              activeScale={1.03}
+              topOffset={60}
+              weatherScreens={weatherScreens}
+              closeSetting={closeSetting}
+              goToWeatherScreen={goToWeatherScreen}
+              handleScroll={handleScroll}
+              flatlistRef={flatlistRef}
+            />
+          </View>
         </View>
-      </SafeAreaView>
-    </Modal>
+        {/* </SafeAreaView> */}
+      </Modal>
+    </>
   );
 };
 

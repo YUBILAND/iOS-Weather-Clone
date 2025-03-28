@@ -59,4 +59,4 @@ const PrecipitationCard = ({
   );
 };
 
-export default PrecipitationCard;
+export default React.memo(PrecipitationCard);

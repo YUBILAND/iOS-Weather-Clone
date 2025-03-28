@@ -1,6 +1,6 @@
 import { RootState } from "@/state/store";
 import React, { useEffect } from "react";
-import { useAnimatedProps } from "react-native-reanimated";
+import { SharedValue, useAnimatedProps } from "react-native-reanimated";
 import { useSelector } from "react-redux";
 import { useChartPressState } from "victory-native";
 import Graph from "../graphs/Graph";
@@ -8,20 +8,26 @@ import GraphLeftText from "../graphs/GraphLeftText";
 import GraphContainer from "../modal/GraphContainer";
 import { getDayArr } from "../precipitation/utils/getDayArr";
 import VisibilityModalDescription from "./VisibilityModalDescription";
+import { LeftTextType } from "../modal/Modal";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
+import { updateLeftText } from "../modal/utils/updateLeftText";
 
 interface VisibilityModalProps {
   cityName: string;
   currentIndex: number;
   id: number;
-  handleActivePress: (active: boolean) => void;
+  updateShared: (leftText: LeftTextType, id: number) => void;
+  isActiveShared: SharedValue<boolean>;
 }
 const VisibilityModal = ({
   cityName,
   currentIndex,
   id,
-  handleActivePress,
+  updateShared,
+  isActiveShared,
 }: VisibilityModalProps) => {
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
 
   const { state: visState, isActive: visIsActive } = useChartPressState({
     x: 0,
@@ -40,15 +46,36 @@ const VisibilityModal = ({
     };
   });
 
-  useEffect(() => {
-    handleActivePress(visIsActive);
-  }, [visIsActive]);
+  useSyncAnimatedValue(visIsActive, isActiveShared);
 
   const currentVisibility = data[cityName].current.vis_miles;
 
   const dailyVisibilityArr = getDayArr(data[cityName], id, "vis_miles");
   const dailyMax = Math.max(...dailyVisibilityArr);
   const dailyMin = Math.min(...dailyVisibilityArr);
+
+  const currentText: LeftTextType = {
+    topText: currentVisibility.toString(),
+    topTextSmall: "mi",
+    bottomText: "Perfectly Clear",
+  };
+
+  const otherText: LeftTextType = {
+    topText: dailyMin + " to " + dailyMax,
+    topTextSmall: "mi",
+    bottomText: "Perfectly Clear",
+  };
+
+  updateLeftText(id, updateShared, currentText, otherText);
+
+  // useEffect(() => {
+  //   updateLeftText({
+  //     currentTopText: currentVisibility.toString() + " mi",
+  //     otherTopText: dailyMin + " to " + dailyMax + " mi",
+  //     currentBottomText: "Perfectly Clear",
+  //     otherBottomText: "Perfectly Clear",
+  //   });
+  // }, [currentVisibility, dailyMax]);
 
   return (
     <>
@@ -58,34 +85,21 @@ const VisibilityModal = ({
         isActive={visIsActive}
         scrollInfoBold={visScrollInfoBold}
         currentIndex={currentIndex}
-        leftSide={
-          <GraphLeftText
-            id={id}
-            currentTopText={currentVisibility.toString() + " mi"}
-            otherTopText={dailyMin + " to " + dailyMax + " mi"}
-            currentBottomText="Perfectly Clear"
-            otherBottomText="Perfectly Clear"
-          />
-        }
+        leftSide={<></>}
       >
         <Graph
           cityName={cityName}
           // @ts-ignore, used Pick but now sure why it still requires all keys
           state={visState}
           isActive={visIsActive}
-          graphHeight={250}
-          strokeWidth={4}
           yAxisLabel="mi"
           loadedIndex={id}
           apiObjectString="vis_miles"
-          domainBottom={0}
           domainTop={10}
           customColor="bgWhite"
           addWeatherText={{ unit: "" }}
         />
       </GraphContainer>
-
-      <VisibilityModalDescription data={data[cityName]} currentIndex={id} />
     </>
   );
 };

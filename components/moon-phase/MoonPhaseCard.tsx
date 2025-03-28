@@ -81,4 +81,4 @@ const MoonPhaseCard = ({
   );
 };
 
-export default MoonPhaseCard;
+export default React.memo(MoonPhaseCard);

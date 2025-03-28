@@ -1,67 +1,126 @@
-import { View, Text, Image } from "react-native";
-import React from "react";
-import DefaultText from "../atoms/DefaultText";
-import {
-  Current,
-  GraphKeyType,
-  WeatherData,
-  weatherKey,
-} from "@/constants/constants";
 import { colors } from "@/assets/colors/colors";
-import { getDayArr } from "../precipitation/utils/getDayArr";
+import React, { MutableRefObject, useEffect, useRef } from "react";
+import { TextInput, View } from "react-native";
+import Animated, {
+  measure,
+  runOnUI,
+  SharedValue,
+  useAnimatedProps,
+  useAnimatedRef,
+  useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
+} from "react-native-reanimated";
+import cloudyImage from "../../assets/images/cloudy.png";
+import { LeftTextType } from "../modal/Modal";
+import { usePrevious } from "../moon-phase/utils/usePrevious";
+import { SelectModal } from "../modal/utils/modalConstants";
+import DefaultText from "../atoms/DefaultText";
 
 interface GraphLeftTextProps {
   id: number;
-  currentTopText: string;
-  otherTopText: string;
-  currentBottomText: string;
-  otherBottomText: string;
+  leftTextShared: MutableRefObject<SharedValue<LeftTextType[]>>;
+  fadeOpacity: SharedValue<number>;
+  currentIndexRef: MutableRefObject<number>;
+  selectedModal: SelectModal;
+  leftText: LeftTextType[];
 }
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 const GraphLeftText = ({
   id,
-  currentTopText,
-  otherTopText,
-  currentBottomText,
-  otherBottomText,
+  leftTextShared,
+  fadeOpacity,
+  currentIndexRef,
+  selectedModal,
+  leftText,
 }: GraphLeftTextProps) => {
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     if (textRef.current) {
+  //       const measured = measure(textRef);
+  //       if (measured) {
+  //         setTextWidth(measured.width);
+  //       }
+  //     }
+  //   }, 0);
+  // }, [leftTextShared.current.value]);
+
+  // console.log("id is", id);
+  // const disableOpacity = useMemo(() => {
+  //   return (
+  //     leftTextShared.current.value[currentIndex].bottomText !==
+  //     leftTextShared.current.value[previousValue ?? currentIndex].bottomText
+  //   );
+  // }, [currentIndex, previousValue, leftTextShared]);
+
+  // const disableOpacityTop = useMemo(() => {
+  //   return (
+  //     leftTextShared.current.value[currentIndex].topText !==
+  //     leftTextShared.current.value[previousValue ?? currentIndex].topText
+  //   );
+  // }, [currentIndex, previousValue, leftTextShared]);
+
+  // Get the animated text
+  // const derivedText = useDerivedValue(() => {
+  //   const sharedValue = leftTextShared.current.value;
+  //   return sharedValue && sharedValue.length >= 3
+  //     ? sharedValue[id].topText
+  //     : "No Data";
+  // });
+
+  // const derivedTextGray = useDerivedValue(() => {
+  //   const sharedValue = leftTextShared.current.value;
+  //   return sharedValue && sharedValue.length >= 3
+  //     ? sharedValue[id].topTextGray
+  //     : "No Data";
+  // });
+
+  const animatedImage = useAnimatedProps(() => {
+    const imageSource = {
+      cloudy: cloudyImage,
+    };
+    const topTextImage = leftTextShared.current.value[id].image;
+    console.log(topTextImage === "cloudy");
+
+    return {
+      source: imageSource["cloudy"],
+    };
+  });
+
   return (
-    <View className="flex-row justify-between items-center">
+    <View className="">
       <View>
         <View
           style={{
             flexDirection: "row",
             alignItems: "flex-end",
-            gap: 8,
+            gap: 0,
           }}
         >
-          {/* <DefaultText className="text-4xl">
-            {id === 0
-              ? Math.round(currentData) + unit
-              : Math.round(dailyMin) + " to"}
+          <DefaultText style={{ fontSize: 30 }}>
+            {leftText[id].topText}
           </DefaultText>
-
-          {id !== 0 && (
-            <DefaultText className="text-4xl">
-              {Math.round(dailyMax) + unit}
+          {leftText[id].topTextSmall && (
+            <DefaultText style={{ fontSize: 25, lineHeight: 33 }}>
+              {leftText[id].topTextSmall}
             </DefaultText>
-          )} */}
-
-          {id === 0 ? (
-            <DefaultText className="text-4xl">{currentTopText}</DefaultText>
-          ) : (
-            <DefaultText className="text-4xl">{otherTopText}</DefaultText>
+          )}
+          <DefaultText style={{ fontSize: 30, color: colors.lightGray }}>
+            {" "}
+            {leftText[id].topTextGray}
+          </DefaultText>
+          {id === 0 && selectedModal === "conditions" && (
+            <Animated.Image
+              style={{ width: 35, height: 35 }}
+              animatedProps={animatedImage}
+            />
           )}
         </View>
-        {id === 0 ? (
-          <DefaultText style={{ color: colors.lightGray }}>
-            {currentBottomText}
-          </DefaultText>
-        ) : (
-          <DefaultText style={{ color: colors.lightGray }}>
-            {otherBottomText}
-          </DefaultText>
-        )}
+
+        <DefaultText style={{ fontSize: 14, color: colors.lightGray }}>
+          {leftText[id].bottomText}
+        </DefaultText>
       </View>
     </View>
   );

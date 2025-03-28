@@ -1,52 +1,64 @@
-import { View, Text, Pressable } from "react-native";
 import React from "react";
+import { View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
-import { useSelector } from "react-redux";
-import { RootState } from "@/state/store";
-import LocationCardItemContainer from "./LocationCardItemContainer";
+import { textShadowStyle } from "../WeatherAtLocation";
+import { getLocationCardData } from "./utils/getLocationCardData";
 
 interface LocationCardItemProps {
-  currentCity: string;
-  currentTemp: number;
-  currentTime: string;
-  currentWeatherCondition: string;
-  currentHigh: number;
-  currentLow: number;
+  city: string;
 }
 
-const LocationCardItem = ({
-  currentCity,
-  currentTemp,
-  currentTime,
-  currentWeatherCondition,
-  currentHigh,
-  currentLow,
-}: LocationCardItemProps) => {
+const LocationCardItem = ({ city }: LocationCardItemProps) => {
+  const {
+    currentTemp,
+    cityTime,
+    currentWeatherCondition,
+    currentHigh,
+    currentLow,
+  } = getLocationCardData(city);
   return (
     <>
       <View className="flex-row justify-between items-center flex-[50]">
         <View>
-          <DefaultText className="font-semibold text-xl">
-            {currentCity}
+          <DefaultText
+            style={[{ fontSize: 20, fontWeight: 700 }, textShadowStyle]}
+          >
+            {city}
           </DefaultText>
-          <DefaultText className=" text-base font-bold">
-            {currentTime}
+          <DefaultText style={[{ fontWeight: 700 }, textShadowStyle]}>
+            {cityTime}
           </DefaultText>
         </View>
 
-        <DefaultText className=" text-5xl">{currentTemp + "°"}</DefaultText>
+        <DefaultText
+          style={[{ fontWeight: 700 }, textShadowStyle]}
+          className=" text-5xl"
+        >
+          {Math.round(currentTemp) + "°"}
+        </DefaultText>
       </View>
 
       <View className="justify-end flex-[50]">
         <View className="flex-row justify-between w-full items-center">
-          <DefaultText className="text-base">
+          <DefaultText
+            style={[{ fontWeight: 700 }, textShadowStyle]}
+            className="text-sm"
+          >
             {currentWeatherCondition}
           </DefaultText>
-          <View className="flex-row gap-x-4">
-            <DefaultText className="text-xl">
-              H: {currentHigh + "°"}
+          <View className="flex-row w-24">
+            <DefaultText
+              style={[{ fontWeight: 700, flex: 5 }, textShadowStyle]}
+              className="text-sm "
+            >
+              H:{Math.round(currentHigh) + "°"}
             </DefaultText>
-            <DefaultText className="text-xl">L: {currentLow + "°"}</DefaultText>
+            <DefaultText
+              style={[{ fontWeight: 700, flex: 5 }, textShadowStyle]}
+              className="text-sm"
+            >
+              L:{Math.round(currentLow) + "°"}
+            </DefaultText>
           </View>
         </View>
       </View>

@@ -47,4 +47,4 @@ const VisibilityCard = ({
   );
 };
 
-export default VisibilityCard;
+export default React.memo(VisibilityCard);

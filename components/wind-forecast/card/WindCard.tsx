@@ -1,5 +1,5 @@
 import { View, Text, Pressable } from "react-native";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import OpacityCard from "../../atoms/OpacityCard";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import DefaultText from "../../atoms/DefaultText";
@@ -36,4 +36,4 @@ const WindCard = ({ cityName, showModal, iconSize }: WindCardProps) => {
   );
 };
 
-export default WindCard;
+export default React.memo(WindCard);

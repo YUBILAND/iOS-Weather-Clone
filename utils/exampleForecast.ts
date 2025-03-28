@@ -139,7 +139,7 @@ const dayCardBg: { [key: string]: ImageSourcePropType } = {
   thunderstorms: require(weatherImageLocation + "thunder" + ".png"),
 };
 const nightCardBg: { [key: string]: ImageSourcePropType } = {
-  clear: require(weatherImageLocation + "clear" + ".png"),
+  clear: require(weatherImageLocation + "clear-night" + ".png"),
   partlyCloudy: require(weatherImageLocation + "partly-night" + ".png"),
   cloudy: require(weatherImageLocation + "cloudy-night" + ".png"),
   foggy: require(weatherImageLocation + "foggy-night" + ".png"),

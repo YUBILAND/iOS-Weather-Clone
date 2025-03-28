@@ -1,26 +1,22 @@
-import { View, Text, Pressable } from "react-native";
-import React from "react";
-import DefaultText from "../../atoms/DefaultText";
 import { Ionicons } from "@expo/vector-icons";
-import Feather from "@expo/vector-icons/Feather";
-import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import React from "react";
+import { Pressable, View } from "react-native";
+import DefaultText from "../../atoms/DefaultText";
 
+import HorizontalLine from "../../atoms/HorizontalLine";
 import {
   iconMap,
-  IconObject,
   ModalDropdownObject,
   modalDropdownObjects,
   SelectModal,
 } from "../utils/modalConstants";
-import HorizontalLine from "../../atoms/HorizontalLine";
 
 interface ModalDropdownItemProps {
   item: ModalDropdownObject;
   index: number;
   selectedModal: SelectModal;
   setSelectedModal: (modal: SelectModal) => void;
-  setOpenModalDropdown: (open: boolean) => void;
+  handleIsOpen: (open: boolean) => void;
   modalName: SelectModal;
 }
 
@@ -29,14 +25,14 @@ const ModalDropdownItem = ({
   index,
   selectedModal,
   setSelectedModal,
-  setOpenModalDropdown,
+  handleIsOpen,
   modalName,
 }: ModalDropdownItemProps) => {
   const lastIndex = index === Object.keys(modalDropdownObjects).length - 1;
 
   const pressDropdownItem = () => {
     setSelectedModal(modalName);
-    setOpenModalDropdown(false);
+    handleIsOpen(false);
   };
 
   const IconComponent = iconMap[modalName];
@@ -54,13 +50,6 @@ const ModalDropdownItem = ({
           {item.label}
         </DefaultText>
         <View className="flex-[0.3]">
-          {/* // @ts.ignore, icon name union doesn't seem to be working */}
-
-          {/* <IconComponent
-            name={iconMap[modalName].name}
-            size={iconMap[modalName].size}
-            color={iconMap[modalName].color}
-          /> */}
           <View className="items-center">
             <IconComponent />
           </View>

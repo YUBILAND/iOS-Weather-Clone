@@ -2,6 +2,7 @@ export const colors = {
   bgWhite: (opacity: number) => `rgba(255,255,255, ${opacity})`,
   bgBlack: (opacity: number) => `rgba(0,0,0, ${opacity})`,
   bgMediumGray: (opacity: number) => `rgba(49,48,53, ${opacity})`,
+  bgLightGray: (opacity: number) => `rgba(60,60,60, ${opacity})`,
 
   bgBlue: (opacity: number = 1) => `rgba(124,197,227, ${opacity})`,
   bgGreen: (opacity: number = 1) => `rgba(72, 227, 82, ${opacity})`,

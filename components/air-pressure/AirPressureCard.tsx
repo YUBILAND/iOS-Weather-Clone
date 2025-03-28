@@ -53,4 +53,4 @@ const AirPressureCard = ({
   );
 };
 
-export default AirPressureCard;
+export default React.memo(AirPressureCard);

@@ -68,4 +68,4 @@ const UVIndexCard = ({ cityName, showModal, iconSize }: UVIndexCardProps) => {
   );
 };
 
-export default UVIndexCard;
+export default React.memo(UVIndexCard);

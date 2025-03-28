@@ -38,53 +38,58 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch, useSelector } from "react-redux";
 
 import { CrossfadeImage } from "react-native-crossfade-image";
+import DefaultText from "@/components/atoms/DefaultText";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useFonts } from "expo-font";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 
 const App = () => {
+  // Delete All Weather Screens
   const resetWeatherScreens = false;
   if (resetWeatherScreens) {
     AsyncStorage.clear();
   }
+
   const dispatch = useDispatch<AppDispatch>();
   const { data, loading, error } = useSelector(
     (state: RootState) => state.weather
   );
 
   const [showSearch, setShowSearch] = useState(false);
+  const [weatherScreens, setWeatherScreens] = useState<string[]>([]);
+  const [update, setUpdate] = useState(false);
   const [searchResultLocations, setSearchResultLocations] = useState<
     Location[]
   >([]);
-  const [weatherScreens, setWeatherScreens] = useState<string[]>([]);
-  const [update, setUpdate] = useState(false);
 
+  // Fetch Weather Screens In Async Storage
   const FirstCity = async () => {
     const cityArray = await getData("city");
-    // console.log(cityArray);
     setWeatherScreens(cityArray);
   };
 
-  // Fetch the weather data when the component mounts
-  // useEffect(() => {
-  //   dispatch(fetchWeatherData());
-  //   FirstCity();
-  // }, [update]);
+  // Temporary fix for weather screen not showing upon adding new location
   useEffect(() => {
     dispatch(fetchWeatherData());
     FirstCity();
-  }, [update]);
+  }, []);
 
-  // Add New Weather Location
+  // Add New Weather Location when click on city name
   const handleLocation = async (location: Location) => {
+    setShowLocationModal(false);
+
     try {
+      await dispatch(fetchWeatherData(location.name));
       setShowSearch(false);
       setSearchResultLocations([]);
-      setUpdate(!update);
-      setShowLocationModal(false);
-      await dispatch(fetchWeatherData(location.name));
+      FirstCity();
+
+      // setUpdate(!update);
     } catch (error) {
       console.error("Error fetching weather data:", error);
     }
   };
-
+  // Handle search functionality
   const handleSearch = (value: string): void => {
     // fetch location based on autocomplete of user input
     let autoCompleteMinimumLength = 2;
@@ -95,16 +100,13 @@ const App = () => {
       });
     }
   };
-
+  // Delay in user typing until result to reduce api calls and smoothen experience
   const handleTextDebounce = useCallback(debounce(handleSearch, 1200), []);
-
+  // Show Search Text Box
   const toggleSearch = (textInputRef: RefObject<TextInput>) => {
     setShowSearch((prevState) => !prevState);
     !showSearch ? textInputRef.current?.focus() : textInputRef.current?.blur();
   };
-
-  const { width } = useWindowDimensions();
-  const scrollX = React.useRef(new Animated.Value(0)).current;
 
   // if (!cityData) {
   //   return (
@@ -121,73 +123,47 @@ const App = () => {
   //   );
   // }
 
-  const [showLocationModal, setShowLocationModal] = useState(false);
-
-  const flatlistRef = useRef<FlatList>(null);
-
-  const handleShowWeatherScreen = (index: number) => {
-    flatlistRef.current?.scrollToIndex({ index: index });
-    setShowLocationModal(false);
-  };
-
   const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
 
+  // Get Weather Background
   const currentCityName = weatherScreens[currentCardIndex];
-
   const background = weatherNameToCardBg(
     getWeatherName(data[currentCityName]?.current.condition.code),
     data[currentCityName]?.current.is_day
   );
 
-  const props = {
-    handleTextDebounce,
-    showSearch,
-    toggleSearch,
-    searchResultLocations,
-    handleLocation,
-    currentCardIndex,
-  };
-
+  // For FlatList
+  const { width } = useWindowDimensions();
+  const scrollX = React.useRef(new Animated.Value(0)).current;
   const dataProp: Array<{ id: string } & WeatherAtLocationProps> = useMemo(
     () =>
       weatherScreens.map((city, index) => ({
         id: city,
-        ...props,
         cityName: city,
       })),
     [weatherScreens]
   );
-
   const flatlistProps = {
-    horizontal: true,
-    decelerationRate: 0,
+    horizontal: true, // Horizontal
+    decelerationRate: 0, //Quick deceleration
     snapToInterval: width, // Use the screen width
-    snapToAlignment: "center" as const,
-    showsHorizontalScrollIndicator: false,
-    pagingEnabled: true,
+    snapToAlignment: "center" as const, // Snap to center
+    showsHorizontalScrollIndicator: false, // No scrollbar
+    // pagingEnabled: true,
     onScroll: Animated.event(
       [{ nativeEvent: { contentOffset: { x: scrollX } } }],
       { useNativeDriver: false }
     ),
   };
-
   const handleViewableItemsChanged = useCallback(
-    ({
-      viewableItems,
-      changed,
-    }: {
-      viewableItems: ViewToken[];
-      changed: ViewToken[];
-    }) => {
+    ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       const currentIndex = viewableItems[0].index;
-      // console.log(currentIndex);
       if (currentIndex != null) {
         setCurrentCardIndex(currentIndex);
       }
     },
     [weatherScreens]
   );
-
   const handleRenderItem = useCallback(
     ({ item }: { item: { id: string } & WeatherAtLocationProps }) => {
       const { id, ...restProps } = item;
@@ -196,7 +172,36 @@ const App = () => {
     []
   );
 
-  if (loading) {
+  // For Location Modal
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const flatlistRef = useRef<FlatList>(null);
+  const handleShowWeatherScreen = (index: number) => {
+    flatlistRef.current?.scrollToIndex({ index: index });
+    setShowLocationModal(false);
+  };
+  const searchProps = {
+    showLocationModal,
+    handleTextDebounce,
+    showSearch,
+    toggleSearch,
+    searchResultLocations,
+    handleLocation,
+    weatherScreens,
+    currentCardIndex,
+  };
+  const handleShowLocationModal = (visible: boolean) =>
+    setShowLocationModal(visible);
+
+  // SafeAreaView causes flicker on mount, so get insets directly and use as padding
+  const insets = useSafeAreaInsets();
+
+  // Preload expo icons since async to prevent delay in image
+  const [fontsLoaded] = useFonts({
+    ...Ionicons.font,
+    ...FontAwesome6.font,
+  });
+
+  if (loading || !fontsLoaded) {
     return (
       <View className="flex-1 relative">
         <StatusBar style="light" />
@@ -220,31 +225,19 @@ const App = () => {
         resizeMode="cover"
       />
 
-      <SafeAreaView className="flex flex-1 ">
-        <View className="relative pb-10 h-full">
-          {/* Bottom Footer */}
-          <View className="w-full h-10 absolute bottom-0 right-0 ">
-            <BottomFooter
-              scrollX={scrollX}
-              weatherScreens={weatherScreens}
-              setShowLocationModal={(visible: boolean) =>
-                setShowLocationModal(visible)
-              }
-            />
-          </View>
+      <LocationModal
+        {...searchProps}
+        goToWeatherScreen={(index: number) => handleShowWeatherScreen(index)}
+      />
 
-          <LocationModal
-            showLocationModal={showLocationModal}
-            handleTextDebounce={handleTextDebounce}
-            showSearch={showSearch}
-            toggleSearch={toggleSearch}
-            searchResultLocations={searchResultLocations}
-            handleLocation={handleLocation}
-            weatherScreens={weatherScreens}
-            goToWeatherScreen={(index: number) =>
-              handleShowWeatherScreen(index)
-            }
-          />
+      <View
+        className="flex flex-[0.95]"
+        style={{
+          paddingTop: insets.top,
+        }}
+      >
+        <View className="h-full">
+          {/* Bottom Footer */}
 
           {/* Weather at location */}
           <FlatList
@@ -257,7 +250,13 @@ const App = () => {
             {...flatlistProps}
           />
         </View>
-      </SafeAreaView>
+      </View>
+
+      <BottomFooter
+        scrollX={scrollX}
+        weatherScreens={weatherScreens}
+        setShowLocationModal={handleShowLocationModal}
+      />
     </View>
   );
 };

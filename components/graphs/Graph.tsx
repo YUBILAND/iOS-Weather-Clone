@@ -43,7 +43,10 @@ import { getGraphData } from "./utils/getGraphData";
 //   areaDarkBottom?: string;
 // }
 
-interface GraphProps<Key extends keyof ChartPressStateNames> {
+interface GraphProps<
+  K1 extends keyof ChartPressStateNames,
+  K2 extends keyof ChartPressStateNames | undefined = undefined
+> {
   cityName: string;
   state: ChartPressState<{
     x: number;
@@ -51,17 +54,24 @@ interface GraphProps<Key extends keyof ChartPressStateNames> {
       currentLineTop: number;
       currentLineBottom: number;
       currentPosition: number;
-    } & Pick<ChartPressStateNames, Key>;
+    } & Pick<ChartPressStateNames, K1> &
+      (K2 extends keyof ChartPressStateNames
+        ? Partial<Pick<ChartPressStateNames, K2>>
+        : {});
   }>;
   isActive: boolean;
   graphHeight?: number;
   strokeWidth?: number;
-  yAxisLabel: string;
   loadedIndex: number;
-  apiObjectString: keyof GraphKeyType;
+  apiObjectString: keyof GraphKeyType | (keyof GraphKeyType)[];
+
+  yAxisLabel: string;
   domainBottom?: number;
   domainTop?: number;
+
   customColor?: Colors;
+  customColor2?: Colors;
+
   addWeatherImages?: boolean | { amount?: number };
   addWeatherText?: boolean | { amount?: number; unit: string };
   removeArea: boolean;
@@ -82,6 +92,7 @@ const Graph = <Key extends keyof ChartPressStateNames>({
   domainBottom = 0,
   domainTop = 120,
   customColor = "bgBlue",
+  customColor2 = "bgGreen",
   addWeatherImages,
   addWeatherText,
   removeArea = false,
@@ -95,12 +106,12 @@ const Graph = <Key extends keyof ChartPressStateNames>({
   const font = getFont();
 
   // Which y axis key was passed
-  const yAxisKey = Object.keys(state.y).find(
+  const yAxisKey = Object.keys(state.y).filter(
     (key) =>
       key !== "currentLineTop" &&
       key !== "currentLineBottom" &&
       key !== "currentPosition"
-  ) as Key;
+  ) as Key[];
 
   // Get Graph Data
   const graphData = getGraphData(
@@ -108,16 +119,13 @@ const Graph = <Key extends keyof ChartPressStateNames>({
     100,
     0,
     loadedIndex,
-    yAxisKey,
-    apiObjectString
+    Array.isArray(yAxisKey) ? yAxisKey : [yAxisKey],
+    Array.isArray(apiObjectString) ? apiObjectString : [apiObjectString]
   );
 
+  // If addWeatherImages prop included, show defualt 12 images, else take what user typed, else 0
   const imageAmount =
-    typeof addWeatherImages === "boolean"
-      ? 12
-      : addWeatherImages?.amount
-      ? addWeatherImages.amount
-      : 0;
+    typeof addWeatherImages === "boolean" ? 12 : addWeatherImages?.amount ?? 0;
 
   // Display image at the top of graph
   const { timeArr, imageArr } = getGraphImageAndCoord(
@@ -136,6 +144,7 @@ const Graph = <Key extends keyof ChartPressStateNames>({
     )
   );
 
+  // If addWeatherText prop included, show defualt 12 texts, else take what user typed, else 0
   const textAmount =
     typeof addWeatherText === "boolean" ||
     (addWeatherText?.amount === undefined && addWeatherText?.unit !== undefined)
@@ -151,7 +160,7 @@ const Graph = <Key extends keyof ChartPressStateNames>({
     data[cityName],
     loadedIndex,
     textAmount,
-    apiObjectString
+    Array.isArray(apiObjectString) ? apiObjectString[0] : apiObjectString
   );
 
   return (
@@ -160,7 +169,8 @@ const Graph = <Key extends keyof ChartPressStateNames>({
         data={graphData!}
         xKey="hour"
         yKeys={[
-          yAxisKey,
+          yAxisKey[0],
+          yAxisKey[1],
           "currentLineTop",
           "currentLineBottom",
           "currentPosition",
@@ -190,10 +200,17 @@ const Graph = <Key extends keyof ChartPressStateNames>({
       >
         {({ points, chartBounds }) => {
           const cutoff = getCurrentHour(location!.tz_id);
-          const leftPoints = points[yAxisKey].filter(
+          const leftPoints = points[yAxisKey[0]].filter(
             (point) => (point.xValue! as number) <= cutoff
           );
-          const rightPoints = points[yAxisKey].filter(
+          const rightPoints = points[yAxisKey[0]].filter(
+            (point) => (point.xValue! as number) >= cutoff
+          );
+
+          const leftPoints2 = points[yAxisKey[1] || yAxisKey[0]].filter(
+            (point) => (point.xValue! as number) <= cutoff
+          );
+          const rightPoints2 = points[yAxisKey[1] || yAxisKey[0]].filter(
             (point) => (point.xValue! as number) >= cutoff
           );
 
@@ -238,15 +255,32 @@ const Graph = <Key extends keyof ChartPressStateNames>({
 
               {/* Right side of graph*/}
               <>
+                {yAxisKey.length > 1 && (
+                  <Line
+                    points={
+                      loadedIndex === 0 ? rightPoints2 : points[yAxisKey[1]]
+                    }
+                    color={colors[customColor2](0.3)}
+                    strokeWidth={6}
+                    curveType={curveType}
+                  />
+                )}
+
                 <Line
-                  points={loadedIndex === 0 ? rightPoints : points[yAxisKey]}
+                  points={loadedIndex === 0 ? rightPoints : points[yAxisKey[0]]}
                   color={colors[customColor](1)}
                   strokeWidth={6}
                   curveType={curveType}
                 />
                 {!removeArea && (
                   <Area
-                    points={loadedIndex === 0 ? rightPoints : points[yAxisKey]}
+                    points={
+                      loadedIndex === 0
+                        ? rightPoints
+                        : points[
+                            Array.isArray(yAxisKey) ? yAxisKey[0] : yAxisKey
+                          ]
+                    }
                     y0={chartBounds.bottom}
                     animate={{ type: "timing", duration: 300 }}
                     curveType={curveType}
@@ -267,6 +301,15 @@ const Graph = <Key extends keyof ChartPressStateNames>({
                 <>
                   {/* Left side of graph*/}
                   <>
+                    <Line
+                      points={leftPoints2}
+                      color={colors[customColor2](0.3)}
+                      strokeWidth={6}
+                      curveType={curveType}
+                    >
+                      <DashPathEffect intervals={[10, 10]} />
+                    </Line>
+
                     <Line
                       points={leftPoints}
                       color={colors[customColor](0.6)}
@@ -358,7 +401,13 @@ const Graph = <Key extends keyof ChartPressStateNames>({
               )}
 
               {isActive ? (
-                <ToolTip x={state.x.position} y={state.y[yAxisKey].position} />
+                <ToolTip
+                  x={state.x.position}
+                  y={
+                    state.y[Array.isArray(yAxisKey) ? yAxisKey[0] : yAxisKey]
+                      .position
+                  }
+                />
               ) : null}
             </>
           );

@@ -105,4 +105,4 @@ const SunPhaseCard = ({
   );
 };
 
-export default SunPhaseCard;
+export default React.memo(SunPhaseCard);

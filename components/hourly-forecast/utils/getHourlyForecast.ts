@@ -62,7 +62,6 @@ export const getHourlyForecastObject = (
           }
 
           // Insert Sunrise Time
-
           const sunriseGreaterThanCurrentTime =
             militaryHour(sunriseTime) > currentHour &&
             parseInt(sunriseTime.split(":")[1].split(" ")[0]) >=
@@ -81,7 +80,7 @@ export const getHourlyForecastObject = (
             //Sunrise should be included
 
             const sunriseExactTime = removeZeroFromTimeString(sunriseDate);
-            const sunriseText = "sunrise";
+            const sunriseText = "Sunrise";
 
             newArr.push({
               time: sunriseExactTime,
@@ -108,7 +107,7 @@ export const getHourlyForecastObject = (
           ) {
             //Sunrise should be included
             const sunsetExactTime = removeZeroFromTimeString(sunsetDate);
-            const sunsetText = "sunset";
+            const sunsetText = "Sunset";
 
             newArr.push({
               time: sunsetExactTime,

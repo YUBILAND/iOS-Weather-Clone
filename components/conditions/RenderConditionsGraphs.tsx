@@ -1,7 +1,11 @@
 import { WeatherData } from "@/constants/constants";
 import React, { memo, useEffect } from "react";
 import { TextInputProps, View } from "react-native";
-import { AnimatedProps, useAnimatedProps } from "react-native-reanimated";
+import {
+  AnimatedProps,
+  SharedValue,
+  useAnimatedProps,
+} from "react-native-reanimated";
 import { ChartPressState, useChartPressState } from "victory-native";
 import DefaultText from "../atoms/DefaultText";
 import TitleTemp from "../graphs/conditions/TitleTemp";
@@ -9,14 +13,19 @@ import GraphContainer from "../modal/GraphContainer";
 import Graph from "../graphs/Graph";
 import { getWeekTempArr } from "../daily-forecast/utils/getWeekTempArr";
 import ConditionsModalDescription from "./ConditionsModalDescription";
+import { LeftTextType } from "../modal/Modal";
+import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
+import { updateLeftText } from "../modal/utils/updateLeftText";
+import { getDayArr } from "../precipitation/utils/getDayArr";
+import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
 
 interface RenderConditionsGraphsProps {
   data: WeatherData;
   cityName: string;
   currentIndex: number;
   item: { id: number };
-
-  handleActivePress: (active: boolean) => void;
+  updateShared: (leftText: LeftTextType, id: number) => void;
+  isActiveShared: SharedValue<boolean>;
 }
 
 const RenderConditionsGraphs = ({
@@ -24,7 +33,8 @@ const RenderConditionsGraphs = ({
   cityName,
   item,
   currentIndex,
-  handleActivePress,
+  updateShared,
+  isActiveShared,
 }: RenderConditionsGraphsProps) => {
   const { state: tempState, isActive: tempIsActive } = useChartPressState({
     x: 0,
@@ -64,13 +74,43 @@ const RenderConditionsGraphs = ({
   const weekMaxTemp = Math.max(...weekTempArr);
   const weekMinTemp = Math.min(...weekTempArr);
 
-  useEffect(() => {
-    handleActivePress(tempIsActive);
-  }, [tempIsActive]);
+  useSyncAnimatedValue(tempIsActive, isActiveShared);
+  // useSyncAnimatedValue(rainIsActive, isActiveShared);
 
-  useEffect(() => {
-    handleActivePress(rainIsActive);
-  }, [rainIsActive]);
+  const hourlyTempMap = getDayArr(data, 0, "temp_c");
+  const maxCelsius = Math.round(Math.max(...hourlyTempMap));
+  const minCelsius = Math.round(Math.min(...hourlyTempMap));
+
+  const currentTemperature = Math.round(parseFloat(data.current?.temp_c));
+  const maxTemperature = Math.round(
+    data.forecast?.forecastday[item.id].day.maxtemp_c
+  );
+  const minTemperature = Math.round(
+    data.forecast?.forecastday[item.id].day.mintemp_c
+  );
+
+  const currentWeatherImage = weatherNameToImage(
+    getWeatherName(data.current?.condition.code),
+    data.current?.is_day
+  );
+
+  const DailyWeatherImage = weatherNameToImage(
+    getWeatherName(data.forecast?.forecastday[item.id].day.condition.code),
+    true
+  );
+
+  const currentText: LeftTextType = {
+    topText: currentTemperature.toString() + "°",
+    bottomText: `H:${maxCelsius}° L:${minCelsius}°`,
+    image: "cloudy",
+  };
+  const otherText: LeftTextType = {
+    topText: maxTemperature.toString() + "°",
+    topTextGray: minTemperature + "°",
+    bottomText: "Celsius",
+  };
+
+  updateLeftText(currentIndex, updateShared, currentText, otherText);
 
   return (
     <>
@@ -81,7 +121,10 @@ const RenderConditionsGraphs = ({
         isActive={tempIsActive}
         scrollInfoBold={tempScrollInfoBold}
         currentIndex={currentIndex}
-        leftSide={<TitleTemp data={data} item={item} />}
+        leftSide={
+          <></>
+          // <TitleTemp data={data} item={item} />
+        }
         hackyWeatherImage
       >
         <Graph
@@ -126,10 +169,8 @@ const RenderConditionsGraphs = ({
           loadedIndex={item.id}
         />
       </GraphContainer>
-
-      <ConditionsModalDescription data={data} currentIndex={item.id} />
     </>
   );
 };
 
-export default RenderConditionsGraphs;
+export default React.memo(RenderConditionsGraphs);

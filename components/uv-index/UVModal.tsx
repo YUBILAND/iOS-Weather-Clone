@@ -1,25 +1,28 @@
 import { useWeatherData } from "@/hooks/useWeatherData";
 import React, { useEffect } from "react";
-import { useAnimatedProps } from "react-native-reanimated";
+import { SharedValue, useAnimatedProps } from "react-native-reanimated";
 import { useChartPressState } from "victory-native";
 import Graph from "../graphs/Graph";
-import GraphLeftText from "../graphs/GraphLeftText";
 import GraphContainer from "../modal/GraphContainer";
+import { LeftTextType } from "../modal/Modal";
 import { getDayArr } from "../precipitation/utils/getDayArr";
-import UVModalDescription from "./UVModalDescription";
 import { getUVLevel } from "./utils/getUVLevel";
+import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
+import { updateLeftText } from "../modal/utils/updateLeftText";
 
 interface UVModalProps {
   cityName: string;
   currentIndex: number;
   id: number;
-  handleActivePress: (active: boolean) => void;
+  updateShared: (leftText: LeftTextType, id: number) => void;
+  isActiveShared: SharedValue<boolean>;
 }
 const UVModal = ({
   cityName,
   currentIndex,
   id,
-  handleActivePress,
+  updateShared,
+  isActiveShared,
 }: UVModalProps) => {
   const data = useWeatherData();
 
@@ -32,6 +35,7 @@ const UVModal = ({
       currentPosition: 0,
     },
   });
+
   const uvScrollInfoBold = useAnimatedProps(() => {
     const pressedValue = uvState.y.uvIndex.value.value;
     const uvIndex =
@@ -42,14 +46,38 @@ const UVModal = ({
     };
   });
 
-  useEffect(() => {
-    handleActivePress(uvIsActive);
-  }, [uvIsActive]);
+  // Updating isActive chartpress from parent.
+  // Turns out assigning shared value within worklet results rerender, so use runOnJS
+  useSyncAnimatedValue(uvIsActive, isActiveShared);
 
   const currentUVIndex = data[cityName].current.uv;
 
   const dailyUVArr = getDayArr(data[cityName], id, "uv");
   const dailyMax = Math.max(...dailyUVArr);
+
+  const currentText: LeftTextType = {
+    topText: Math.round(currentUVIndex).toString(),
+    topTextSmall: getUVLevel(currentUVIndex),
+    bottomText: "World Health Organization UVI",
+  };
+  const otherText: LeftTextType = {
+    topText: Math.round(dailyMax).toString(),
+    topTextSmall: getUVLevel(dailyMax),
+    bottomText: "World Health Organization UVI",
+  };
+
+  // const currentText: LeftTextType = {
+  //     topText: currentTemperature.toString() + "°",
+  //     bottomText: `H:${maxCelsius}° L:${minCelsius}°`,
+  //     image: "cloudy",
+  //   };
+  //   const otherText: LeftTextType = {
+  //     topText: maxTemperature.toString() + "°",
+  //     topTextGray: minTemperature + "°",
+  //     bottomText: "Celsius",
+  //   };
+
+  updateLeftText(id, updateShared, currentText, otherText);
 
   return (
     <>
@@ -59,38 +87,25 @@ const UVModal = ({
         isActive={uvIsActive}
         scrollInfoBold={uvScrollInfoBold}
         currentIndex={currentIndex}
-        leftSide={
-          <GraphLeftText
-            id={id}
-            currentTopText={
-              Math.round(currentUVIndex) + " " + getUVLevel(currentUVIndex)
-            }
-            otherTopText={Math.round(dailyMax) + " " + getUVLevel(dailyMax)}
-            currentBottomText="World Health Organization UVI"
-            otherBottomText="World Health Organization UVI"
-          />
-        }
+        leftSide={<></>}
       >
         <Graph
           cityName={cityName}
           // @ts-ignore, used Pick but now sure why it still requires all keys
           state={uvState}
           isActive={uvIsActive}
-          graphHeight={250}
-          strokeWidth={4}
           yAxisLabel="°"
           loadedIndex={id}
           apiObjectString="uv"
-          domainBottom={0}
           domainTop={12}
           customColor="bgGreen"
           addWeatherText={{ unit: "" }}
         />
       </GraphContainer>
 
-      <UVModalDescription data={data[cityName]} currentIndex={id} />
+      {/* <UVModalDescription data={data[cityName]} currentIndex={id} /> */}
     </>
   );
 };
 
-export default UVModal;
+export default React.memo(UVModal);

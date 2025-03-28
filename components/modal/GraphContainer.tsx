@@ -36,7 +36,9 @@ interface GraphContainerProps<Key extends string> {
   leftSide: React.ReactNode;
   children: React.ReactNode;
   hackyWeatherImage?: boolean;
-  scrollInfoBold: Partial<AnimatedProps<TextInputProps>>;
+  scrollInfoBold:
+    | Partial<AnimatedProps<TextInputProps>>
+    | Partial<AnimatedProps<TextInputProps>>[];
   smallBold?: boolean;
   currentIndex: number;
   belowScrollInfo?: Partial<AnimatedProps<TextInputProps>>;
@@ -77,15 +79,15 @@ const GraphContainer = <Key extends string>({
       ], // Translate X based on state.x
     };
   });
-  const bottomStyle = useAnimatedStyle(() => {
-    const xPosition = state.x.position.value;
-    const xValue = state.x.value.value;
-    return {
-      transform: [
-        { translateX: xValue < stopLeftScrollOnXValue ? 10 : xPosition - 40 },
-      ], // Translate X based on state.x
-    };
-  });
+  // const bottomStyle = useAnimatedStyle(() => {
+  //   const xPosition = state.x.position.value;
+  //   const xValue = state.x.value.value;
+  //   return {
+  //     transform: [
+  //       { translateX: xValue < stopLeftScrollOnXValue ? 10 : xPosition - 40 },
+  //     ], // Translate X based on state.x
+  //   };
+  // });
 
   // Translate X so bold text follows user drag, same as above but for bigger text
   const animatedView = useAnimatedStyle(() => {
@@ -111,14 +113,13 @@ const GraphContainer = <Key extends string>({
   const conditionArray = getConditionArray(data[cityName], currentIndex);
 
   return (
-    <View className=" w-full px-4 relative z-0">
-      <View className="mb-2 ">
+    <View className=" w-full px-4 relative z-0 pt-20 ">
+      <View className="absolute top-0 left-0">
         {/* Draggable Time */}
         <View
           style={{
             opacity: isActive ? 100 : 0,
             position: "absolute",
-            paddingTop: 2,
           }}
         >
           {/* Shows user hovered time */}
@@ -179,11 +180,35 @@ const GraphContainer = <Key extends string>({
                   fontWeight: 600,
                 },
               ]}
-              animatedProps={scrollInfoBold}
+              animatedProps={
+                Array.isArray(scrollInfoBold)
+                  ? scrollInfoBold[0]
+                  : scrollInfoBold
+              }
             />
           </AnimatedView>
 
-          {belowScrollInfo && (
+          {Array.isArray(scrollInfoBold) && (
+            <AnimatedTextInput
+              textAlign={"center"}
+              editable={false}
+              underlineColorAndroid={"transparent"}
+              style={[
+                {
+                  fontSize: 12,
+                  width: 120,
+                  lineHeight: 12,
+                  color: colors.lightGray,
+
+                  fontWeight: 600,
+                },
+                animatedView,
+              ]}
+              animatedProps={scrollInfoBold[1]}
+            />
+          )}
+
+          {/* {belowScrollInfo && (
             <AnimatedTextInput
               editable={false}
               underlineColorAndroid={"transparent"}
@@ -198,7 +223,7 @@ const GraphContainer = <Key extends string>({
               ]}
               animatedProps={belowScrollInfo}
             />
-          )}
+          )} */}
         </View>
 
         {/* Left side  */}

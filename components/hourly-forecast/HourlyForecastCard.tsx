@@ -1,15 +1,12 @@
 import { colors } from "@/assets/colors/colors";
-import { RootState } from "@/state/store";
-import React, { useEffect, useState } from "react";
+import { useAmericanTime } from "@/hooks/useAmericanTime";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import React, { useMemo } from "react";
 import { Pressable, ScrollView, View } from "react-native";
-import { useSelector } from "react-redux";
 import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 import HourlyForecastItem from "./HourlyForecastItem";
-import { DailyStats } from "./utils/constants";
 import { getHourlyForecastObject } from "./utils/getHourlyForecast";
-import { useAmericanTime } from "@/hooks/useAmericanTime";
-import { useWeatherData } from "@/hooks/useWeatherData";
 
 interface HourlyForecastProps {
   cityName: string;
@@ -19,14 +16,11 @@ interface HourlyForecastProps {
 const HourlyForecast = ({ cityName, showModal }: HourlyForecastProps) => {
   const americanTime = useAmericanTime();
   const data = useWeatherData();
-  const { location, forecast } = data[cityName];
 
-  const [dailyArr, setDailyArr] = useState<DailyStats[]>([]);
-
-  useEffect(() => {
-    if (location)
-      setDailyArr(getHourlyForecastObject(data[cityName], americanTime));
-  }, []);
+  const dailyArr = useMemo(
+    () => getHourlyForecastObject(data[cityName], americanTime),
+    [data, cityName, americanTime]
+  );
 
   const weatherMessage = "Random text related to today's weather";
 
@@ -58,7 +52,7 @@ const HourlyForecast = ({ cityName, showModal }: HourlyForecastProps) => {
               key={hour?.fullDate}
               hour={hour}
               index={index}
-              dailyArr={dailyArr}
+              dailyArr={getHourlyForecastObject(data[cityName], americanTime)}
               showModal={showModal}
             />
           ))}
@@ -68,4 +62,4 @@ const HourlyForecast = ({ cityName, showModal }: HourlyForecastProps) => {
   );
 };
 
-export default HourlyForecast;
+export default React.memo(HourlyForecast);

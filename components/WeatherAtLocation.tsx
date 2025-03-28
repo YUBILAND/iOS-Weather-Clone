@@ -2,7 +2,7 @@ import { colors } from "@/assets/colors/colors";
 import { getCurrentTime } from "@/hooks/hooks";
 import { RootState } from "@/state/store";
 import { Ionicons } from "@expo/vector-icons";
-import React, { useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { FlatList, ScrollView, TextInput, TextStyle, View } from "react-native";
 import Animated, {
   useAnimatedProps,
@@ -51,6 +51,14 @@ export interface WeatherAtLocationProps {
   cityName: string;
 }
 
+const iconSize = 18;
+
+export const textShadowStyle: TextStyle = {
+  textShadowColor: "rgba(0, 0, 0, 0.5)",
+  textShadowOffset: { width: 2, height: 2 },
+  textShadowRadius: 4,
+};
+
 const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
   const data = useWeatherData();
   const americanTime = useAmericanTime();
@@ -58,9 +66,9 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
   const { location, forecast, current } = data[cityName];
 
   const [modalVisible, setModalVisible] = useState<boolean>(true);
-
   const [currentIndex, setCurrentIndex] = useState<number>(0);
   const currentIndexRef = useRef<number>(0);
+  //Setting selectedModal to an initial value might cause other screens to not pull up modal
   const [selectedModal, setSelectedModal] = useState<SelectModal | null>(null);
 
   const currentTime = getCurrentTime(location?.tz_id);
@@ -71,8 +79,6 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
   );
 
   const openModalOnIndexRef = useRef<boolean>(false);
-
-  const iconSize = 18;
 
   const { state } = useChartPressState({
     x: 0,
@@ -99,7 +105,6 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
   });
 
   const daysSincePrevMonth = useMemo(() => getDaysSincePrevMonth(), []);
-
   const initialScrollPosition = TICKS_PER_DAY * daysSincePrevMonth * 10;
   const initialScrollIndex = initialScrollPosition / 10;
 
@@ -117,32 +122,44 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
     userScrolledIndex,
     initialScrollIndex
   );
-
   const initialMoonPhase = getCurrentMoonPhase(
     data[cityName],
     initialScrollIndex,
     initialScrollIndex
   );
 
-  const showThisModal = (modalName: SelectModal) => {
+  const showThisModal = useCallback((modalName: SelectModal) => {
     setSelectedModal(modalName);
     setCurrentIndex(0);
     setModalVisible(true);
-  };
+  }, []);
+
+  const modalCallbacks = useMemo(
+    () => ({
+      wind: () => showThisModal("wind"),
+      humidity: () => showThisModal("humidity"),
+      airPressure: () => showThisModal("airPressure"),
+      feelsLike: () => showThisModal("feelsLike"),
+      precipitation: () => showThisModal("precipitation"),
+      visibility: () => showThisModal("visibility"),
+      conditions: () => showThisModal("conditions"),
+      uv: () => showThisModal("uv"),
+      sunPhase: () => showThisModal("sunPhase"),
+      moonPhase: () => showThisModal("moonPhase"),
+    }),
+    [showThisModal]
+  );
 
   console.log("Flatlist rerendered");
-
-  const textShadowStyle: TextStyle = {
-    textShadowColor: "rgba(0, 0, 0, 0.5)",
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
-  };
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="w-screen">
       {/* Forecast section */}
-      <View className="mx-4 flex justify-around flex-1 mb-2">
-        <View className="mb-8 pt-14">
+      <View
+        className="mx-4 flex justify-around flex-1 "
+        style={{ paddingTop: 40 }}
+      >
+        <View className="mb-8 ">
           <LocationName
             location={location}
             className="text-center text-5xl"
@@ -181,148 +198,159 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
         </View>
 
         {/* Modal Component */}
-        {selectedModal === "sunPhase" ? (
-          <ModalContainer
-            modalVisible={modalVisible}
-            setModalVisible={setModalVisible}
-            title={"Sun Phase"}
-            selectedModal={selectedModal}
-          >
-            <SunPhaseModal cityName={cityName} nextPhaseTime={nextPhaseTime} />
-          </ModalContainer>
-        ) : selectedModal === "moonPhase" ? (
-          <ModalContainer
-            modalVisible={modalVisible}
-            setModalVisible={setModalVisible}
-            title={"Moon Phase"}
-            selectedModal={selectedModal}
-            backgroundColor={colors.darkGray}
-            putMoonHere={
-              <View
-                style={{
-                  backgroundColor: "black",
-                }}
-              >
+        <>
+          {selectedModal === "sunPhase" ? (
+            <ModalContainer
+              modalVisible={modalVisible}
+              setModalVisible={setModalVisible}
+              title={"Sun Phase"}
+              selectedModal={selectedModal}
+            >
+              <SunPhaseModal
+                cityName={cityName}
+                nextPhaseTime={nextPhaseTime}
+              />
+            </ModalContainer>
+          ) : selectedModal === "moonPhase" ? (
+            <ModalContainer
+              modalVisible={modalVisible}
+              setModalVisible={setModalVisible}
+              title={"Moon Phase"}
+              selectedModal={selectedModal}
+              backgroundColor={colors.darkGray}
+              putMoonHere={
                 <View
-                  className="items-center"
-                  style={{ paddingTop: 20, paddingBottom: 8 }}
+                  style={{
+                    backgroundColor: "black",
+                  }}
                 >
-                  <MoonPhaseGraph
-                    cityName={cityName}
-                    state={state}
-                    graphHeight={250}
-                    initialScrollIndex={initialScrollIndex}
-                    userScrolledIndex={userScrolledIndex}
-                    currentMoonPhase={currentMoonPhase}
-                    showPercent
-                    scaleDown={40}
-                    // addLines
-                  />
-                </View>
-
-                <View className="w-full flex-row items-center h-12">
-                  <View style={{ flex: 20, alignItems: "center" }}>
-                    {userScrolledIndex >= initialScrollIndex + 3 && (
-                      <Ionicons
-                        name="arrow-back-circle-outline"
-                        size={40}
-                        color={colors.bgBlue(1)}
-                        onPress={() => {
-                          setUserScrolledIndex(Math.floor(initialScrollIndex));
-                          offsetX.value = initialScrollPosition * 12;
-                          flatlistRef.current?.scrollToIndex({
-                            index: initialScrollPosition / (TICKS_PER_DAY * 10),
-                            animated: false,
-                          });
-                        }}
-                      />
-                    )}
-                  </View>
-
                   <View
-                    style={{ flex: 60 }}
-                    className="flex-row justify-center"
+                    className="items-center"
+                    style={{ paddingTop: 20, paddingBottom: 8 }}
                   >
-                    <AnimatedTextInput
-                      editable={false}
-                      underlineColorAndroid={"transparent"}
-                      style={animatedStyle}
-                      animatedProps={scrolledDate}
+                    <MoonPhaseGraph
+                      cityName={cityName}
+                      state={state}
+                      graphHeight={250}
+                      initialScrollIndex={initialScrollIndex}
+                      userScrolledIndex={userScrolledIndex}
+                      currentMoonPhase={currentMoonPhase}
+                      showPercent
+                      scaleDown={40}
+                      // addLines
                     />
                   </View>
 
-                  <View style={{ flex: 20, alignItems: "center" }}>
-                    {userScrolledIndex <= initialScrollIndex - 3 && (
-                      <Ionicons
-                        name="arrow-forward-circle-outline"
-                        size={40}
-                        color={colors.bgBlue(1)}
-                        onPress={() => {
-                          setUserScrolledIndex(
-                            Math.floor(
-                              initialScrollPosition / (TICKS_PER_DAY * 10)
-                            )
-                          );
-                          offsetX.value = initialScrollPosition * 12;
-                          flatlistRef.current?.scrollToIndex({
-                            index: initialScrollPosition / (TICKS_PER_DAY * 10),
-                            animated: false,
-                          });
-                        }}
+                  <View className="w-full flex-row items-center h-12">
+                    <View style={{ flex: 20, alignItems: "center" }}>
+                      {userScrolledIndex >= initialScrollIndex + 3 && (
+                        <Ionicons
+                          name="arrow-back-circle-outline"
+                          size={40}
+                          color={colors.bgBlue(1)}
+                          onPress={() => {
+                            setUserScrolledIndex(
+                              Math.floor(initialScrollIndex)
+                            );
+                            offsetX.value = initialScrollPosition * 12;
+                            flatlistRef.current?.scrollToIndex({
+                              index:
+                                initialScrollPosition / (TICKS_PER_DAY * 10),
+                              animated: false,
+                            });
+                          }}
+                        />
+                      )}
+                    </View>
+
+                    <View
+                      style={{ flex: 60 }}
+                      className="flex-row justify-center"
+                    >
+                      <AnimatedTextInput
+                        editable={false}
+                        underlineColorAndroid={"transparent"}
+                        style={animatedStyle}
+                        animatedProps={scrolledDate}
                       />
-                    )}
+                    </View>
+
+                    <View style={{ flex: 20, alignItems: "center" }}>
+                      {userScrolledIndex <= initialScrollIndex - 3 && (
+                        <Ionicons
+                          name="arrow-forward-circle-outline"
+                          size={40}
+                          color={colors.bgBlue(1)}
+                          onPress={() => {
+                            setUserScrolledIndex(
+                              Math.floor(
+                                initialScrollPosition / (TICKS_PER_DAY * 10)
+                              )
+                            );
+                            offsetX.value = initialScrollPosition * 12;
+                            flatlistRef.current?.scrollToIndex({
+                              index:
+                                initialScrollPosition / (TICKS_PER_DAY * 10),
+                              animated: false,
+                            });
+                          }}
+                        />
+                      )}
+                    </View>
                   </View>
                 </View>
-              </View>
-            }
-          >
-            <MoonPhaseModal
-              cityName={cityName}
-              flatlistRef={flatlistRef}
-              sharedDate={sharedDate}
-              offsetX={offsetX}
-              userScrolledIndex={userScrolledIndex}
-              setUserScrolledIndex={(index: number) =>
-                setUserScrolledIndex(index)
               }
-              currentMoonPhase={currentMoonPhase}
-              daysSincePrevMonth={daysSincePrevMonth}
-            />
-          </ModalContainer>
-        ) : selectedModal ? (
-          <ModalContainer
-            modalVisible={modalVisible}
-            setModalVisible={(visible: boolean) => setModalVisible(visible)}
-            title={modalDropdownObjects[selectedModal].label}
-            selectedModal={selectedModal}
-          >
-            <Modal
-              cityName={cityName}
-              currentIndex={currentIndex}
-              setCurrentIndex={(index: number) => setCurrentIndex(index)}
-              currentIndexRef={currentIndexRef}
+            >
+              <MoonPhaseModal
+                cityName={cityName}
+                flatlistRef={flatlistRef}
+                sharedDate={sharedDate}
+                offsetX={offsetX}
+                userScrolledIndex={userScrolledIndex}
+                setUserScrolledIndex={(index: number) =>
+                  setUserScrolledIndex(index)
+                }
+                currentMoonPhase={currentMoonPhase}
+                daysSincePrevMonth={daysSincePrevMonth}
+              />
+            </ModalContainer>
+          ) : selectedModal ? (
+            <ModalContainer
+              modalVisible={modalVisible}
+              setModalVisible={(visible: boolean) => setModalVisible(visible)}
+              title={modalDropdownObjects[selectedModal].label}
               selectedModal={selectedModal}
-              setSelectedModal={(modal: SelectModal) => setSelectedModal(modal)}
-              openModalOnIndexRef={openModalOnIndexRef}
-            />
-          </ModalContainer>
-        ) : (
-          <View></View>
-        )}
+            >
+              <Modal
+                cityName={cityName}
+                currentIndex={currentIndex}
+                setCurrentIndex={(index: number) => setCurrentIndex(index)}
+                currentIndexRef={currentIndexRef}
+                selectedModal={selectedModal}
+                setSelectedModal={(modal: SelectModal) =>
+                  setSelectedModal(modal)
+                }
+                openModalOnIndexRef={openModalOnIndexRef}
+              />
+            </ModalContainer>
+          ) : (
+            <></>
+          )}
+        </>
 
         <CardsContainer className="gap-y-2">
           <HourlyForecastCard
             cityName={cityName}
-            showModal={() => showThisModal("conditions")}
+            showModal={modalCallbacks.conditions}
           />
 
           <DailyForecastCard
             cityName={cityName}
             iconSize={iconSize}
-            showModal={() => {
+            showModal={useCallback(() => {
               setSelectedModal("conditions");
               setModalVisible(true);
-            }}
+            }, [])}
             setCurrentIndex={(index: number) => setCurrentIndex(index)}
             openModalOnIndexRef={openModalOnIndexRef}
           />
@@ -334,7 +362,7 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
               <UVIndexCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => showThisModal("uv")}
+                showModal={modalCallbacks.uv}
               />
             }
             rightCard={
@@ -342,7 +370,7 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
                 graphHeight={60}
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => showThisModal("sunPhase")}
+                showModal={modalCallbacks.sunPhase}
               />
             }
           />
@@ -350,7 +378,7 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
           <WindCard
             cityName={cityName}
             iconSize={iconSize}
-            showModal={() => showThisModal("wind")}
+            showModal={modalCallbacks.wind}
           />
 
           <TwoCards
@@ -358,14 +386,14 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
               <WindChillCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => showThisModal("feelsLike")}
+                showModal={modalCallbacks.feelsLike}
               />
             }
             rightCard={
               <PrecipitationCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => showThisModal("precipitation")}
+                showModal={modalCallbacks.precipitation}
               />
             }
           />
@@ -375,14 +403,14 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
               <VisibilityCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => showThisModal("visibility")}
+                showModal={modalCallbacks.visibility}
               />
             }
             rightCard={
               <HumidityCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => showThisModal("humidity")}
+                showModal={modalCallbacks.humidity}
               />
             }
           />
@@ -393,7 +421,7 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
             userScrolledIndex={initialScrollIndex}
             currentMoonPhase={initialMoonPhase}
             initialScrollIndex={initialScrollIndex}
-            showModal={() => showThisModal("moonPhase")}
+            showModal={modalCallbacks.moonPhase}
           />
 
           <TwoCards
@@ -401,14 +429,14 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
               <VisibilityCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => showThisModal("visibility")}
+                showModal={modalCallbacks.visibility}
               />
             }
             rightCard={
               <AirPressureCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={() => showThisModal("airPressure")}
+                showModal={modalCallbacks.airPressure}
               />
             }
           />

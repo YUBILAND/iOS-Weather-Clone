@@ -7,8 +7,15 @@ import {
   VisibilityIcon,
   FeelsLikeIcon,
   WindIcon,
+  PencilIcon,
+  BellIcon,
+  CelsiusIcon,
+  FahrenheitIcon,
+  BarGraphIcon,
+  PopUpIcon,
 } from "./icons";
 
+// Types and constants for Modal Dropdown
 export type SelectModal =
   | "conditions"
   | "uv"
@@ -20,76 +27,54 @@ export type SelectModal =
   | "airPressure"
   | "sunPhase"
   | "moonPhase";
-
-export type IoniconName =
-  | "cloudy-night-outline"
-  | "sunny-outline"
-  | "water-outline"
-  | "thermometer-outline"
-  | "eye-outline"
-  | "stopwatch-outline";
-
 export interface ModalDropdownObject {
   label: string;
   id: number;
-  imageName: IoniconName;
 }
-
 export type ModalDropdownObjectsType = {
   [key in SelectModal]: ModalDropdownObject;
 };
-
 export const modalDropdownObjects: ModalDropdownObjectsType = {
   conditions: {
     label: "Conditions",
     id: 0,
-    imageName: "cloudy-night-outline",
   },
   uv: {
     label: "UV Index",
     id: 1,
-    imageName: "sunny-outline",
   },
   wind: {
     label: "Wind",
     id: 2,
-    imageName: "cloudy-night-outline",
   },
   precipitation: {
     label: "Precipitation",
     id: 3,
-    imageName: "water-outline",
   },
   feelsLike: {
     label: "Feels Like",
     id: 4,
-    imageName: "thermometer-outline",
   },
   humidity: {
     label: "Humidity",
     id: 5,
-    imageName: "eye-outline",
   },
   visibility: {
     label: "Visibility",
     id: 6,
-    imageName: "stopwatch-outline",
   },
   airPressure: {
     label: "Air Pressure",
     id: 7,
-    imageName: "cloudy-night-outline",
   },
 
   sunPhase: {
     label: "Sun Phase",
     id: 8,
-    imageName: "cloudy-night-outline",
   },
   moonPhase: {
     label: "Moon Phase",
     id: 9,
-    imageName: "cloudy-night-outline",
   },
 };
 
@@ -113,4 +98,57 @@ export const iconMap: IconObject = {
   airPressure: AirPressureIcon,
   sunPhase: ConditionsIcon,
   moonPhase: ConditionsIcon,
+};
+
+// Types and constants for Settings Dropdown
+export type SelectSetting =
+  | "editList"
+  | "notifications"
+  | "celsius"
+  | "fahrenheit"
+  | "units"
+  | "reportAnIssue";
+export type SettingsDropdownObjectsType = {
+  [key in SelectSetting]: ModalDropdownObject;
+};
+export interface SettingsDropdownObject {
+  label: string;
+  id: number;
+}
+export const settingsDropdownObjects: SettingsDropdownObjectsType = {
+  editList: {
+    label: "Edit List",
+    id: 0,
+  },
+  notifications: {
+    label: "Notification",
+    id: 1,
+  },
+  celsius: {
+    label: "Celsius",
+    id: 2,
+  },
+  fahrenheit: {
+    label: "Fahrenheit",
+    id: 3,
+  },
+  units: {
+    label: "Units",
+    id: 4,
+  },
+  reportAnIssue: {
+    label: "Report an Issue",
+    id: 5,
+  },
+};
+export type SettingsIconObject = {
+  [key in SelectSetting]: React.ComponentType<IconProps>;
+};
+export const settingsIconMap: SettingsIconObject = {
+  editList: PencilIcon,
+  notifications: BellIcon,
+  celsius: CelsiusIcon,
+  fahrenheit: FahrenheitIcon,
+  units: BarGraphIcon,
+  reportAnIssue: PopUpIcon,
 };
