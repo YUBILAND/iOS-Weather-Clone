@@ -32,3 +32,28 @@ export const storeData = async (
     console.log("Error storing value: ", error);
   }
 };
+
+export const deleteData = async (
+  key: string,
+  weatherScreens: string[],
+  index: number
+) => {
+  try {
+    // Delete city from weatherScreens
+
+    const newScreens = weatherScreens.filter((_, idx) => idx !== index);
+
+    // Set new weatherscreens array
+    await AsyncStorage.setItem(key, JSON.stringify(newScreens));
+  } catch (error) {
+    console.log("Error deleting value: ", error);
+  }
+};
+
+export const swapData = async (key: string, weatherScreens: string[]) => {
+  try {
+    await AsyncStorage.setItem(key, JSON.stringify(weatherScreens));
+  } catch (error) {
+    console.log("Error swapping value: ", error);
+  }
+};

@@ -1,14 +1,15 @@
 import React from "react";
-import { View } from "react-native";
+import { Pressable, View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import { textShadowStyle } from "../WeatherAtLocation";
 import { getLocationCardData } from "./utils/getLocationCardData";
 
 interface LocationCardItemProps {
   city: string;
+  isEditingList: boolean;
 }
 
-const LocationCardItem = ({ city }: LocationCardItemProps) => {
+const LocationCardItem = ({ city, isEditingList }: LocationCardItemProps) => {
   const {
     currentTemp,
     cityTime,
@@ -19,7 +20,8 @@ const LocationCardItem = ({ city }: LocationCardItemProps) => {
   return (
     <>
       <View className="flex-row justify-between items-center flex-[50]">
-        <View>
+        {/* City Info */}
+        <View className={isEditingList ? "gap-y-1" : ""}>
           <DefaultText
             style={[{ fontSize: 20, fontWeight: 700 }, textShadowStyle]}
           >
@@ -29,7 +31,7 @@ const LocationCardItem = ({ city }: LocationCardItemProps) => {
             {cityTime}
           </DefaultText>
         </View>
-
+        {/* Temps */}
         <DefaultText
           style={[{ fontWeight: 700 }, textShadowStyle]}
           className=" text-5xl"
@@ -38,30 +40,33 @@ const LocationCardItem = ({ city }: LocationCardItemProps) => {
         </DefaultText>
       </View>
 
-      <View className="justify-end flex-[50]">
-        <View className="flex-row justify-between w-full items-center">
-          <DefaultText
-            style={[{ fontWeight: 700 }, textShadowStyle]}
-            className="text-sm"
-          >
-            {currentWeatherCondition}
-          </DefaultText>
-          <View className="flex-row w-24">
+      {/* Bottom Details */}
+      {!isEditingList && (
+        <View className="justify-end flex-[50]">
+          <View className="flex-row justify-between w-full items-center">
             <DefaultText
-              style={[{ fontWeight: 700, flex: 5 }, textShadowStyle]}
-              className="text-sm "
-            >
-              H:{Math.round(currentHigh) + "°"}
-            </DefaultText>
-            <DefaultText
-              style={[{ fontWeight: 700, flex: 5 }, textShadowStyle]}
+              style={[{ fontWeight: 700 }, textShadowStyle]}
               className="text-sm"
             >
-              L:{Math.round(currentLow) + "°"}
+              {currentWeatherCondition}
             </DefaultText>
+            <View className="flex-row w-24">
+              <DefaultText
+                style={[{ fontWeight: 700, flex: 5 }, textShadowStyle]}
+                className="text-sm "
+              >
+                H:{Math.round(currentHigh) + "°"}
+              </DefaultText>
+              <DefaultText
+                style={[{ fontWeight: 700, flex: 5 }, textShadowStyle]}
+                className="text-sm"
+              >
+                L:{Math.round(currentLow) + "°"}
+              </DefaultText>
+            </View>
           </View>
         </View>
-      </View>
+      )}
     </>
   );
 };

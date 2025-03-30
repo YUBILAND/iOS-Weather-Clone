@@ -11,6 +11,7 @@ import SettingsDropdownItem from "./SettingsDropdownItem";
 interface SettingsDropdownProps {
   isOpen: boolean;
   handleIsOpen: (visible: boolean) => void;
+  chooseSetting: (selected: SelectSetting | null) => void;
 }
 
 export type TempUnit = "celsius" | "fahrenheit";
@@ -18,15 +19,9 @@ export type TempUnit = "celsius" | "fahrenheit";
 const SettingsDropdownContainer = ({
   isOpen,
   handleIsOpen,
+  chooseSetting,
 }: SettingsDropdownProps) => {
   const [selectedTempUnit, setSelectedTempUnit] = useState<TempUnit>("celsius");
-
-  const [selectedSetting, setSelectedSetting] = useState<SelectSetting | null>(
-    "celsius"
-  );
-  const handleSelectedSetting = (selected: SelectSetting | null) => {
-    setSelectedSetting(selected);
-  };
 
   const handleSelectedTempUnit = (tempUnit: TempUnit) => {
     setSelectedTempUnit(tempUnit);
@@ -45,7 +40,7 @@ const SettingsDropdownContainer = ({
             const itemProps = {
               item,
               index,
-              handleSelectedSetting,
+              chooseSetting,
               selectedTempUnit,
               handleSelectedTempUnit,
             };

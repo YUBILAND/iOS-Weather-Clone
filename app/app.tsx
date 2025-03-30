@@ -62,6 +62,10 @@ const App = () => {
     Location[]
   >([]);
 
+  const changeWeatherScreens = (weatherScreenArr: string[]) => {
+    setWeatherScreens(weatherScreenArr);
+  };
+
   // Fetch Weather Screens In Async Storage
   const FirstCity = async () => {
     const cityArray = await getData("city");
@@ -228,6 +232,7 @@ const App = () => {
       <LocationModal
         {...searchProps}
         goToWeatherScreen={(index: number) => handleShowWeatherScreen(index)}
+        changeWeatherScreens={changeWeatherScreens}
       />
 
       <View

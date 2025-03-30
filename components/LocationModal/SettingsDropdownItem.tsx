@@ -14,7 +14,7 @@ import DropdownGaps from "../atoms/DropdownGaps";
 interface SettingsDropdownItemProps {
   item: SettingsDropdownObject;
   index: number;
-  handleSelectedSetting: (setting: SelectSetting | null) => void;
+  chooseSetting: (setting: SelectSetting | null) => void;
   handleIsOpen: (open: boolean) => void;
   settingName: SelectSetting;
   selectedTempUnit: TempUnit;
@@ -24,7 +24,7 @@ interface SettingsDropdownItemProps {
 const SettingsDropdownItem = ({
   item,
   index,
-  handleSelectedSetting,
+  chooseSetting,
   handleIsOpen,
   settingName,
   selectedTempUnit,
@@ -33,7 +33,7 @@ const SettingsDropdownItem = ({
   const lastIndex = index === Object.keys(SettingsDropdownItem).length - 1;
 
   const pressDropdownItem = () => {
-    handleSelectedSetting(settingName);
+    chooseSetting(settingName);
     handleIsOpen(false);
     // Only celsius and fahrenheit should have checkmarks
     if (
@@ -41,6 +41,7 @@ const SettingsDropdownItem = ({
       selectedTempUnit !== settingName
     ) {
       handleSelectedTempUnit(settingName as TempUnit);
+    } else {
     }
   };
 
