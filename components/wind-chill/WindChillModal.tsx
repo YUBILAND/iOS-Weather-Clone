@@ -63,7 +63,7 @@ const WindChillModal = ({
   const dailyMinWindChill = Math.min(...dailyWindChillSpeed);
 
   const hourlyTempMap = data[cityName].forecast?.forecastday[id].hour.map(
-    (hour) => Math.round(parseFloat(hour.temp_c))
+    (hour) => Math.round(hour.temp_c)
   );
   const maxCelsius = Math.max(...hourlyTempMap);
   const minCelsius = Math.min(...hourlyTempMap);
@@ -72,7 +72,7 @@ const WindChillModal = ({
 
   const currentText: LeftTextType = {
     topText: Math.round(currentWindChill) + "°".toString(),
-    bottomText: `Actual: ${Math.round(parseFloat(currentTemperature)) + "°"}`,
+    bottomText: `Actual: ${Math.round(currentTemperature) + "°"}`,
   };
 
   const otherText: LeftTextType = {

@@ -16,6 +16,8 @@ import Animated, {
 import { useSelector } from "react-redux";
 import { ChartPressState } from "victory-native";
 import { getConditionArray } from "./utils/getConditionArray";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
@@ -41,7 +43,6 @@ interface GraphContainerProps<Key extends string> {
     | Partial<AnimatedProps<TextInputProps>>[];
   smallBold?: boolean;
   currentIndex: number;
-  belowScrollInfo?: Partial<AnimatedProps<TextInputProps>>;
 }
 
 const GraphContainer = <Key extends string>({
@@ -54,13 +55,27 @@ const GraphContainer = <Key extends string>({
   scrollInfoBold,
   smallBold = false,
   currentIndex,
-  belowScrollInfo,
 }: GraphContainerProps<Key>) => {
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
+  const is12Hr = useIs12Hr();
 
   // Dynamically show time
   const draggedTime = useAnimatedProps(() => {
-    const time = `${state.x.value.value % 24}:00`;
+    const time = is12Hr
+      ? `${
+          state.x.value.value === 0 || state.x.value.value === 12
+            ? 12
+            : state.x.value.value === 24
+            ? 12
+            : state.x.value.value % 12
+        }:00 ${
+          state.x.value.value === 24
+            ? "AM"
+            : Math.floor(state.x.value.value / 12) === 0
+            ? "AM"
+            : "PM"
+        }`
+      : `${state.x.value.value % 24}:00`;
     return {
       text: time,
       value: time,
@@ -75,19 +90,10 @@ const GraphContainer = <Key extends string>({
     const xValue = state.x.value.value;
     return {
       transform: [
-        { translateX: xValue < stopLeftScrollOnXValue ? 30 : xPosition - 15 },
+        { translateX: xValue < stopLeftScrollOnXValue ? 30 : xPosition },
       ], // Translate X based on state.x
     };
   });
-  // const bottomStyle = useAnimatedStyle(() => {
-  //   const xPosition = state.x.position.value;
-  //   const xValue = state.x.value.value;
-  //   return {
-  //     transform: [
-  //       { translateX: xValue < stopLeftScrollOnXValue ? 10 : xPosition - 40 },
-  //     ], // Translate X based on state.x
-  //   };
-  // });
 
   // Translate X so bold text follows user drag, same as above but for bigger text
   const animatedView = useAnimatedStyle(() => {
@@ -104,7 +110,7 @@ const GraphContainer = <Key extends string>({
                 : -20
               : hackyWeatherImage
               ? xPosition - 10 - 20
-              : xPosition - 60,
+              : xPosition - 40,
         },
       ],
     };
@@ -207,23 +213,6 @@ const GraphContainer = <Key extends string>({
               animatedProps={scrollInfoBold[1]}
             />
           )}
-
-          {/* {belowScrollInfo && (
-            <AnimatedTextInput
-              editable={false}
-              underlineColorAndroid={"transparent"}
-              style={[
-                {
-                  fontSize: 12,
-                  width: 140,
-                  lineHeight: 12,
-                  color: colors.lightGray,
-                },
-                bottomStyle,
-              ]}
-              animatedProps={belowScrollInfo}
-            />
-          )} */}
         </View>
 
         {/* Left side  */}

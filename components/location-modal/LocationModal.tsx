@@ -1,47 +1,14 @@
-import {
-  View,
-  Text,
-  Modal,
-  SafeAreaView,
-  Dimensions,
-  Pressable,
-  TextInput,
-  FlatList,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
-import React, { RefObject, useCallback, useRef, useState } from "react";
-import DefaultText from "../atoms/DefaultText";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/assets/colors/colors";
-import Search from "../atoms/Search";
 import { Location } from "@/constants/constants";
-import LocationCardContainer from "./LocationCardContainer";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useSelector } from "react-redux";
-import { RootState } from "@/state/store";
-import LocationCardItem from "./LocationCardItem";
-import LocationCardItemContainer from "./LocationCardItemContainer";
-import { useWeatherData } from "@/hooks/useWeatherData";
-import { useAmericanTime } from "@/hooks/useAmericanTime";
-import { removeZeroFromTimeString } from "@/hooks/hooks";
-import { getDayArr } from "../precipitation/utils/getDayArr";
-import SettingsDropdown from "./SettingsDropdown";
-import { SelectSetting } from "../modal/utils/modalConstants";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
-import DraggableFlatList from "react-native-draggable-flatlist";
-import ExampleDragDrop from "./ExampleDragDrop";
-import { getLocationCardData } from "./utils/getLocationCardData";
+import React, { RefObject, useCallback, useRef, useState } from "react";
+import { FlatList, Modal, Pressable, TextInput, View } from "react-native";
+import Search from "../atoms/Search";
+import { SelectSetting } from "../modal/utils/modalConstants";
 import { Item, LocationCardFlatlist } from "./LocationCardFlatlist";
-import VisibleText from "./VisibleText";
+import SettingsDropdown from "./SettingsDropdown";
 import TitleBar from "./TitleBar";
-import {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
+import VisibleText from "./VisibleText";
 
 const ListHeader = ({
   hasCrossedPoint,
@@ -97,32 +64,31 @@ const LocationModal = ({
   weatherScreens,
   changeWeatherScreens,
 }: LocationModalProps) => {
-  const data = useWeatherData();
-  const americanTime = useAmericanTime();
-
-  const screenHeight = Dimensions.get("window").height;
-  const insets = useSafeAreaInsets();
-
-  // Calculate the height (subtract 47 pixels)
-  const calculatedHeight = screenHeight - insets.top;
-
+  // States
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [hasCrossedPoint, setHasCrossedPoint] = useState(false);
+  const [selectedSetting, setSelectedSetting] = useState<SelectSetting | null>(
+    "celsius"
+  );
+  const [confirmDeleteIndex, setConfirmDeleteIndex] = useState<number | null>(
+    null
+  );
 
+  // Refs
+  const textInputRef = useRef<TextInput>(null);
+  const flatlistRef = useRef<FlatList<Item>>(null);
+
+  // Callbacks
   const handleSettingsModal = useCallback(() => {
     setIsSettingsOpen(true);
   }, []);
-
   const handleIsOpen = useCallback((open: boolean) => {
     setIsSettingsOpen(open);
   }, []);
-
   const closeSetting = useCallback(() => {
     setIsSettingsOpen(false);
     setSelectedSetting(null);
   }, []);
-
-  const [hasCrossedPoint, setHasCrossedPoint] = useState(false);
-
   const handleScroll = useCallback(
     (scrollOffset: any) => {
       const THRESHOLD = 50;
@@ -137,21 +103,28 @@ const LocationModal = ({
     },
     [hasCrossedPoint]
   );
-
-  const textInputRef = useRef<TextInput>(null);
   const handleToggleSearch = useCallback(() => {
     toggleSearch(textInputRef);
     if (flatlistRef.current !== null) {
       flatlistRef.current.scrollToOffset({ animated: false, offset: 0 });
     }
   }, [textInputRef]);
-
-  const flatlistRef = useRef<FlatList<Item>>(null);
-
   const handleCancel = () => {
     handleToggleSearch();
   };
+  const chooseSetting = (setting: SelectSetting | null) =>
+    setSelectedSetting(setting);
+  const handleConfirmDeleteIndex = (index: number | null) => {
+    setConfirmDeleteIndex(index);
+  };
 
+  // Props
+  const titleBarProps = {
+    handleSettingsModal,
+    selectedSetting,
+    chooseSetting,
+    handleConfirmDeleteIndex,
+  };
   const searchProps = {
     handleTextDebounce,
     showSearch,
@@ -161,44 +134,25 @@ const LocationModal = ({
     textInputRef,
     handleCancel,
   };
-
-  const StickyHeader = React.memo(() => {
-    return (
-      <ListHeader
-        hasCrossedPoint={hasCrossedPoint}
-        showSearch={showSearch}
-        searchProps={searchProps}
-      />
-    );
-  });
-
-  const [selectedSetting, setSelectedSetting] = useState<SelectSetting | null>(
-    "celsius"
-  );
-
-  const chooseSetting = (setting: SelectSetting | null) =>
-    setSelectedSetting(setting);
-
-  const [confirmDeleteIndex, setConfirmDeleteIndex] = useState<number | null>(
-    null
-  );
-
-  const handleConfirmDeleteIndex = (index: number | null) => {
-    setConfirmDeleteIndex(index);
-    console.log(index);
+  const flatlistProps = {
+    weatherScreens,
+    closeSetting,
+    goToWeatherScreen,
+    handleScroll,
+    flatlistRef,
+    confirmDeleteIndex,
+    handleConfirmDeleteIndex,
+    changeWeatherScreens,
   };
 
   return (
     <>
       <Modal visible={showLocationModal} transparent animationType="slide">
-        {/* <SafeAreaView> */}
-
         <View
           style={{
-            // height: calculatedHeight,
             backgroundColor: colors.bgBlack(1),
           }}
-          className="px-4 h-screen"
+          className=" h-screen w-screen"
         >
           {/* Absolute View that registers presses for hiding dropdown */}
           {isSettingsOpen && (
@@ -208,24 +162,20 @@ const LocationModal = ({
             />
           )}
 
+          {/* Weather Title + Search Component WHEN Scrolled past threshold */}
           <View className="relative">
             <BlurView
+              className="absolute top-0 left-0 px-2"
               style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
                 backgroundColor: hasCrossedPoint ? "transparent" : "black",
                 display: !showSearch ? "flex" : "none",
                 zIndex: 30,
               }}
             >
               <TitleBar
+                {...titleBarProps}
                 text="Weather"
                 visible={hasCrossedPoint}
-                handleSettingsModal={handleSettingsModal}
-                selectedSetting={selectedSetting}
-                chooseSetting={chooseSetting}
-                handleConfirmDeleteIndex={handleConfirmDeleteIndex}
               />
               {hasCrossedPoint && (
                 <View className="py-4 ">
@@ -240,45 +190,31 @@ const LocationModal = ({
             <SettingsDropdown
               isOpen={isSettingsOpen}
               handleIsOpen={handleIsOpen}
-              chooseSetting={chooseSetting}
             />
           </View>
 
-          {/* <StickyHeader /> */}
-
           {/* Flatlist */}
-          <View
-            // className="absolute top-24 left-0 w-screen"
-            style={{ zIndex: 10 }}
-          >
-            {/* <View className="absolute top-0 left-0">
-              <Search {...searchProps} />
-            </View> */}
-
-            {/* fix unfocus problem, removing flatlist solves it */}
-            {/* <Search {...searchProps} /> */}
-            {/* <ExampleDragDrop stickyElement={ListHeader} /> */}
-
+          <View style={{ zIndex: 10 }}>
             <LocationCardFlatlist
-              stickyElement={StickyHeader}
+              {...flatlistProps}
+              searchComponent={<Search {...searchProps} />}
+              // @ts-ignore expects a component rather than react node but useCallback breaks search functionality
+              stickyElement={
+                <ListHeader
+                  hasCrossedPoint={hasCrossedPoint}
+                  showSearch={showSearch}
+                  searchProps={searchProps}
+                />
+              }
               activeScale={1.03}
               topOffset={60}
-              weatherScreens={weatherScreens}
-              closeSetting={closeSetting}
-              goToWeatherScreen={goToWeatherScreen}
-              handleScroll={handleScroll}
-              flatlistRef={flatlistRef}
               isEditingList={selectedSetting === "editList"}
-              confirmDeleteIndex={confirmDeleteIndex}
-              handleConfirmDeleteIndex={handleConfirmDeleteIndex}
-              changeWeatherScreens={changeWeatherScreens}
             />
           </View>
         </View>
-        {/* </SafeAreaView> */}
       </Modal>
     </>
   );
 };
 
-export default LocationModal;
+export default React.memo(LocationModal);

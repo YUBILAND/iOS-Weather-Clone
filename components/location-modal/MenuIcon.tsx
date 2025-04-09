@@ -15,9 +15,9 @@ interface MenuIconProps {
 const MenuIcon = ({ size, isEditingList }: MenuIconProps) => {
   const width = useSharedValue(0);
 
-  width.value = isEditingList ? size : 0;
-
   const animatedStyle = useAnimatedStyle(() => {
+    width.value = isEditingList ? size : 0;
+
     return {
       width: withTiming(width.value, { duration: 300 }),
       height: size,

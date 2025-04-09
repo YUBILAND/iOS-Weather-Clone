@@ -1,5 +1,5 @@
 import { colors } from "@/assets/colors/colors";
-import { getCurrentTime } from "@/hooks/hooks";
+import { getCurrentTime, stringToTime } from "@/hooks/hooks";
 import { RootState } from "@/state/store";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useCallback, useMemo, useRef, useState } from "react";
@@ -43,7 +43,12 @@ import VisibilityCard from "./visibility/VisibilityCard";
 import WindChillCard from "./wind-chill/WindChillCard";
 import WindCard from "./wind-forecast/card/WindCard";
 import { useWeatherData } from "@/hooks/useWeatherData";
-import { useAmericanTime } from "@/hooks/useAmericanTime";
+import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
+import { cToF } from "@/hooks/CtoF";
+import { getTemperature } from "@/hooks/getTemperature";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
+import AveragesCard from "./averages/AveragesCard";
+import WindMapCard from "./wind-map/WindMapCard";
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
@@ -61,24 +66,18 @@ export const textShadowStyle: TextStyle = {
 
 const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
   const data = useWeatherData();
-  const americanTime = useAmericanTime();
+  const is12Hr = useIs12Hr();
+  const tempUnit = useTemperatureUnit();
 
   const { location, forecast, current } = data[cityName];
 
   const [modalVisible, setModalVisible] = useState<boolean>(true);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
-  const currentIndexRef = useRef<number>(0);
-  //Setting selectedModal to an initial value might cause other screens to not pull up modal
   const [selectedModal, setSelectedModal] = useState<SelectModal | null>(null);
 
-  const currentTime = getCurrentTime(location?.tz_id);
-  const nextPhaseTime = getNextPhaseTime(
-    data[cityName],
-    currentTime,
-    americanTime
-  );
-
+  const currentIndexRef = useRef<number>(0);
   const openModalOnIndexRef = useRef<boolean>(false);
+  const flatlistRef = useRef<FlatList>(null);
 
   const { state } = useChartPressState({
     x: 0,
@@ -104,11 +103,15 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
     };
   });
 
+  const currentTime = getCurrentTime(location?.tz_id);
+  const nextPhaseTime = stringToTime(
+    is12Hr,
+    getNextPhaseTime(data[cityName], currentTime)
+  );
+
   const daysSincePrevMonth = useMemo(() => getDaysSincePrevMonth(), []);
   const initialScrollPosition = TICKS_PER_DAY * daysSincePrevMonth * 10;
   const initialScrollIndex = initialScrollPosition / 10;
-
-  const flatlistRef = useRef<FlatList>(null);
 
   const offsetX = useSharedValue(
     TICKS_PER_DAY * OFFSETX_PER_TICK * daysSincePrevMonth
@@ -142,6 +145,7 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
       feelsLike: () => showThisModal("feelsLike"),
       precipitation: () => showThisModal("precipitation"),
       visibility: () => showThisModal("visibility"),
+      averages: () => showThisModal("averages"),
       conditions: () => showThisModal("conditions"),
       uv: () => showThisModal("uv"),
       sunPhase: () => showThisModal("sunPhase"),
@@ -151,6 +155,14 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
   );
 
   console.log("Flatlist rerendered");
+
+  const currentTemp = Math.round(getTemperature(current?.temp_c!, tempUnit));
+  const currentHigh = Math.round(
+    getTemperature(forecast?.forecastday[0].day.maxtemp_c!, tempUnit)
+  );
+  const currentLow = Math.round(
+    getTemperature(forecast?.forecastday[0].day.mintemp_c!, tempUnit)
+  );
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} className="w-screen">
@@ -167,10 +179,9 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
           />
 
           <RoundedTemperature
-            temperature={parseInt(current?.temp_c!)}
+            temperature={currentTemp}
             className="text-center pl-5"
             style={{
-              // remove bottom padding due to line height
               fontSize: 128,
               lineHeight: 128,
               marginBottom: -20,
@@ -185,19 +196,14 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
           />
 
           <HighsAndLows
-            high={
-              Math.round(forecast?.forecastday[0].day.maxtemp_c) ?? undefined
-            }
-            low={
-              Math.round(forecast?.forecastday[0].day.mintemp_c) ?? undefined
-            }
+            high={currentHigh}
+            low={currentLow}
             className="flex-row gap-x-2 justify-center items-center "
             textClasses="text-2xl font-semibold"
             style={textShadowStyle}
           />
         </View>
 
-        {/* Modal Component */}
         <>
           {selectedModal === "sunPhase" ? (
             <ModalContainer
@@ -337,12 +343,14 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
             <></>
           )}
         </>
-
+        {/* Causing delay when changing temperature */}
         <CardsContainer className="gap-y-2">
           <HourlyForecastCard
             cityName={cityName}
             showModal={modalCallbacks.conditions}
           />
+
+          {/* <WindMapCard cityName={cityName} /> */}
 
           <DailyForecastCard
             cityName={cityName}
@@ -426,10 +434,10 @@ const WeatherAtLocation = ({ cityName }: WeatherAtLocationProps) => {
 
           <TwoCards
             leftCard={
-              <VisibilityCard
+              <AveragesCard
                 cityName={cityName}
                 iconSize={iconSize}
-                showModal={modalCallbacks.visibility}
+                showModal={modalCallbacks.averages}
               />
             }
             rightCard={

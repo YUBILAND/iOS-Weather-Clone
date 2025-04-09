@@ -7,6 +7,7 @@ import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
 import DailyForecastItem from "./DailyForecastItem";
 import CardTitle from "../atoms/CardTitle";
+import { useWeatherData } from "@/hooks/useWeatherData";
 
 interface DailyForecastCardProps {
   cityName: string;
@@ -23,7 +24,7 @@ const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
   openModalOnIndexRef,
   iconSize,
 }) => {
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
   const { forecast, current } = data[cityName];
 
   return (

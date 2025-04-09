@@ -11,7 +11,6 @@ import {
   Animated,
   FlatList,
   Image,
-  SafeAreaView,
   TextInput,
   View,
   ViewToken,
@@ -19,7 +18,7 @@ import {
 
 import { fetchLocations } from "@/api/weather";
 import Spinner from "@/components/atoms/Spinner";
-import { getData } from "@/utils/asyncStorage";
+import { getData, getTempUnit } from "@/utils/asyncStorage";
 import { debounce } from "lodash";
 import "../global.css";
 
@@ -29,7 +28,6 @@ import WeatherAtLocation, {
 import { useWindowDimensions } from "react-native";
 
 import BottomFooter from "@/components/atoms/BottomFooter";
-import LocationModal from "@/components/LocationModal/LocationModal";
 import { Location } from "@/constants/constants";
 import { fetchWeatherData } from "@/state/api/apiSlice";
 import { AppDispatch, RootState } from "@/state/store";
@@ -37,11 +35,16 @@ import { getWeatherName, weatherNameToCardBg } from "@/utils/exampleForecast";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch, useSelector } from "react-redux";
 
-import { CrossfadeImage } from "react-native-crossfade-image";
-import DefaultText from "@/components/atoms/DefaultText";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useFonts } from "expo-font";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
+import { CrossfadeImage } from "react-native-crossfade-image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  fetchIs12Hr,
+  fetchOtherUnits,
+  fetchTempUnit,
+} from "@/state/settings/settingsSlice";
+import LocationModal from "@/components/location-modal/LocationModal";
 
 const App = () => {
   // Delete All Weather Screens
@@ -57,7 +60,6 @@ const App = () => {
 
   const [showSearch, setShowSearch] = useState(false);
   const [weatherScreens, setWeatherScreens] = useState<string[]>([]);
-  const [update, setUpdate] = useState(false);
   const [searchResultLocations, setSearchResultLocations] = useState<
     Location[]
   >([]);
@@ -75,7 +77,12 @@ const App = () => {
   // Temporary fix for weather screen not showing upon adding new location
   useEffect(() => {
     dispatch(fetchWeatherData());
+
     FirstCity();
+    // Should fetch from async storage and update redux
+    dispatch(fetchTempUnit());
+    dispatch(fetchIs12Hr());
+    dispatch(fetchOtherUnits());
   }, []);
 
   // Add New Weather Location when click on city name

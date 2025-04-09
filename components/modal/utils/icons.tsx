@@ -1,4 +1,4 @@
-import { Entypo, Ionicons } from "@expo/vector-icons";
+import { Entypo, Ionicons, Octicons } from "@expo/vector-icons";
 import Feather from "@expo/vector-icons/Feather";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -79,6 +79,16 @@ export const VisibilityIcon = ({
   color?: string | OpaqueColorValue;
 }) => {
   return <Feather name={"eye"} size={size} color={color} />;
+};
+
+export const AveragesIcon = ({
+  size = 18,
+  color = "white",
+}: {
+  size?: number;
+  color?: string | OpaqueColorValue;
+}) => {
+  return <Octicons name="graph" size={size} color={color} />;
 };
 
 export const AirPressureIcon = ({

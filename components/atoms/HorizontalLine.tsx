@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import React from "react";
 import { colors } from "@/assets/colors/colors";
 
@@ -14,7 +14,7 @@ const HorizontalLine = ({
   children,
 }: HorizontalLineProps) => {
   return (
-    <View // Horizontal line
+    <View
       className="h-0 w-full relative"
       style={{
         borderTopWidth: size,

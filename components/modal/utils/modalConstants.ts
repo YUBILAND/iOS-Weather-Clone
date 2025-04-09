@@ -13,6 +13,7 @@ import {
   FahrenheitIcon,
   BarGraphIcon,
   PopUpIcon,
+  AveragesIcon,
 } from "./icons";
 
 // Types and constants for Modal Dropdown
@@ -24,6 +25,7 @@ export type SelectModal =
   | "feelsLike"
   | "humidity"
   | "visibility"
+  | "averages"
   | "airPressure"
   | "sunPhase"
   | "moonPhase";
@@ -63,18 +65,22 @@ export const modalDropdownObjects: ModalDropdownObjectsType = {
     label: "Visibility",
     id: 6,
   },
+  averages: {
+    label: "Averages",
+    id: 7,
+  },
   airPressure: {
     label: "Air Pressure",
-    id: 7,
+    id: 8,
   },
 
   sunPhase: {
     label: "Sun Phase",
-    id: 8,
+    id: 9,
   },
   moonPhase: {
     label: "Moon Phase",
-    id: 9,
+    id: 10,
   },
 };
 
@@ -95,6 +101,7 @@ export const iconMap: IconObject = {
   feelsLike: FeelsLikeIcon,
   humidity: HumidityIcon,
   visibility: VisibilityIcon,
+  averages: AveragesIcon,
   airPressure: AirPressureIcon,
   sunPhase: ConditionsIcon,
   moonPhase: ConditionsIcon,

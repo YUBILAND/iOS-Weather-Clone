@@ -32,6 +32,7 @@ const Search: React.FC<SearchProps> = ({
   textInputRef,
   handleCancel,
 }) => {
+  console.log("RERENDERED SEARCH WHY");
   return (
     <View className="flex-row items-center gap-x-2">
       <TouchableHighlight

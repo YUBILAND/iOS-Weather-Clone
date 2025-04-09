@@ -1,5 +1,5 @@
 import React from "react";
-import { Pressable, View } from "react-native";
+import { View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import { textShadowStyle } from "../WeatherAtLocation";
 import { getLocationCardData } from "./utils/getLocationCardData";
@@ -27,10 +27,12 @@ const LocationCardItem = ({ city, isEditingList }: LocationCardItemProps) => {
           >
             {city}
           </DefaultText>
+
           <DefaultText style={[{ fontWeight: 700 }, textShadowStyle]}>
             {cityTime}
           </DefaultText>
         </View>
+
         {/* Temps */}
         <DefaultText
           style={[{ fontWeight: 700 }, textShadowStyle]}

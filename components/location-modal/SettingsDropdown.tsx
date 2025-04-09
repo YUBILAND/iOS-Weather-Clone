@@ -1,17 +1,16 @@
 import { colors } from "@/assets/colors/colors";
 import { BlurView } from "expo-blur";
 import React, { useState } from "react";
-import { View } from "react-native";
 import {
   SelectSetting,
   settingsDropdownObjects,
 } from "../modal/utils/modalConstants";
 import SettingsDropdownItem from "./SettingsDropdownItem";
+import UnitModal from "./unit-modal/UnitModal";
 
 interface SettingsDropdownProps {
   isOpen: boolean;
   handleIsOpen: (visible: boolean) => void;
-  chooseSetting: (selected: SelectSetting | null) => void;
 }
 
 export type TempUnit = "celsius" | "fahrenheit";
@@ -19,16 +18,19 @@ export type TempUnit = "celsius" | "fahrenheit";
 const SettingsDropdownContainer = ({
   isOpen,
   handleIsOpen,
-  chooseSetting,
 }: SettingsDropdownProps) => {
-  const [selectedTempUnit, setSelectedTempUnit] = useState<TempUnit>("celsius");
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const handleSelectedTempUnit = (tempUnit: TempUnit) => {
-    setSelectedTempUnit(tempUnit);
+  const handleModalVisible = (visible: boolean) => {
+    setModalVisible(visible);
   };
-
   return (
     <>
+      <UnitModal
+        modalVisible={modalVisible}
+        setModalVisible={handleModalVisible}
+      />
+
       {/* View pushes modal dropdown up which looks better than without */}
       {isOpen && (
         <BlurView
@@ -40,9 +42,6 @@ const SettingsDropdownContainer = ({
             const itemProps = {
               item,
               index,
-              chooseSetting,
-              selectedTempUnit,
-              handleSelectedTempUnit,
             };
             return (
               <SettingsDropdownItem
@@ -50,6 +49,7 @@ const SettingsDropdownContainer = ({
                 {...itemProps}
                 handleIsOpen={(open: boolean) => handleIsOpen(open)}
                 settingName={key as SelectSetting}
+                setModalVisible={handleModalVisible}
               />
             );
           })}

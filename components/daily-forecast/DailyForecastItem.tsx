@@ -17,6 +17,8 @@ import { getWeekTempArr } from "./utils/getWeekTempArr";
 import TemperatureBar from "../conditions/TemperatureBar";
 import HorizontalLine from "../atoms/HorizontalLine";
 import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
+import { getTemperature } from "@/hooks/getTemperature";
+import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
 
 interface DailyForecastItemProp {
   data: WeatherData;
@@ -35,13 +37,15 @@ const DailyForecastItem = ({
   setCurrentIndex,
   openModalOnIndexRef,
 }: DailyForecastItemProp) => {
+  const tempUnit = useTemperatureUnit();
+
   const weekday = getShortWeekday(getDate(item?.date + "T00:00:00"));
 
-  const weekTempArr = getWeekTempArr(data);
+  const weekTempArr = getWeekTempArr(data, tempUnit);
   const weekHigh = Math.max(...weekTempArr);
   const weekLow = Math.min(...weekTempArr);
 
-  const dailyTempArr = getDailyTempArr(data, index);
+  const dailyTempArr = getDailyTempArr(data, index, tempUnit);
   const dailyHigh = Math.max(...dailyTempArr);
   const dailyLow = Math.min(...dailyTempArr);
 
@@ -88,7 +92,9 @@ const DailyForecastItem = ({
             tempHigh={dailyHigh}
             tempLow={dailyLow}
             currentTemperature={
-              index === 0 ? parseFloat(data.current.temp_c) : undefined
+              index === 0
+                ? getTemperature(data.current.temp_c, tempUnit)
+                : undefined
             }
           />
         </View>
@@ -97,4 +103,4 @@ const DailyForecastItem = ({
   );
 };
 
-export default DailyForecastItem;
+export default React.memo(DailyForecastItem);

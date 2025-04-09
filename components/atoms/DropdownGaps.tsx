@@ -1,4 +1,3 @@
-import { View, Text } from "react-native";
 import React from "react";
 import HorizontalLine from "./HorizontalLine";
 import { colors } from "@/assets/colors/colors";

@@ -6,7 +6,7 @@ import {
 } from "@/hooks/hooks";
 import { RootState } from "@/state/store";
 import { FontAwesome } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import Animated, { useAnimatedProps } from "react-native-reanimated";
 import { useSelector } from "react-redux";
@@ -21,6 +21,7 @@ import CardTitle from "../atoms/CardTitle";
 import CardBottomText from "../atoms/CardBottomText";
 import CardStat from "../atoms/CardStat";
 import { useWeatherData } from "@/hooks/useWeatherData";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
@@ -43,32 +44,24 @@ const SunPhaseCard = ({
   });
 
   const data = useWeatherData();
+  const is12Hr = useIs12Hr();
+
   const { location } = data[cityName];
 
-  const { americanTime } = useSelector((state: RootState) => state.settings);
-
-  const currentTime = getCurrentTime(location?.tz_id);
-  const nextPhaseTime = getNextPhaseTime(
-    data[cityName],
-    currentTime,
-    americanTime
+  const currentTime = useMemo(() => getCurrentTime(location?.tz_id), []);
+  const nextPhaseTime = useMemo(
+    () => getNextPhaseTime(data[cityName], currentTime),
+    []
   );
-
-  const nextNextPhaseTime = getNextPhaseTime(
-    data[cityName],
-    nextPhaseTime,
-    americanTime
+  const nextNextPhaseTime = useMemo(
+    () => getNextPhaseTime(data[cityName], nextPhaseTime),
+    []
   );
-
-  // const remainingTime = getRemainingTimeUntilNextPhase(
-  //   currentTime,
-  //   nextPhaseTime
-  // );
 
   const nextSunPhase = data[cityName].current.is_day ? "Sunset" : "Sunrise";
-
   const nextNextSunPhase = data[cityName].current.is_day ? "Sunrise" : "Sunset";
 
+  const domain = useMemo(() => ({ top: 1000, bottom: -800 }), []);
   return (
     <OpacityCard className="h-full">
       <Pressable
@@ -81,7 +74,7 @@ const SunPhaseCard = ({
             title={nextSunPhase}
             icon={<FontAwesome name="sun-o" color="white" size={iconSize} />}
           />
-          <CardStat stat={nextPhaseTime} />
+          <CardStat stat={stringToTime(is12Hr, nextPhaseTime)} />
         </View>
 
         <SunPhaseGraph
@@ -89,16 +82,16 @@ const SunPhaseCard = ({
           state={state}
           isActive={isActive}
           graphHeight={graphHeight}
-          domain={{ top: 800, bottom: -800 }}
+          domain={domain}
           strokeWidth={4}
           removePress
         />
         <CardBottomText
           className="px-4"
-          // text={`${nextSunPhase}: ${remainingTime.split(":")[0]} hrs ${
-          //   remainingTime.split(":")[1]
-          // } mins`}
-          text={`${nextNextSunPhase}: ${nextNextPhaseTime}`}
+          text={`${nextNextSunPhase}: ${stringToTime(
+            is12Hr,
+            nextNextPhaseTime
+          )}`}
         />
       </Pressable>
     </OpacityCard>

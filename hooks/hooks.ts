@@ -163,16 +163,16 @@ export function removeZeroFromTimeString(timeString: string | null) {
 }
 
 export const timeFormat = (
-  americanTime: boolean,
+  is12Hr: boolean,
   removeMinutes = false
 ): Intl.DateTimeFormatOptions => ({
   hour: "numeric",
   minute: removeMinutes ? undefined : "numeric", // Ternary operator
-  hour12: americanTime,
+  hour12: is12Hr,
 });
 
 export function stringToTime(
-  americanTime: boolean,
+  is12Hr: boolean,
   timeString: string,
   removeMinutes: boolean = false,
   addMinutes: number = 0
@@ -186,11 +186,11 @@ export function stringToTime(
   date.setHours(militaryHour(timeString));
   date.setMinutes(parseInt(minutes));
   // const time = removeZeroFromTimeString(
-  //   date.toLocaleTimeString("en-US", timeFormat(americanTime, removeMinutes))
+  //   date.toLocaleTimeString("en-US", timeFormat(is12Hr, removeMinutes))
   // );
   const time = date.toLocaleTimeString(
     "en-US",
-    timeFormat(americanTime, removeMinutes)
+    timeFormat(is12Hr, removeMinutes)
   );
   return time;
 }

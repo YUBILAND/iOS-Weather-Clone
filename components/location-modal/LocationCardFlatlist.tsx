@@ -1,40 +1,22 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import {
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Pressable,
-} from "react-native";
+import { deleteData, swapData } from "@/utils/asyncStorage";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { FlatList, Pressable, View } from "react-native";
 import DraggableFlatList, {
   RenderItemParams,
   ScaleDecorator,
 } from "react-native-draggable-flatlist";
-import LocationCardItemContainer from "./LocationCardItemContainer";
-import LocationCardItem from "./LocationCardItem";
-import { FlatList } from "react-native";
-import { Entypo, Ionicons } from "@expo/vector-icons";
-import { colors } from "@/assets/colors/colors";
-import DeleteButton from "./DeleteButton";
 import Animated, {
   Easing,
   FadeOutUp,
-  runOnJS,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import TrashButton from "./TrashButton";
-import DefaultText from "../atoms/DefaultText";
+import DeleteButton from "./DeleteButton";
+import LocationCardItem from "./LocationCardItem";
+import LocationCardItemContainer from "./LocationCardItemContainer";
 import MenuIcon from "./MenuIcon";
-import { SelectSetting } from "../modal/utils/modalConstants";
-import { deleteData, storeData, swapData } from "@/utils/asyncStorage";
+import TrashButton from "./TrashButton";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -56,6 +38,7 @@ interface LocationCardFlatlistProps {
   confirmDeleteIndex: number | null;
   handleConfirmDeleteIndex: (index: number | null) => void;
   changeWeatherScreens: (weatherScreensArr: string[]) => void;
+  searchComponent: React.ReactNode;
 }
 
 export const LocationCardFlatlist = ({
@@ -71,12 +54,10 @@ export const LocationCardFlatlist = ({
   confirmDeleteIndex,
   handleConfirmDeleteIndex,
   changeWeatherScreens,
+  searchComponent,
 }: LocationCardFlatlistProps) => {
   const initialData: Item[] = useMemo(() => {
     return [...Array(weatherScreens.length)].map((d, index) => {
-      console.log("RERENDERED INITIAL DATA");
-      console.log(index);
-
       return {
         index: index,
         cityName: weatherScreens[index],
@@ -96,8 +77,8 @@ export const LocationCardFlatlist = ({
       const firstIndex = item.index === 0;
 
       const left = useSharedValue(0);
-      left.value = confirmDeleteIndex === item.index ? -60 : 0;
       const animatedStyle = useAnimatedStyle(() => {
+        left.value = confirmDeleteIndex === item.index ? -70 : 0;
         return {
           // position: "absolute",
           // top: 0,
@@ -114,8 +95,9 @@ export const LocationCardFlatlist = ({
       });
 
       const height1 = useSharedValue(100);
-      height1.value = isEditingList ? 60 : 100;
       const animatedStyle1 = useAnimatedStyle(() => {
+        height1.value = isEditingList ? 60 : 100;
+
         return {
           height: withTiming(height1.value, { duration: 300 }),
           opacity: isActive ? 0.8 : 1,
@@ -163,7 +145,6 @@ export const LocationCardFlatlist = ({
                           isEditingList={isEditingList}
                         />
                       )}
-
                       <LocationCardItemContainer
                         closeSetting={closeSetting}
                         weatherScreens={weatherScreens}
@@ -179,7 +160,7 @@ export const LocationCardFlatlist = ({
                       </LocationCardItemContainer>
                       {!firstIndex && (
                         // Manually add gap to the right since trash button is not in flex-row
-                        <View className="pr-0">
+                        <View>
                           <MenuIcon
                             size={DELETE_BUTTON_SIZE}
                             isEditingList={isEditingList}
@@ -187,6 +168,7 @@ export const LocationCardFlatlist = ({
                         </View>
                       )}
                       <>
+                        {/* Click outside to stop delete */}
                         {confirmDeleteIndex !== null && (
                           <Pressable
                             onPress={() => handleConfirmDeleteIndex(null)}
@@ -194,8 +176,11 @@ export const LocationCardFlatlist = ({
                             style={{ zIndex: 0 }}
                           />
                         )}
-
-                        <TrashButton handleRemove={handleRemove} />
+                        {!firstIndex && isEditingList && (
+                          <View className="absolute top-0 left-full ml-4">
+                            <TrashButton handleRemove={handleRemove} />
+                          </View>
+                        )}
                       </>
                     </AnimatedPressable>
                     {/* </Animated.View> */}
@@ -211,28 +196,22 @@ export const LocationCardFlatlist = ({
     [weatherScreens, isEditingList, confirmDeleteIndex]
   );
 
+  const handleDragSwap = ({ data }: { data: Item[] }) => {
+    setData(data);
+    changeWeatherScreens(data.map((item) => item.cityName));
+    swapData(
+      "city",
+      data.map((item) => item.cityName)
+    );
+  };
+
   return (
     <>
       <DraggableFlatList
-        // @ts-ignore
+        // @ts-ignore not sure which type ref object it requires
         ref={flatlistRef}
-        contentContainerStyle={{
-          paddingTop: topOffset,
-          rowGap: 8,
-          paddingBottom: 80,
-        }}
-        containerStyle={{ zIndex: 10, height: "100%" }}
-        style={{ overflowY: "visible", overflowX: "visible" }}
         data={data}
-        onDragEnd={({ data }) => {
-          console.log("NOT DRAGGING");
-          setData(data);
-          changeWeatherScreens(data.map((item) => item.cityName));
-          swapData(
-            "city",
-            data.map((item) => item.cityName)
-          );
-        }}
+        onDragEnd={handleDragSwap}
         keyExtractor={(item) => item.index.toString()}
         renderItem={renderItem}
         stickyHeaderIndices={[0]}
@@ -241,6 +220,18 @@ export const LocationCardFlatlist = ({
         onScrollOffsetChange={(e) => handleScroll(e)}
         keyboardShouldPersistTaps="handled"
         extraData={weatherScreens}
+        contentContainerStyle={{
+          paddingTop: topOffset,
+          rowGap: 8,
+          paddingBottom: 80,
+          paddingHorizontal: 8,
+        }}
+        containerStyle={{
+          zIndex: 10,
+          height: "100%",
+        }}
+        style={{ overflowX: "visible" }}
+        dragItemOverflow={true}
       />
     </>
   );

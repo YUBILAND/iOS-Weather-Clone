@@ -9,21 +9,17 @@ interface CalendarScrollViewProps {
   cityName: string;
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
-  currentIndexRef: MutableRefObject<number>;
   scrollRef: MutableRefObject<boolean>;
   handleOpenModalDropdown: (visible: boolean) => void;
-  // animateFade: (onFadeOutComplete?: () => void) => void;
 }
 
 const CalendarScrollView = ({
   cityName,
   currentIndex,
   setCurrentIndex,
-  currentIndexRef,
   scrollRef,
   handleOpenModalDropdown,
-}: // animateFade,
-CalendarScrollViewProps) => {
+}: CalendarScrollViewProps) => {
   const data = useWeatherData();
   const { location } = data[cityName];
 
@@ -72,11 +68,15 @@ CalendarScrollViewProps) => {
               : "transparent";
 
           const handleNewIndex = () => {
-            if (index !== currentIndex) {
+            const differentIndex = index !== currentIndex;
+            if (differentIndex) {
               setCurrentIndex(index);
               handleOpenModalDropdown(false);
               // why is this true?
               scrollRef.current = true;
+              // setTimeout(() => {
+              //   scrollRef.current = false;
+              // }, 1000);
             }
           };
 

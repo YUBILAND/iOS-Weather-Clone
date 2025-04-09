@@ -1,10 +1,5 @@
 import { fetchWeatherForecast } from "@/api/weather";
-import {
-  Current,
-  Forecast,
-  Location,
-  WeatherData,
-} from "@/constants/constants";
+import { WeatherData } from "@/constants/constants";
 import { getData, storeData } from "@/utils/asyncStorage";
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 

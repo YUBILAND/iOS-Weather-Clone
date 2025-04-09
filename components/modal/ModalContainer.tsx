@@ -19,7 +19,7 @@ type ConditionModalProps = {
   setModalVisible: (visible: boolean) => void;
   children: React.ReactNode;
   title: string;
-  selectedModal: SelectModal;
+  selectedModal?: SelectModal;
   backgroundColor?: string;
   putMoonHere?: React.ReactNode;
 };
@@ -39,7 +39,7 @@ const ModalContainer = ({
   // Calculate the height (subtract 47 pixels)
   const calculatedHeight = screenHeight - insets.top;
 
-  const IconComponent = iconMap[selectedModal];
+  const IconComponent = selectedModal ? iconMap[selectedModal] : null;
 
   return (
     <Modal animationType="slide" transparent={true} visible={modalVisible}>
@@ -49,7 +49,7 @@ const ModalContainer = ({
         >
           <View className="flex-row items-center justify-between px-6 py-3">
             <ModalHeader closeModal={setModalVisible} title={title}>
-              <IconComponent size={28} />
+              {selectedModal && <IconComponent size={28} />}
             </ModalHeader>
           </View>
 

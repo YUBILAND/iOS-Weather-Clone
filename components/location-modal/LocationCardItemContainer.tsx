@@ -1,13 +1,11 @@
-import { View, Text, Pressable, ImageBackground } from "react-native";
-import React, { useEffect, useRef } from "react";
-import DefaultText from "../atoms/DefaultText";
-import { getWeatherName, weatherNameToCardBg } from "@/utils/exampleForecast";
 import { useWeatherData } from "@/hooks/useWeatherData";
+import { getWeatherName, weatherNameToCardBg } from "@/utils/exampleForecast";
+import React from "react";
+import { ImageBackground, Pressable } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-  Easing,
 } from "react-native-reanimated";
 
 interface LocationCardItemContainerProps {
@@ -35,16 +33,15 @@ const LocationCardItemContainer = ({
     data[weatherScreens[idx]]?.current.is_day
   );
 
-  console.log("bg for ", weatherScreens[idx], "at index ", idx, " is what?");
-
   const handlePress = () => {
     goToWeatherScreen(idx);
     closeSetting();
   };
 
   const height1 = useSharedValue(100);
-  height1.value = isEditingList ? 60 : 100;
   const animatedStyle = useAnimatedStyle(() => {
+    height1.value = isEditingList ? 60 : 100;
+
     return {
       flex: 1,
       height: withTiming(height1.value, { duration: 300 }),

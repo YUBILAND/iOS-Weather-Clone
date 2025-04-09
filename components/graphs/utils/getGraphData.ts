@@ -17,6 +17,7 @@ export const getGraphData = (
 
   // Fill in missing 24:00 or 0:00 time. Just a copy of 23:00 data
   const todaysForecast = data.forecast?.forecastday[currentIndex]?.hour;
+
   const addMidnightWeather = [
     ...todaysForecast,
     {

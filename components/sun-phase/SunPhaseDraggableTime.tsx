@@ -21,12 +21,12 @@ interface SunPhaseDraggableTimeProps {
     };
   }>;
   isActive: boolean;
-  americanTime: boolean;
+  is12Hr: boolean;
   data: WeatherData;
 }
 const SunPhaseDraggableTime = ({
   data,
-  americanTime,
+  is12Hr,
   state,
   isActive,
 }: SunPhaseDraggableTimeProps) => {
@@ -56,7 +56,7 @@ const SunPhaseDraggableTime = ({
 
     const timeIn12 = americanHour + ":" + americanMins + amOrPm;
 
-    const time = americanTime ? timeIn12 : timeIn24;
+    const time = is12Hr ? timeIn12 : timeIn24;
     return {
       text: time,
       value: time,
@@ -66,7 +66,7 @@ const SunPhaseDraggableTime = ({
   const animatedStyle = useAnimatedStyle(() => {
     const xPosition = state.x.position.value;
     const xValue = state.x.value.value;
-    const stopRight = americanTime ? 18 : 21;
+    const stopRight = is12Hr ? 18 : 21;
     return {
       transform: [
         {
@@ -84,7 +84,7 @@ const SunPhaseDraggableTime = ({
   const animatedStyle2 = useAnimatedStyle(() => {
     const xPosition = state.x.position.value;
     const xValue = state.x.value.value;
-    const stopRight = americanTime ? 18 : 21;
+    const stopRight = is12Hr ? 18 : 21;
     return {
       transform: [
         {
@@ -132,7 +132,7 @@ const SunPhaseDraggableTime = ({
     const americanMins = timeIn24.split(":")[1].split(" ")[0];
     const amOrPm = parseInt(timeIn24.split(":")[0]) >= 12 ? " PM" : " AM";
     const timeIn12 = americanHour + ":" + americanMins + amOrPm;
-    const time = americanTime ? timeIn12 : timeIn24;
+    const time = is12Hr ? timeIn12 : timeIn24;
 
     // This gets current dragged time in X Axis Format
     const draggedTimeHr = parseInt(time.split(":")[0]);

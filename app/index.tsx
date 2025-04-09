@@ -8,13 +8,20 @@ import {
   SafeAreaProvider,
 } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as eva from "@eva-design/eva";
+import { ApplicationProvider, Layout, Text } from "@ui-kitten/components";
+import { EventProvider } from "react-native-outside-press";
 
 export default function Index() {
   return (
     <Provider store={store}>
       <SafeAreaProvider initialMetrics={initialWindowMetrics}>
         <GestureHandlerRootView style={{ flex: 1 }}>
-          <App />
+          <ApplicationProvider {...eva} theme={eva.light}>
+            <EventProvider>
+              <App />
+            </EventProvider>
+          </ApplicationProvider>
         </GestureHandlerRootView>
       </SafeAreaProvider>
       {/* <Test /> */}

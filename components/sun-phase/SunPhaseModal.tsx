@@ -11,7 +11,7 @@ import SunPhaseGraph from "./SunPhaseGraph";
 import SunPhaseHeader from "./SunPhaseHeader";
 import SunPhaseInfo from "./SunPhaseInfo";
 import { getSunPhaseInfo } from "./utils/getSunPhaseInfo";
-import { useAmericanTime } from "@/hooks/useAmericanTime";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
 
 type SunPhaseModalProps = {
   cityName: string;
@@ -27,7 +27,7 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
   const data = useWeatherData();
   const { location } = data[cityName];
 
-  const americanTime = useAmericanTime();
+  const is12Hr = useIs12Hr();
 
   const currentTime = getCurrentTime(location?.tz_id);
 
@@ -36,7 +36,7 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
     nextPhaseTime
   );
 
-  const sunPhaseInfo = getSunPhaseInfo(data[cityName], americanTime);
+  const sunPhaseInfo = getSunPhaseInfo(data[cityName], is12Hr);
 
   return (
     <View>
@@ -51,7 +51,7 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
 
           <SunPhaseDraggableTime
             data={data[cityName]}
-            americanTime={americanTime}
+            is12Hr={is12Hr}
             state={state}
             isActive={isActive}
           />

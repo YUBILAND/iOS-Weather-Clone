@@ -1,7 +1,6 @@
 import React, {
   MutableRefObject,
   useCallback,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -18,14 +17,9 @@ import {
 import Animated, {
   runOnJS,
   runOnUI,
-  useAnimatedGestureHandler,
-  useAnimatedProps,
-  useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
-  withDelay,
-  withTiming,
 } from "react-native-reanimated";
 import HorizontalLine from "../atoms/HorizontalLine";
 import RenderConditionsGraphs from "../conditions/RenderConditionsGraphs";
@@ -35,33 +29,25 @@ import { SelectModal } from "./utils/modalConstants";
 
 import { useWeatherData } from "@/hooks/useWeatherData";
 import AirPressureModal from "../air-pressure/AirPressureModal";
-import HumidityModal from "../humidity/HumidityModal";
-import PrecipitationModal from "../precipitation/PrecipitationModal";
-import UVModal from "../uv-index/UVModal";
-import VisibilityModal from "../visibility/VisibilityModal";
-import WindChillModal from "../wind-chill/WindChillModal";
-import WindModal from "../wind-forecast/WindModal";
-import GraphLeftText from "../graphs/GraphLeftText";
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-  PanGestureHandler,
-} from "react-native-gesture-handler";
-import DefaultText from "../atoms/DefaultText";
-import { useChartPressState } from "victory-native";
-import { usePrevious } from "../moon-phase/utils/usePrevious";
-import UVModalDescription from "../uv-index/UVModalDescription";
-import WindChillModalDescription from "../wind-chill/WindChillModalDescription";
-import PrecipitationModalDescription from "../precipitation/PrecipitationModalDescription";
-import VisibilityModalDescription from "../visibility/VisibilityModalDescription";
-import HumidityModalDescription from "../humidity/HumidityModalDescription";
 import AirPressureModalDescription from "../air-pressure/AirPressureModalDescription";
 import ConditionsModalDescription from "../conditions/ConditionsModalDescription";
+import GraphLeftText from "../graphs/GraphLeftText";
+import HumidityModal from "../humidity/HumidityModal";
+import HumidityModalDescription from "../humidity/HumidityModalDescription";
+import PrecipitationModal from "../precipitation/PrecipitationModal";
+import PrecipitationModalDescription from "../precipitation/PrecipitationModalDescription";
+import UVModal from "../uv-index/UVModal";
+import UVModalDescription from "../uv-index/UVModalDescription";
+import VisibilityModal from "../visibility/VisibilityModal";
+import VisibilityModalDescription from "../visibility/VisibilityModalDescription";
+import WindChillModal from "../wind-chill/WindChillModal";
+import WindChillModalDescription from "../wind-chill/WindChillModalDescription";
+import WindModal from "../wind-forecast/WindModal";
 import ModalDropdownButton from "./dropdown/ModalDropdownButton";
+import AveragesModal from "../averages/AveragesModal";
+import AveragesModalDescription from "../averages/AveragesModalDescription";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
-const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
 type ModalProps = {
   cityName: string;
@@ -83,73 +69,42 @@ const Modal = ({
   openModalOnIndexRef,
 }: ModalProps) => {
   const data = useWeatherData();
+  const { width } = useWindowDimensions();
 
   // Hide dropdown button when hovering over graph
-  const [isAnyActive, setIsActive] = useState<boolean>(false);
-
   const isActiveShared = useSharedValue(true);
+  const [openModalDropdown, setOpenModalDropdown] = useState<boolean>(false);
+  const [leftText, setLeftText] = useState<LeftTextType[]>([
+    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
+    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
+    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
+  ]);
 
-  const { state: uvState, isActive: ballenIsActive } = useChartPressState({
-    x: 0,
-    y: {
-      ballen: 0,
-    },
-  });
-  const currentIndexRef1 = useRef<number>(0);
+  const leftTextSharedRef = useRef(
+    useSharedValue<LeftTextType[]>([
+      { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
+      { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
+      { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
+    ])
+  );
+  const flatlistRef = useRef<FlatList>(null);
+  const currentlyScrollingRef = useRef<boolean>(true);
+  const enableScrollRef = useRef<boolean>(true);
 
   const derivedIsActive = useDerivedValue(() => {
-    // console.log(isActiveShared.value);
     return isActiveShared.value;
   });
-
-  // useAnimatedReaction(
-  //   () => {
-  //     console.log("Reading Shared Value:", isActiveShared.value); // 🔍 Debug log
-  //     return isActiveShared.value;
-  //   },
-  //   (currentValue, previousValue) => {
-  //     if (currentValue !== previousValue) {
-  //       console.log("Updated in Parent:", currentValue);
-  //     }
-  //   }
-  // );
-
   const isBallenActive = useAnimatedStyle(() => {
-    // console.log(ballenIsActive);
     return {
       opacity: derivedIsActive.value ? 0 : 1,
     };
   });
 
-  const flatlistRef = useRef<FlatList>(null);
-
-  const flatlistRenderAmount: { id: number }[] = useMemo(() => {
-    return Array(3)
-      .fill(0)
-      .map((_, idx) => ({ id: idx }));
-  }, []);
-
-  const { width } = useWindowDimensions();
-
-  const flatlistProps = {
-    horizontal: true,
-    decelerationRate: 0,
-    snapToInterval: width, // Use the screen width
-    snapToAlignment: "center" as const,
-    showsHorizontalScrollIndicator: false,
-    pagingEnabled: true,
-  };
-
-  const currentlyScrollingRef = useRef<boolean>(true);
-  // Prevent user scroll interrupt when click calendar
-  const enableScrollRef = useRef<boolean>(true);
-
   // If user is scrolling, animate the scroll
   if (flatlistRef.current && currentlyScrollingRef.current) {
-    // console.log("current index is ", currentIndex);
     flatlistRef.current.scrollToIndex({ animated: true, index: currentIndex });
     currentlyScrollingRef.current = true;
-    enableScrollRef.current = false;
+    enableScrollRef.current = true;
   }
 
   if (flatlistRef.current && openModalOnIndexRef.current) {
@@ -158,14 +113,11 @@ const Modal = ({
     openModalOnIndexRef.current = false;
   }
 
-  useEffect(() => {
-    console.log("Current Index is", currentIndex);
-  }, [currentIndex]);
-
-  const [openModalDropdown, setOpenModalDropdown] = useState<boolean>(false);
-
-  const handleOpenModalDropdown = (open: boolean) => setOpenModalDropdown(open);
-
+  const flatlistRenderAmount: { id: number }[] = useMemo(() => {
+    return Array(3)
+      .fill(0)
+      .map((_, idx) => ({ id: idx }));
+  }, []);
   const renderItem = useCallback(
     ({ item }: { item: { id: number } }) => {
       return (
@@ -236,6 +188,16 @@ const Modal = ({
                   isActiveShared={isActiveShared}
                 />
               </React.Fragment>
+            ) : selectedModal === "averages" ? (
+              <React.Fragment key={"averages"}>
+                <AveragesModal
+                  cityName={cityName}
+                  currentIndex={currentIndex}
+                  id={item.id}
+                  updateShared={updateLeftTextShared}
+                  isActiveShared={isActiveShared}
+                />
+              </React.Fragment>
             ) : selectedModal === "humidity" ? (
               <React.Fragment key={"humidity"}>
                 <HumidityModal
@@ -263,30 +225,15 @@ const Modal = ({
         </TouchableWithoutFeedback>
       );
     },
-    [openModalDropdown, isAnyActive, currentIndex]
+    [openModalDropdown, currentIndex]
   );
-
   const keyExtractor = useCallback(
     (_: { id: number }, index: number) => index.toString(),
     []
   );
 
-  const [leftText, setLeftText] = useState<LeftTextType[]>([
-    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-  ]);
-
-  const leftTextSharedRef = useRef(
-    useSharedValue<LeftTextType[]>([
-      { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-      { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-      { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-    ])
-  );
-
+  const handleOpenModalDropdown = (open: boolean) => setOpenModalDropdown(open);
   // Function to update SharedValue
-  const fadeOpacity = useSharedValue(1); // Initially fully visible
   const updateLeftTextShared = useCallback(
     (newText: LeftTextType, id: number) => {
       runOnUI(() => {
@@ -301,27 +248,6 @@ const Modal = ({
     []
   );
 
-  // const animateFade = (
-  //   setIndexBeforeAnimation: () => void,
-  //   onFadeOutComplete: () => void
-  // ) => {
-  //   runOnJS(() => {
-  //     setIndexBeforeAnimation();
-  //   })();
-
-  //   runOnUI(() => {
-
-  //     const animationDuration = 100;
-  //     fadeOpacity.value = withTiming(0, { duration: animationDuration }, () => {
-  //       runOnJS(onFadeOutComplete)();
-  //       fadeOpacity.value = withDelay(
-  //         animationDuration,
-  //         withTiming(1, { duration: animationDuration })
-  //       );
-  //     });
-  //   })();
-  // };
-
   const handleViewableItemsChanged = useCallback(
     ({
       viewableItems,
@@ -330,11 +256,6 @@ const Modal = ({
         id: number;
       }>[];
     }) => {
-      // The reason fade opacity is triggering earlier than setCurrentIindex is because
-      // the viewableItems array is appended the second visible screen right before the
-      // first one disappears so getting the  0th index rather than 1st index will
-      // result in going to the same index
-
       if (!currentlyScrollingRef.current) {
         //given that only two screens can be visible at a time
 
@@ -354,6 +275,30 @@ const Modal = ({
     [currentIndex]
   );
 
+  const calendarScrollViewProps = {
+    cityName,
+    currentIndex,
+    setCurrentIndex,
+    handleOpenModalDropdown,
+  };
+  const graphLeftTextProps = {
+    leftText,
+    selectedModal,
+  };
+  const modalDropDownProps = {
+    selectedModal,
+    openModalDropdown,
+    handleOpenModalDropdown,
+  };
+  const flatlistProps = {
+    horizontal: true,
+    decelerationRate: 0,
+    snapToInterval: width, // Use the screen width
+    snapToAlignment: "center" as const,
+    showsHorizontalScrollIndicator: false,
+    pagingEnabled: true,
+  };
+
   return (
     <>
       {selectedModal !== "sunPhase" && (
@@ -361,12 +306,8 @@ const Modal = ({
           {/* Calendar */}
           <View>
             <CalendarScrollView
-              cityName={cityName}
-              currentIndex={currentIndex}
-              setCurrentIndex={setCurrentIndex}
-              currentIndexRef={currentIndexRef}
+              {...calendarScrollViewProps}
               scrollRef={currentlyScrollingRef}
-              handleOpenModalDropdown={handleOpenModalDropdown}
             />
 
             <HorizontalLine />
@@ -383,29 +324,20 @@ const Modal = ({
           <View className="z-0">
             <Animated.View style={isBallenActive}>
               <GraphLeftText
+                {...graphLeftTextProps}
                 id={currentIndex}
                 leftTextShared={leftTextSharedRef}
-                leftText={leftText}
-                fadeOpacity={fadeOpacity}
-                currentIndexRef={currentIndexRef1}
-                selectedModal={selectedModal}
               />
             </Animated.View>
           </View>
           <Animated.View className="z-20 relative" style={isBallenActive}>
-            <ModalDropdownButton
-              selectedModal={selectedModal}
-              openModalDropdown={openModalDropdown}
-              handleOpenModalDropdown={handleOpenModalDropdown}
-            />
+            <ModalDropdownButton {...modalDropDownProps} />
 
             <ModalDropdownContainer
               selectedModal={selectedModal}
               setSelectedModal={setSelectedModal}
               isOpen={openModalDropdown}
               handleIsOpen={handleOpenModalDropdown}
-              currentIndex={currentIndex}
-              id={currentIndex}
             />
           </Animated.View>
         </View>
@@ -426,6 +358,7 @@ const Modal = ({
           scrollEnabled={enableScrollRef.current}
           onMomentumScrollEnd={() => {
             enableScrollRef.current = true;
+            currentlyScrollingRef.current = false;
           }}
         />
       </>
@@ -452,6 +385,11 @@ const Modal = ({
           />
         ) : selectedModal === "visibility" ? (
           <VisibilityModalDescription
+            data={data[cityName]}
+            currentIndex={currentIndex}
+          />
+        ) : selectedModal === "averages" ? (
+          <AveragesModalDescription
             data={data[cityName]}
             currentIndex={currentIndex}
           />

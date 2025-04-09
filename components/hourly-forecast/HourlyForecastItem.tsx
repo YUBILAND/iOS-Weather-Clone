@@ -1,17 +1,21 @@
-import { weatherKey, WeatherType } from "@/constants/constants";
+import { colors } from "@/assets/colors/colors";
 import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
-import React from "react";
+import React, { useCallback } from "react";
 import { Image, Pressable, View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import RoundedTemperature from "../atoms/RoundedTemperature";
 import { DailyStats } from "./utils/constants";
-import { colors } from "@/assets/colors/colors";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
+import { dateStringToTime } from "@/hooks/hourlyConstants";
+import { stringToTime } from "@/hooks/hooks";
+import HourlyForecastItemTime from "./HourlyForecastItemTime";
 
 interface HourlyForecastItemProps {
   hour: DailyStats;
   index: number;
   dailyArr: DailyStats[];
   showModal: () => void;
+  temperature: string | number;
 }
 
 const HourlyForecastItem = ({
@@ -19,13 +23,15 @@ const HourlyForecastItem = ({
   index,
   dailyArr,
   showModal,
+  temperature,
 }: HourlyForecastItemProps) => {
   const pressableHorizontalPadding = 8;
+  const handlePress = useCallback(() => {
+    showModal();
+  }, [showModal]);
   return (
     <Pressable
-      onPress={() => {
-        showModal();
-      }}
+      onPress={handlePress}
       onStartShouldSetResponder={() => true}
       className="flex justify-center items-center w-fit rounded-3xl pt-3 "
       style={{
@@ -35,9 +41,7 @@ const HourlyForecastItem = ({
           index === dailyArr.length - 1 ? 0 : pressableHorizontalPadding,
       }}
     >
-      <DefaultText style={{ fontSize: 15, fontWeight: 600 }}>
-        {index === 0 ? "Now" : hour?.time.split(" ").join("")}
-      </DefaultText>
+      <HourlyForecastItemTime hour={hour} index={index} />
 
       <View className=" items-center h-10 w-12 justify-center">
         <Image
@@ -54,7 +58,7 @@ const HourlyForecastItem = ({
       </View>
 
       <RoundedTemperature
-        temperature={hour?.celsius}
+        temperature={temperature}
         className="text-xl font-semibold"
         style={{ fontSize: 20 }}
       />
@@ -62,4 +66,4 @@ const HourlyForecastItem = ({
   );
 };
 
-export default HourlyForecastItem;
+export default React.memo(HourlyForecastItem);

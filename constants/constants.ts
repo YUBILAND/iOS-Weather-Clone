@@ -2,43 +2,6 @@ import { CompassDirections } from "@/components/wind-forecast/utils/windConstant
 
 export const apiKey = "7295bc21a1cd4c43a94220808250802";
 
-// export const weatherImages = {
-
-//   [require("../assets/images/partlycloudy.png")] : ["partly cloudy"],
-
-//   "partly cloudy": require("../assets/images/partlycloudy.png"),
-
-//   "moderate rain": require("../assets/images/drizzle.png"),
-//   "patchy rain possible": require("../assets/images/drizzle.png"),
-//   "patchy rain nearby": require("../assets/images/drizzle.png"),
-//   "light rain": require("../assets/images/drizzle.png"),
-//   "light freezing rain": require("../assets/images/drizzle.png"),
-//   "moderate rain at times": require("../assets/images/drizzle.png"),
-
-//   "heavy rain": require("../assets/images/heavyrain.png"),
-//   "heavy rain at times": require("../assets/images/heavyrain.png"),
-//   "moderate or heavy freezing rain": require("../assets/images/heavyrain.png"),
-//   "moderate or heavy rain shower": require("../assets/images/heavyrain.png"),
-//   "moderate or heavy rain with thunder": require("../assets/images/heavyrain.png"),
-
-//   "light snow": require("../assets/images/snow.png"),
-//   "moderate snow": require("../assets/images/snow.png"),
-//   "heavy snow": require("../assets/images/snow.png"),
-//   "blowing snow": require("../assets/images/snow.png"),
-//   "moderate or heavy snow showers": require("../assets/images/snow.png"),
-//   blizzard: require("../assets/images/snow.png"),
-
-//   sunny: require("../assets/images/sun.png"),
-//   clear: require("../assets/images/sun.png"),
-
-//   overcast: require("../assets/images/cloud.png"),
-//   cloudy: require("../assets/images/cloud.png"),
-
-//   mist: require("../assets/images/mist.png"),
-//   fog: require("../assets/images/mist.png"),
-
-// };
-
 export const weatherImages = {
   sunrise: ["sunrise"],
   sunset: ["sunset"],
@@ -168,7 +131,7 @@ export type WeatherData = {
 };
 
 export type Current = {
-  temp_c: string;
+  temp_c: number;
   wind_mph: number;
   humidity: number;
   condition: Condition;
@@ -231,6 +194,7 @@ export type HourObject = Omit<WeatherData["current"], "air_quality"> & {
   time: string;
   chance_of_rain: number;
   temp_c: number;
+  temp_f: number;
   wind_mph: number;
   humidity: number;
   uv: number;
@@ -244,6 +208,7 @@ export type HourObject = Omit<WeatherData["current"], "air_quality"> & {
 
 export interface GraphKeyType {
   temp_c: number;
+  temp_f: number;
   chance_of_rain: number;
   uv: number;
   wind_mph: number;

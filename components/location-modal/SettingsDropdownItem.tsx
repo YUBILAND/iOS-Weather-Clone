@@ -1,47 +1,65 @@
 import { Entypo } from "@expo/vector-icons";
-import React from "react";
+import React, { useState } from "react";
 import { Pressable, View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
 import {
   SelectSetting,
   SettingsDropdownObject,
+  settingsDropdownObjects,
   settingsIconMap,
 } from "../modal/utils/modalConstants";
 import { TempUnit } from "./SettingsDropdown";
 import DropdownGaps from "../atoms/DropdownGaps";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/state/store";
+import { setTempUnit } from "@/state/settings/settingsSlice";
+import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
+import { storeTempUnit } from "@/utils/asyncStorage";
+import UnitModal from "./unit-modal/UnitModal";
 
 interface SettingsDropdownItemProps {
   item: SettingsDropdownObject;
   index: number;
-  chooseSetting: (setting: SelectSetting | null) => void;
   handleIsOpen: (open: boolean) => void;
   settingName: SelectSetting;
-  selectedTempUnit: TempUnit;
-  handleSelectedTempUnit: (tempUnit: TempUnit) => void;
+  setModalVisible: (visible: boolean) => void;
 }
 
 const SettingsDropdownItem = ({
   item,
   index,
-  chooseSetting,
   handleIsOpen,
   settingName,
-  selectedTempUnit,
-  handleSelectedTempUnit,
+  setModalVisible,
 }: SettingsDropdownItemProps) => {
-  const lastIndex = index === Object.keys(SettingsDropdownItem).length - 1;
+  const tempUnit = useTemperatureUnit();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const changeTempUnit = (tempUnit: TempUnit) => {
+    // Update redux state
+    dispatch(setTempUnit(tempUnit));
+    // Update asyncStorage
+    storeTempUnit(tempUnit);
+  };
+
+  const lastIndex = index === Object.keys(settingsDropdownObjects).length - 1;
 
   const pressDropdownItem = () => {
-    chooseSetting(settingName);
+    // chooseSetting(settingName);
     handleIsOpen(false);
     // Only celsius and fahrenheit should have checkmarks
     if (
       ["celsius", "fahrenheit"].includes(settingName) &&
-      selectedTempUnit !== settingName
+      tempUnit !== settingName
     ) {
-      handleSelectedTempUnit(settingName as TempUnit);
+      changeTempUnit(settingName as TempUnit);
     } else {
+      // When other settings are pressed
+      if (settingName === "units") {
+        setModalVisible(true);
+        console.log("CLICKED UNITS");
+      }
     }
   };
 
@@ -54,7 +72,7 @@ const SettingsDropdownItem = ({
       <View className="flex-row items-center " style={{ paddingVertical: 8 }}>
         <View
           className="flex-[0.1] pl-4"
-          style={{ opacity: selectedTempUnit === settingName ? 1 : 0 }}
+          style={{ opacity: tempUnit === settingName ? 1 : 0 }}
         >
           <Entypo name="check" size={18} color={"white"} />
         </View>
@@ -68,7 +86,6 @@ const SettingsDropdownItem = ({
         </View>
       </View>
 
-      {/* {!lastIndex && <HorizontalLine />} */}
       {!lastIndex ? (
         gapArr.includes(index) ? (
           <DropdownGaps />

@@ -14,7 +14,7 @@ import ModalTransparentTextBox from "../modal/ModalTransparentTextBox";
 import { getUVArr } from "./utils/getUVArr";
 import HorizontalBar from "./HorizontalBar";
 import { getCurrentTime, stringToTime } from "@/hooks/hooks";
-import { useAmericanTime } from "@/hooks/useAmericanTime";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
 
 interface UVModalDescriptionProps {
   data: WeatherData;
@@ -25,7 +25,7 @@ const UVModalDescription = ({
   data,
   currentIndex,
 }: UVModalDescriptionProps) => {
-  const americanTime = useAmericanTime();
+  const is12Hr = useIs12Hr();
   const todaysUVArr = getUVArr(data, 0);
   const todaysUVHigh = Math.round(Math.max(...todaysUVArr));
 
@@ -40,7 +40,7 @@ const UVModalDescription = ({
         title={
           currentIndex === 0
             ? "Now, " +
-              stringToTime(americanTime, getCurrentTime(data.location.tz_id))
+              stringToTime(is12Hr, getCurrentTime(data.location.tz_id))
             : "2025, Mar 4th"
         }
         description="It is currently weak. From 10 to 2, it will become mid level."

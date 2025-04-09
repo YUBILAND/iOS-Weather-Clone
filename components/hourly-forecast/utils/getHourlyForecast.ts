@@ -9,10 +9,7 @@ import {
 import { DailyStats } from "./constants";
 import { addWhiteSpace, dateStringToTime } from "@/hooks/hourlyConstants";
 
-export const getHourlyForecastObject = (
-  data: WeatherData,
-  americanTime: boolean
-) => {
+export const getHourlyForecastObject = (data: WeatherData) => {
   if (data.location) {
     const currentHour = getCurrentHour(data.location!.tz_id);
 
@@ -27,8 +24,8 @@ export const getHourlyForecastObject = (
           data.forecast?.forecastday[i].astro.sunset!
         );
 
-        const sunriseDate = stringToTime(americanTime, sunriseTime, false);
-        const sunsetDate = stringToTime(americanTime, sunsetTime, false);
+        const sunriseDate = stringToTime(false, sunriseTime, false);
+        const sunsetDate = stringToTime(false, sunsetTime, false);
 
         data.forecast?.forecastday[i].hour.filter((hour, index) => {
           const firstDay = i === 0;
@@ -42,8 +39,8 @@ export const getHourlyForecastObject = (
             (firstDay && greaterThanCurrentHour) ||
             (lastDay && lessThanCurrentHour)
           ) {
-            const normalTime = dateStringToTime(hour.time, true, americanTime);
-            const celsius = parseInt(hour.temp_c);
+            const timeIn24Hr = dateStringToTime(hour.time, false, false);
+            const celsius = hour.temp_c;
             const condition =
               hour.wind_mph >= 15
                 ? ("windy" as WeatherType)
@@ -51,7 +48,7 @@ export const getHourlyForecastObject = (
                 ? hour.condition.text
                 : addWhiteSpace(hour.condition.text) + "night";
             newArr.push({
-              time: normalTime,
+              time: timeIn24Hr,
               condition: condition,
               celsius: celsius,
               fullDate: hour.time,

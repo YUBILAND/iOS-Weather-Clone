@@ -11,7 +11,7 @@ import { RootState } from "@/state/store";
 import { getMoonGraphLumin } from "./utils/getMoonGraphLumin";
 import { MoonPhase } from "./utils/constants";
 import { getInitialMoonPhase } from "./utils/getInitialMoonPhase";
-import { useAmericanTime } from "@/hooks/useAmericanTime";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
 
 interface MoonPhaseModalInfoProps {
   data: WeatherData;
@@ -27,7 +27,7 @@ const MoonPhaseModalInfo = memo(
     initialScrollIndex,
     currentMoonPhase,
   }: MoonPhaseModalInfoProps) => {
-    const americanTime = useAmericanTime();
+    const is12Hr = useIs12Hr();
 
     const astroData = data.forecast.forecastday[0].astro;
 
@@ -35,17 +35,11 @@ const MoonPhaseModalInfo = memo(
 
     const moonrise =
       astroData.moonrise !== "No moonrise"
-        ? stringToTime(
-            americanTime,
-            removeZeroFromTimeString(astroData.moonrise)
-          )
+        ? stringToTime(is12Hr, removeZeroFromTimeString(astroData.moonrise))
         : astroData.moonrise;
     const moonset =
       astroData.moonset !== "No moonset"
-        ? stringToTime(
-            americanTime,
-            removeZeroFromTimeString(astroData.moonset)
-          )
+        ? stringToTime(is12Hr, removeZeroFromTimeString(astroData.moonset))
         : astroData.moonset;
 
     const moonGraphLumin = getMoonGraphLumin(

@@ -58,7 +58,7 @@ const WindChillModalDescription = ({
             <HorizontalLine />
 
             <View className="gap-y-2 px-4">
-              <View className="flex-row justify-between">
+              <View className="flex-row justify-between items-center">
                 <DefaultText className=" font-semibold">Today</DefaultText>
 
                 <TemperatureBar
@@ -71,7 +71,7 @@ const WindChillModalDescription = ({
                 />
               </View>
 
-              <View className="flex-row justify-between">
+              <View className="flex-row justify-between items-center">
                 <DefaultText className=" font-semibold">Tomorrow</DefaultText>
                 <TemperatureBar
                   barWidth={160}

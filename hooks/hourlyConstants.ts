@@ -10,12 +10,12 @@ import {
 export function dateStringToTime(
   dateString: string,
   removeMinutes: boolean,
-  americanTime: boolean
+  is12Hr: boolean
 ) {
   return removeZeroFromTimeString(
     new Date(dateString).toLocaleTimeString(
       "en-US",
-      timeFormat(americanTime, removeMinutes)
+      timeFormat(is12Hr, removeMinutes)
     )
   );
 }

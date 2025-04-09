@@ -4,8 +4,8 @@ import { regularTimeOnXAxis } from "./getRegularTimeOnXAxis";
 
 export const getNextPhaseTime = (
   data: WeatherData,
-  currentTime: string,
-  americanTime: boolean
+  currentTime: string
+  // is12Hr: boolean
 ) => {
   const currentSunriseTime = data.forecast.forecastday[0].astro.sunrise.replace(
     /^0/,
@@ -43,7 +43,7 @@ export const getNextPhaseTime = (
   }
 
   // conver to 12hr or 24hr
-  nextPhaseTime = stringToTime(americanTime, nextPhaseTime);
+  // nextPhaseTime = stringToTime(is12Hr, nextPhaseTime);
 
   return nextPhaseTime;
 };

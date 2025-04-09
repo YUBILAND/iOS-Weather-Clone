@@ -18,6 +18,9 @@ import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
 import { updateLeftText } from "../modal/utils/updateLeftText";
 import { getDayArr } from "../precipitation/utils/getDayArr";
 import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
+import { getTemperature } from "@/hooks/getTemperature";
+import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
+import { getDailyTempArr } from "../daily-forecast/utils/getDailyTempArr";
 
 interface RenderConditionsGraphsProps {
   data: WeatherData;
@@ -36,6 +39,8 @@ const RenderConditionsGraphs = ({
   updateShared,
   isActiveShared,
 }: RenderConditionsGraphsProps) => {
+  const tempUnit = useTemperatureUnit();
+
   const { state: tempState, isActive: tempIsActive } = useChartPressState({
     x: 0,
     y: {
@@ -70,34 +75,36 @@ const RenderConditionsGraphs = ({
     };
   });
 
-  const weekTempArr = getWeekTempArr(data);
+  const weekTempArr = getWeekTempArr(data, tempUnit);
   const weekMaxTemp = Math.max(...weekTempArr);
   const weekMinTemp = Math.min(...weekTempArr);
 
   useSyncAnimatedValue(tempIsActive, isActiveShared);
   // useSyncAnimatedValue(rainIsActive, isActiveShared);
 
-  const hourlyTempMap = getDayArr(data, 0, "temp_c");
+  const hourlyTempMap = getDailyTempArr(data, 0, tempUnit);
   const maxCelsius = Math.round(Math.max(...hourlyTempMap));
   const minCelsius = Math.round(Math.min(...hourlyTempMap));
 
-  const currentTemperature = Math.round(parseFloat(data.current?.temp_c));
+  const currentTemperature = Math.round(
+    getTemperature(data.current?.temp_c, tempUnit)
+  );
   const maxTemperature = Math.round(
-    data.forecast?.forecastday[item.id].day.maxtemp_c
+    getTemperature(data.forecast?.forecastday[item.id].day.maxtemp_c, tempUnit)
   );
   const minTemperature = Math.round(
-    data.forecast?.forecastday[item.id].day.mintemp_c
+    getTemperature(data.forecast?.forecastday[item.id].day.mintemp_c, tempUnit)
   );
 
-  const currentWeatherImage = weatherNameToImage(
-    getWeatherName(data.current?.condition.code),
-    data.current?.is_day
-  );
+  // const currentWeatherImage = weatherNameToImage(
+  //   getWeatherName(data.current?.condition.code),
+  //   data.current?.is_day
+  // );
 
-  const DailyWeatherImage = weatherNameToImage(
-    getWeatherName(data.forecast?.forecastday[item.id].day.condition.code),
-    true
-  );
+  // const DailyWeatherImage = weatherNameToImage(
+  //   getWeatherName(data.forecast?.forecastday[item.id].day.condition.code),
+  //   true
+  // );
 
   const currentText: LeftTextType = {
     topText: currentTemperature.toString() + "°",
@@ -132,7 +139,7 @@ const RenderConditionsGraphs = ({
           // @ts-ignore, used Pick but now sure why it still requires all keys
           state={tempState}
           isActive={tempIsActive}
-          apiObjectString="temp_c"
+          apiObjectString={tempUnit === "celsius" ? "temp_c" : "temp_f"}
           graphHeight={200}
           yAxisLabel="°"
           domainTop={weekMaxTemp + 10}

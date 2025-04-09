@@ -32,6 +32,8 @@ import { getXOffset } from "./utils/getXOffset";
 import { getYShift } from "./utils/getYShift";
 import { useSunPhaseData } from "./utils/useSunPhaseData";
 import Animated from "react-native-reanimated";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import getFont from "@/hooks/getFont";
 
 const SunPhaseGraph = ({
   cityName,
@@ -61,9 +63,9 @@ const SunPhaseGraph = ({
   addLines?: boolean;
   domain?: { top: number; bottom: number };
 }) => {
-  const font = useFont(SpaceMono, 12);
+  const font = getFont();
 
-  const { data } = useSelector((state: RootState) => state.weather);
+  const data = useWeatherData();
   const { forecast, current, location } = data[cityName];
 
   const sunriseTime = forecast?.forecastday[0].astro.sunrise;
@@ -89,7 +91,6 @@ const SunPhaseGraph = ({
     yShift,
     xOffset
   );
-
   // Find X where intersection happens after offset has been applied.
   const firstIntersectionPostOffset = getFirstIntersectionPostOffset(
     xTicks,
@@ -297,4 +298,4 @@ const SemiCircle = ({
   );
 };
 
-export default SunPhaseGraph;
+export default React.memo(SunPhaseGraph);
