@@ -8,7 +8,6 @@ import React, {
 import {
   FlatList,
   Pressable,
-  TextInput,
   TouchableWithoutFeedback,
   useWindowDimensions,
   View,
@@ -29,23 +28,17 @@ import { SelectModal } from "./utils/modalConstants";
 
 import { useWeatherData } from "@/hooks/useWeatherData";
 import AirPressureModal from "../air-pressure/AirPressureModal";
-import AirPressureModalDescription from "../air-pressure/AirPressureModalDescription";
-import ConditionsModalDescription from "../conditions/ConditionsModalDescription";
+import AveragesModal from "../averages/AveragesModal";
 import GraphLeftText from "../graphs/GraphLeftText";
 import HumidityModal from "../humidity/HumidityModal";
-import HumidityModalDescription from "../humidity/HumidityModalDescription";
 import PrecipitationModal from "../precipitation/PrecipitationModal";
-import PrecipitationModalDescription from "../precipitation/PrecipitationModalDescription";
 import UVModal from "../uv-index/UVModal";
-import UVModalDescription from "../uv-index/UVModalDescription";
 import VisibilityModal from "../visibility/VisibilityModal";
-import VisibilityModalDescription from "../visibility/VisibilityModalDescription";
 import WindChillModal from "../wind-chill/WindChillModal";
-import WindChillModalDescription from "../wind-chill/WindChillModalDescription";
 import WindModal from "../wind-forecast/WindModal";
 import ModalDropdownButton from "./dropdown/ModalDropdownButton";
-import AveragesModal from "../averages/AveragesModal";
-import AveragesModalDescription from "../averages/AveragesModalDescription";
+import ModalDescriptions from "./ModalDescriptions";
+import AirQualityModal from "../air-quality/AirQualityModal";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
@@ -126,7 +119,7 @@ const Modal = ({
           className="w-screen"
           key={item.id}
         >
-          <View className="w-screen">
+          <View className="w-screen px-4">
             {selectedModal === "conditions" ? (
               <React.Fragment key={"conditions"}>
                 <RenderConditionsGraphs
@@ -181,16 +174,6 @@ const Modal = ({
             ) : selectedModal === "visibility" ? (
               <React.Fragment key={"visibility"}>
                 <VisibilityModal
-                  cityName={cityName}
-                  currentIndex={currentIndex}
-                  id={item.id}
-                  updateShared={updateLeftTextShared}
-                  isActiveShared={isActiveShared}
-                />
-              </React.Fragment>
-            ) : selectedModal === "averages" ? (
-              <React.Fragment key={"averages"}>
-                <AveragesModal
                   cityName={cityName}
                   currentIndex={currentIndex}
                   id={item.id}
@@ -275,6 +258,7 @@ const Modal = ({
     [currentIndex]
   );
 
+  // Props for components
   const calendarScrollViewProps = {
     cityName,
     currentIndex,
@@ -301,7 +285,7 @@ const Modal = ({
 
   return (
     <>
-      {selectedModal !== "sunPhase" && (
+      {!["airQuality", "sunPhase", "averages"].includes(selectedModal) && (
         <>
           {/* Calendar */}
           <View>
@@ -343,7 +327,7 @@ const Modal = ({
         </View>
       </View>
 
-      {/* Graphs */}
+      {/* Graphs and FlatList */}
       <>
         <FlatList
           onViewableItemsChanged={handleViewableItemsChanged}
@@ -362,50 +346,25 @@ const Modal = ({
           }}
         />
       </>
+
+      {selectedModal === "airQuality" && (
+        <View className="px-4">
+          <AirQualityModal cityName={cityName} />
+        </View>
+      )}
+
+      {selectedModal === "averages" && (
+        <View className="px-4">
+          <AveragesModal cityName={cityName} />
+        </View>
+      )}
+
       <Pressable onPressIn={() => handleOpenModalDropdown(false)}>
-        {selectedModal === "uv" ? (
-          <UVModalDescription
-            data={data[cityName]}
-            currentIndex={currentIndex}
-          />
-        ) : selectedModal === "conditions" ? (
-          <ConditionsModalDescription
-            data={data[cityName]}
-            currentIndex={currentIndex}
-          />
-        ) : selectedModal === "feelsLike" ? (
-          <WindChillModalDescription
-            data={data[cityName]}
-            currentIndex={currentIndex}
-          />
-        ) : selectedModal === "precipitation" ? (
-          <PrecipitationModalDescription
-            data={data[cityName]}
-            currentIndex={currentIndex}
-          />
-        ) : selectedModal === "visibility" ? (
-          <VisibilityModalDescription
-            data={data[cityName]}
-            currentIndex={currentIndex}
-          />
-        ) : selectedModal === "averages" ? (
-          <AveragesModalDescription
-            data={data[cityName]}
-            currentIndex={currentIndex}
-          />
-        ) : selectedModal === "humidity" ? (
-          <HumidityModalDescription
-            data={data[cityName]}
-            currentIndex={currentIndex}
-          />
-        ) : selectedModal === "airPressure" ? (
-          <AirPressureModalDescription
-            data={data[cityName]}
-            currentIndex={currentIndex}
-          />
-        ) : (
-          <View></View>
-        )}
+        <ModalDescriptions
+          data={data[cityName]}
+          currentIndex={currentIndex}
+          selectedModal={selectedModal}
+        />
       </Pressable>
     </>
   );

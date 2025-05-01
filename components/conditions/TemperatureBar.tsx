@@ -1,8 +1,8 @@
-import { View, Text } from "react-native";
 import React from "react";
+import { ColorValue, View } from "react-native";
 import RoundedTemperature from "../atoms/RoundedTemperature";
 import ProgressBar from "../progress-bar/ProgressBar";
-import { WeatherData } from "@/constants/constants";
+import { colors } from "@/assets/colors/colors";
 
 interface TemperatureBarProps {
   barWidth: number;
@@ -11,6 +11,9 @@ interface TemperatureBarProps {
   weekLow: number;
   tempHigh: number;
   tempLow: number;
+  hideLeft?: boolean;
+  gradientColors?: readonly [string, string, ...string[]];
+  barColor?: ColorValue;
 }
 
 const TemperatureBar = ({
@@ -20,17 +23,25 @@ const TemperatureBar = ({
   weekLow,
   tempHigh,
   tempLow,
+  hideLeft = false,
+  gradientColors = undefined,
+  barColor = undefined,
 }: TemperatureBarProps) => {
   return (
-    <View className="flex-row justify-between items-center gap-x-1">
+    <View
+      className="flex-row justify-between items-center "
+      style={{ gap: hideLeft ? 16 : 8 }}
+    >
       {/* Daily Low */}
-      <View className="w-10">
-        <RoundedTemperature
-          className="text-xl font-semibold"
-          temperature={Math.round(tempLow)}
-          style={{ alignSelf: "flex-end" }}
-        />
-      </View>
+      {!hideLeft && (
+        <View className="w-14">
+          <RoundedTemperature
+            className="text-xl font-semibold"
+            temperature={tempLow}
+            style={{ alignSelf: "flex-end" }}
+          />
+        </View>
+      )}
 
       {/* Temperature Bar */}
       <View>
@@ -41,15 +52,21 @@ const TemperatureBar = ({
           dailyHigh={tempHigh}
           dailyLow={tempLow}
           currentTemperature={currentTemperature}
+          gradientColors={gradientColors}
+          barColor={barColor}
         />
       </View>
 
       {/* Daily High */}
-      <View className="w-10">
+      <View style={{ width: hideLeft ? 50 : 40 }}>
         <RoundedTemperature
           className="text-xl font-semibold "
-          temperature={Math.round(tempHigh)}
-          style={{ alignSelf: "flex-end" }}
+          temperature={tempHigh}
+          style={{
+            alignSelf: hideLeft ? "flex-end" : "flex-start",
+            color: hideLeft ? "lightblue" : "white",
+          }}
+          unit={hideLeft ? '"' : undefined}
         />
       </View>
     </View>

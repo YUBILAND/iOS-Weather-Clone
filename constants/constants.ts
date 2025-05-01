@@ -132,6 +132,7 @@ export type WeatherData = {
 
 export type Current = {
   temp_c: number;
+  temp_f: number;
   wind_mph: number;
   humidity: number;
   condition: Condition;

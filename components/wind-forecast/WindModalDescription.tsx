@@ -1,22 +1,19 @@
+import { WeatherData } from "@/constants/constants";
 import React from "react";
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
-import ModalBoxTitle from "../modal/ModalBoxTitle";
-import ModalTextBoxContainer from "../modal/ModalTextBoxContainer";
-import { colors } from "@/assets/colors/colors";
-import { WeatherData } from "@/constants/constants";
-import Dot from "../modal/Dot";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import ModalTextBox from "../modal/ModalTextBox";
-import ModalOption from "../modal/ModalOption";
-import ModalTransparentTextBox from "../modal/ModalTransparentTextBox";
-// import { getUVArr } from "./utils/getUVArr";
-import HorizontalBar from "../uv-index/HorizontalBar";
-import { getUVArr } from "../uv-index/utils/getUVArr";
-import { getWindArr } from "./utils/getWindArr";
-import { ListItem } from "tamagui";
+import { useOtherUnits } from "@/hooks/useOtherUnits";
+import { OtherUnitsType } from "@/state/settings/constants";
+import { useChangeOtherUnits } from "../location-modal/unit-modal/hooks/useChangeOtherUnits";
+import SettingsTextBoxContainer from "../location-modal/unit-modal/SettingsTextBoxContainer";
+import SettingsTextBoxList from "../location-modal/unit-modal/SettingsTextBoxList";
+import { windOptionUnitArr } from "../location-modal/unit-modal/utils/constants";
+import { getDayArr } from "../precipitation/utils/getDayArr";
 import BeaufortScale from "./BeaufortScale";
+import { getMinMaxArr } from "../utils/getMinMaxArr";
+import BarComparison from "../modal/BarComparison";
 
 interface WindModalDescriptionProps {
   data: WeatherData;
@@ -27,52 +24,54 @@ const WindModalDescription = ({
   data,
   currentIndex,
 }: WindModalDescriptionProps) => {
-  const todaysWindArr = getWindArr(data, 0);
-  const todaysWindHigh = Math.round(Math.max(...todaysWindArr));
+  const windUnit = useOtherUnits()["wind"];
 
-  const tomorrowsWindArr = getWindArr(data, 1);
-  const tomorrowsWindHigh = Math.round(Math.max(...tomorrowsWindArr));
+  const changeOtherUnits = useChangeOtherUnits();
+  const selectOtherUnits = (otherUnit: {
+    [key in keyof OtherUnitsType]: string;
+  }) => {
+    changeOtherUnits(otherUnit);
+  };
 
-  const maxWind = Math.max(
-    Math.round(todaysWindHigh),
-    Math.round(tomorrowsWindHigh)
+  const { arrMax: todaysGustHigh } = getMinMaxArr(
+    getDayArr(data, 0, "gust_mph")
+  );
+  const { arrMax: tomorrowsGustHigh } = getMinMaxArr(
+    getDayArr(data, 1, "gust_mph")
   );
 
   const dailyOverviewMessage = "Current wind speed is coming from the";
+  const dailyComparisonText = `Today's Wind is similar to Tomorrows`;
+  const windDefinition = `Wind Speed`;
+  const bftDefinition = `The Beaufort scale is a wind force scale that uses numbers to describe wind speed and conditions. It was developed by Sir Francis Beaufort of the U.K. Royal Navy in 1805.`;
+
+  const firstIndex = currentIndex === 0;
+
   return (
     <View className="px-4">
       <ModalTextBox title="Daily Summary">
         <DefaultText>{dailyOverviewMessage}</DefaultText>
       </ModalTextBox>
-      {currentIndex === 0 && (
+      {firstIndex && (
         <>
           <ModalTextBox title="Daily Comparison" removeHorizontalPadding>
             <View className="gap-y-2 px-4">
-              <DefaultText>Today's Wind is similar to tomorrows</DefaultText>
+              <DefaultText>{dailyComparisonText}</DefaultText>
             </View>
 
             <HorizontalLine />
 
-            <View className="gap-y-2 px-4">
-              <HorizontalBar
-                title="Today"
-                bgColor="light"
-                currentHigh={Math.round(todaysWindHigh).toString() + " mph"}
-                percentage={todaysWindHigh / maxWind}
-              />
-              <HorizontalBar
-                title="Tomorrow"
-                bgColor="dark"
-                currentHigh={Math.round(tomorrowsWindHigh).toString() + " mph"}
-                percentage={tomorrowsWindHigh / maxWind}
-              />
-            </View>
+            <BarComparison
+              todaysHigh={Math.round(todaysGustHigh)}
+              tomorrowsHigh={Math.round(tomorrowsGustHigh)}
+              unit={windUnit}
+            />
           </ModalTextBox>
         </>
       )}
 
       <ModalTextBox title={"About Wind Speed and Gusts"}>
-        <DefaultText>Wind is wind</DefaultText>
+        <DefaultText>{windDefinition}</DefaultText>
       </ModalTextBox>
 
       <ModalTextBox title={"Beaufort Scale"} removeHorizontalPadding>
@@ -86,13 +85,19 @@ const WindModalDescription = ({
           className=""
           style={{ lineHeight: 18, letterSpacing: 0.2 }}
         >
-          The Beaufort scale is a wind force scale that uses numbers to describe
-          wind speed and conditions. It was developed by Sir Francis Beaufort of
-          the U.K. Royal Navy in 1805.
+          {bftDefinition}
         </DefaultText>
       </ModalTextBox>
 
-      <ModalOption title="Option" />
+      <SettingsTextBoxContainer title={"Other Units"}>
+        <SettingsTextBoxList
+          arr={windOptionUnitArr}
+          interactableType="dropdown"
+          selectedValue="mph"
+          onSelect={selectOtherUnits}
+          openUpward
+        />
+      </SettingsTextBoxContainer>
     </View>
   );
 };

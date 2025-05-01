@@ -1,40 +1,39 @@
-import { RootState } from "@/state/store";
-import React from "react";
-import { Pressable, View } from "react-native";
-import { CalendarDaysIcon } from "react-native-heroicons/outline";
-import { useSelector } from "react-redux";
-import ColoredBar from "../atoms/ColoredBar";
-import DefaultText from "../atoms/DefaultText";
-import OpacityCard from "../atoms/OpacityCard";
-import { colors } from "@/assets/colors/colors";
-import { FontAwesome } from "@expo/vector-icons";
-import CardTitle from "../atoms/CardTitle";
-import CardStat from "../atoms/CardStat";
-import CardBottomText from "../atoms/CardBottomText";
 import { useWeatherData } from "@/hooks/useWeatherData";
+import { FontAwesome } from "@expo/vector-icons";
+import React from "react";
+import { Pressable, StyleProp, View, ViewStyle } from "react-native";
+import CardBottomText from "../atoms/CardBottomText";
+import CardStat from "../atoms/CardStat";
+import CardTitle from "../atoms/CardTitle";
+import OpacityCard from "../atoms/OpacityCard";
+import { getTemperature } from "@/hooks/useDisplayUnits";
+import Animated, { AnimatedStyle } from "react-native-reanimated";
 
 interface WindChillCardProps {
   cityName: string;
   showModal: () => void;
   iconSize: number;
+  collapseFromTopStyle: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
 }
 
 const WindChillCard = ({
   cityName,
   showModal,
   iconSize,
+  collapseFromTopStyle,
 }: WindChillCardProps) => {
   const data = useWeatherData();
   const { current } = data[cityName];
 
-  const windChillTemp = Math.round(current.windchill_c).toString() + "°";
+  const windChillTemp =
+    Math.round(getTemperature(current.windchill_c)).toString() + "°";
 
-  const message = "random message";
+  const message = "feels like something";
 
   return (
-    <OpacityCard>
+    <OpacityCard className="h-full">
       <Pressable
-        className="px-4 gap-y-2 h-full"
+        className="px-4 gap-y-2 "
         onPress={() => {
           showModal();
         }}
@@ -49,10 +48,13 @@ const WindChillCard = ({
             />
           }
         />
+        <View className="overflow-hidden ">
+          <Animated.View style={collapseFromTopStyle} className="gap-y-2">
+            <CardStat stat={windChillTemp} />
 
-        <CardStat stat={windChillTemp} />
-
-        <CardBottomText text={message} />
+            <CardBottomText text={message} />
+          </Animated.View>
+        </View>
       </Pressable>
     </OpacityCard>
   );

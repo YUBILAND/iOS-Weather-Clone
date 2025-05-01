@@ -11,6 +11,7 @@ import UnitModal from "./unit-modal/UnitModal";
 interface SettingsDropdownProps {
   isOpen: boolean;
   handleIsOpen: (visible: boolean) => void;
+  chooseSetting: (setting: SelectSetting | null) => void;
 }
 
 export type TempUnit = "celsius" | "fahrenheit";
@@ -18,6 +19,7 @@ export type TempUnit = "celsius" | "fahrenheit";
 const SettingsDropdownContainer = ({
   isOpen,
   handleIsOpen,
+  chooseSetting,
 }: SettingsDropdownProps) => {
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -50,6 +52,7 @@ const SettingsDropdownContainer = ({
                 handleIsOpen={(open: boolean) => handleIsOpen(open)}
                 settingName={key as SelectSetting}
                 setModalVisible={handleModalVisible}
+                chooseSetting={chooseSetting}
               />
             );
           })}

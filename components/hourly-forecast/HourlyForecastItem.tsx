@@ -33,7 +33,7 @@ const HourlyForecastItem = ({
     <Pressable
       onPress={handlePress}
       onStartShouldSetResponder={() => true}
-      className="flex justify-center items-center w-fit rounded-3xl pt-3 "
+      className="flex justify-center items-center w-fit rounded-3xl  "
       style={{
         rowGap: 6,
         paddingLeft: index === 0 ? 0 : pressableHorizontalPadding,

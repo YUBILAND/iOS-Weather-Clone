@@ -1,24 +1,15 @@
-import { colors } from "@/assets/colors/colors";
-import {
-  ForecastObject,
-  WeatherData,
-  weatherKey,
-  WeatherType,
-} from "@/constants/constants";
+import { ForecastObject, WeatherData } from "@/constants/constants";
 import { getDate } from "@/hooks/hooks";
+import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
 import React, { MutableRefObject } from "react";
 import { Image, Pressable, View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
-import RoundedTemperature from "../atoms/RoundedTemperature";
-import ProgressBar from "../progress-bar/ProgressBar";
-import { getDailyTempArr } from "./utils/getDailyTempArr";
-import { getShortWeekday } from "./utils/getShortWeekday";
-import { getWeekTempArr } from "./utils/getWeekTempArr";
-import TemperatureBar from "../conditions/TemperatureBar";
 import HorizontalLine from "../atoms/HorizontalLine";
-import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
-import { getTemperature } from "@/hooks/getTemperature";
-import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
+import TemperatureBar from "../conditions/TemperatureBar";
+import { getDayArr } from "../precipitation/utils/getDayArr";
+import { getWeekArr } from "../utils/getWeekArr";
+import { getShortWeekday } from "./utils/getShortWeekday";
+import { getTemperature } from "@/hooks/useDisplayUnits";
 
 interface DailyForecastItemProp {
   data: WeatherData;
@@ -37,15 +28,13 @@ const DailyForecastItem = ({
   setCurrentIndex,
   openModalOnIndexRef,
 }: DailyForecastItemProp) => {
-  const tempUnit = useTemperatureUnit();
-
   const weekday = getShortWeekday(getDate(item?.date + "T00:00:00"));
 
-  const weekTempArr = getWeekTempArr(data, tempUnit);
+  const weekTempArr = getWeekArr(data, "temp_c");
   const weekHigh = Math.max(...weekTempArr);
   const weekLow = Math.min(...weekTempArr);
 
-  const dailyTempArr = getDailyTempArr(data, index, tempUnit);
+  const dailyTempArr = getDayArr(data, index, "temp_c");
   const dailyHigh = Math.max(...dailyTempArr);
   const dailyLow = Math.min(...dailyTempArr);
 
@@ -54,7 +43,7 @@ const DailyForecastItem = ({
 
   return (
     <>
-      <HorizontalLine />
+      {index !== 0 && <HorizontalLine />}
       <Pressable
         key={item?.date}
         className="flex-row items-center w-full mr-4 gap-x-8"
@@ -89,12 +78,10 @@ const DailyForecastItem = ({
             barWidth={100}
             weekHigh={weekHigh}
             weekLow={weekLow}
-            tempHigh={dailyHigh}
-            tempLow={dailyLow}
+            tempHigh={Math.round(dailyHigh)}
+            tempLow={Math.round(dailyLow)}
             currentTemperature={
-              index === 0
-                ? getTemperature(data.current.temp_c, tempUnit)
-                : undefined
+              index === 0 ? getTemperature(data.current.temp_c) : undefined
             }
           />
         </View>

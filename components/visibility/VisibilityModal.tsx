@@ -1,17 +1,20 @@
-import { RootState } from "@/state/store";
-import React, { useEffect } from "react";
+import { getDistance } from "@/hooks/useDisplayUnits";
+import { useOtherUnits } from "@/hooks/useOtherUnits";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import React from "react";
 import { SharedValue, useAnimatedProps } from "react-native-reanimated";
-import { useSelector } from "react-redux";
 import { useChartPressState } from "victory-native";
 import Graph from "../graphs/Graph";
-import GraphLeftText from "../graphs/GraphLeftText";
 import GraphContainer from "../modal/GraphContainer";
-import { getDayArr } from "../precipitation/utils/getDayArr";
-import VisibilityModalDescription from "./VisibilityModalDescription";
 import { LeftTextType } from "../modal/Modal";
-import { useWeatherData } from "@/hooks/useWeatherData";
-import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
 import { updateLeftText } from "../modal/utils/updateLeftText";
+import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
+import { getDayArr } from "../precipitation/utils/getDayArr";
+import { getMinMaxArr } from "../utils/getMinMaxArr";
+import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
+import { useForecastData } from "../graphs/utils/useForecastData";
+import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
+import { GraphDefaultY } from "../graphs/utils/constants";
 
 interface VisibilityModalProps {
   cityName: string;
@@ -28,18 +31,14 @@ const VisibilityModal = ({
   isActiveShared,
 }: VisibilityModalProps) => {
   const data = useWeatherData();
+  const distanceUnit = useOtherUnits()["distance"];
 
   const { state: visState, isActive: visIsActive } = useChartPressState({
     x: 0,
-    y: {
-      vis: 0,
-      currentLineTop: 0,
-      currentLineBottom: 0,
-      currentPosition: 0,
-    },
+    y: GraphDefaultY,
   });
   const visScrollInfoBold = useAnimatedProps(() => {
-    const vis = `${visState.y.vis.value.value} mi`;
+    const vis = `${Math.round(visState.y.mainLine.value.value)}${distanceUnit}`;
     return {
       text: vis,
       value: vis,
@@ -48,34 +47,43 @@ const VisibilityModal = ({
 
   useSyncAnimatedValue(visIsActive, isActiveShared);
 
-  const currentVisibility = data[cityName].current.vis_miles;
+  const currentVisibility = Math.round(
+    getDistance(data[cityName].current.vis_miles)
+  );
 
-  const dailyVisibilityArr = getDayArr(data[cityName], id, "vis_miles");
-  const dailyMax = Math.max(...dailyVisibilityArr);
-  const dailyMin = Math.min(...dailyVisibilityArr);
+  const { arrMax: dailyVisMax, arrMin: dailyVisMin } = getMinMaxArr(
+    getDayArr(data[cityName], id, "vis_miles")
+  );
 
   const currentText: LeftTextType = {
     topText: currentVisibility.toString(),
-    topTextSmall: "mi",
+    topTextSmall: distanceUnit,
     bottomText: "Perfectly Clear",
   };
 
   const otherText: LeftTextType = {
-    topText: dailyMin + " to " + dailyMax,
-    topTextSmall: "mi",
+    topText: Math.round(dailyVisMin) + " to " + Math.round(dailyVisMax),
+    topTextSmall: distanceUnit,
     bottomText: "Perfectly Clear",
   };
 
   updateLeftText(id, updateShared, currentText, otherText);
 
-  // useEffect(() => {
-  //   updateLeftText({
-  //     currentTopText: currentVisibility.toString() + " mi",
-  //     otherTopText: dailyMin + " to " + dailyMax + " mi",
-  //     currentBottomText: "Perfectly Clear",
-  //     otherBottomText: "Perfectly Clear",
-  //   });
-  // }, [currentVisibility, dailyMax]);
+  const { timeArr: timeArr, imageArr: visImageArr } = getGraphImageAndCoord(
+    data[cityName],
+    id,
+    12,
+    "vis_miles"
+  );
+
+  const visDayArr = getDayArr(data[cityName], id, "vis_miles");
+  const visForecastWithoutMidnight = visDayArr.map((vis) => {
+    return {
+      mainLine: vis,
+    };
+  });
+  const visAvgForecast = useForecastData(visForecastWithoutMidnight);
+  const visGraphData = formatGraphDataCopy(data[cityName], visAvgForecast);
 
   return (
     <>
@@ -85,19 +93,18 @@ const VisibilityModal = ({
         isActive={visIsActive}
         scrollInfoBold={visScrollInfoBold}
         currentIndex={currentIndex}
-        leftSide={<></>}
       >
         <Graph
+          graphData={visGraphData}
           cityName={cityName}
           // @ts-ignore, used Pick but now sure why it still requires all keys
           state={visState}
           isActive={visIsActive}
           yAxisLabel="mi"
           loadedIndex={id}
-          apiObjectString="vis_miles"
-          domainTop={10}
+          domainTop={distanceUnit === "mi" ? 10 : 30}
           customColor="bgWhite"
-          addWeatherText={{ unit: "" }}
+          chartImageArrays={[timeArr, visImageArr]}
         />
       </GraphContainer>
     </>

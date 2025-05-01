@@ -1,19 +1,15 @@
-import { getDailyTempArr } from "@/components/daily-forecast/utils/getDailyTempArr";
 import { getDayArr } from "@/components/precipitation/utils/getDayArr";
-import { getTemperature } from "@/hooks/getTemperature";
+import { getMinMaxArr } from "@/components/utils/getMinMaxArr";
 import { removeZeroFromTimeString } from "@/hooks/hooks";
+import { getTemperature } from "@/hooks/useDisplayUnits";
 import { useIs12Hr } from "@/hooks/useIs12Hr";
-import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
 import { useWeatherData } from "@/hooks/useWeatherData";
 
 export const getLocationCardData = (cityName: string) => {
   const data = useWeatherData();
   const is12Hr = useIs12Hr();
-  const tempUnit = useTemperatureUnit();
 
-  const currentTemp = Math.round(
-    getTemperature(data[cityName].current.temp_c, tempUnit)
-  );
+  const currentTemp = Math.round(getTemperature(data[cityName].current.temp_c));
   const currentTimeZone = data[cityName].location.tz_id;
   const cityTime = removeZeroFromTimeString(
     new Date().toLocaleTimeString("en-US", {
@@ -24,9 +20,10 @@ export const getLocationCardData = (cityName: string) => {
     })
   );
   const currentWeatherCondition = data[cityName].current.condition.text;
-  const dailyTempArr = getDailyTempArr(data[cityName], 0, tempUnit);
-  const currentHigh = Math.max(...dailyTempArr);
-  const currentLow = Math.min(...dailyTempArr);
+
+  const { arrMax: currentHigh, arrMin: currentLow } = getMinMaxArr(
+    getDayArr(data[cityName], 0, "temp_c")
+  );
 
   return {
     currentTemp,

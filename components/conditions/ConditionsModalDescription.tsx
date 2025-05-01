@@ -1,98 +1,38 @@
-import React from "react";
-import { View } from "react-native";
-import DefaultText from "../atoms/DefaultText";
-import HorizontalLine from "../atoms/HorizontalLine";
-import ModalBoxTitle from "../modal/ModalBoxTitle";
-import ModalTextBoxContainer from "../modal/ModalTextBoxContainer";
 import { colors } from "@/assets/colors/colors";
 import { WeatherData } from "@/constants/constants";
-import Dot from "../modal/Dot";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
+import React from "react";
+import { View } from "react-native";
+import HorizontalLine from "../atoms/HorizontalLine";
+import ComparisonComponent from "../modal/ComparisonComponent";
 import ModalTextBox from "../modal/ModalTextBox";
-import ModalOption from "../modal/ModalOption";
-import RoundedTemperature from "../atoms/RoundedTemperature";
-import ProgressBar from "../progress-bar/ProgressBar";
-import { getDailyTempArr } from "../daily-forecast/utils/getDailyTempArr";
-import { getWeekTempArr } from "../daily-forecast/utils/getWeekTempArr";
-import TemperatureBar from "./TemperatureBar";
-import { getDayArr } from "../precipitation/utils/getDayArr";
-import { getCurrentHour, getCurrentTime, militaryHour } from "@/hooks/hooks";
-import { removeZeroFromDecimal } from "./utils/removeZeroFromDecimal";
+import TempOption from "../modal/TempOption";
+import { getDailyComparisonArr } from "../modal/utils/getDailyComparisonArr";
+import { getWeekArr } from "../utils/getWeekArr";
 import PrecipitationDotTable, { DotTableEntry } from "./PrecipitationDotTable";
+import { get24HrRainfall } from "./utils/get24HrRainfall";
+import { getCurrentDayData } from "./utils/getCurrentDayData";
+import { getMinMaxArr } from "../utils/getMinMaxArr";
+import DescriptionText from "../modal/DescriptionText";
 
-interface ModalDescriptionProps {
+interface ConditionsModalDescriptionProps {
   data: WeatherData;
   currentIndex: number;
 }
 
-const ModalDescription = ({ data, currentIndex }: ModalDescriptionProps) => {
-  const currentHour = getCurrentHour(data.location.tz_id);
-
-  const last24HrRainfall = data.forecast.forecastday[0].hour.reduce(
-    (acc, hour, index) => {
-      if (index <= currentHour) {
-        return (acc += hour.precip_in);
-      }
-      return acc;
-    },
-    0
-  );
-
-  let next24HrRainfall = data.forecast.forecastday[0].hour.reduce(
-    (acc, hour, index) => {
-      if (index >= currentHour) {
-        return (acc += hour.precip_in);
-      }
-      return acc;
-    },
-    0
-  );
-
-  next24HrRainfall = data.forecast.forecastday[1].hour.reduce(
-    (acc, hour, index) => {
-      if (index <= currentHour) {
-        return (acc += hour.precip_in);
-      }
-      return acc;
-    },
-    0
-  );
+const ConditionsModalDescription = ({
+  data,
+  currentIndex,
+}: ConditionsModalDescriptionProps) => {
+  const { last24HrRainfall, next24HrRainfall } = get24HrRainfall(data);
 
   const dailyTotalRainfall =
     data.forecast.forecastday[currentIndex].day.totalprecip_in;
 
-  const todaysTempArr = getDailyTempArr(data, 0);
-  const todaysHigh = Math.max(...todaysTempArr);
-  const todaysLow = Math.min(...todaysTempArr);
+  const { arrMax: weekTempHigh, arrMin: weekTempLow } = getMinMaxArr(
+    getWeekArr(data, "temp_c")
+  );
 
-  const tomorrowsTempArr = getDailyTempArr(data, 1);
-  const tomorrowsHigh = Math.max(...tomorrowsTempArr);
-  const tomorrowsLow = Math.min(...tomorrowsTempArr);
-
-  const weekTempArr = getWeekTempArr(data);
-  const weekHigh = Math.max(...weekTempArr);
-  const weekLow = Math.min(...weekTempArr);
-
-  const currentDayData: DotTableEntry[] = [
-    {
-      header: "Last 24 hours",
-      variable: "Precipitation",
-      value:
-        removeZeroFromDecimal(
-          (Math.round(last24HrRainfall * 100) / 100).toString()
-        ) + '"',
-    },
-
-    {
-      header: "Next 24 hours",
-      variable: "Rain",
-      value:
-        removeZeroFromDecimal(
-          (Math.round(next24HrRainfall * 100) / 100).toString()
-        ) + '"',
-      dot: colors.blue,
-    },
-  ];
+  const currentDayData = getCurrentDayData(last24HrRainfall, next24HrRainfall);
 
   const dailyPrecip: DotTableEntry[] = [
     {
@@ -102,80 +42,58 @@ const ModalDescription = ({ data, currentIndex }: ModalDescriptionProps) => {
     },
   ];
 
-  const forecastText = `It is currently 10 and cloudy. It is sunny from 8 to 10. At 4 pm it will become sunny. Today's temperature range from 8-20.`;
+  const dailyComparisonArr = getDailyComparisonArr(data, "temp_c");
 
+  const forecastText = `It is currently 10 and cloudy. It is sunny from 8 to 10. At 4 pm it will become sunny. Today's temperature range from 8-20.`;
+  const dailySummaryText = `Monday's lowest temperature is 2 at midnight. Highest temp is 13 at midnight`;
+  const dailyComparisonText = `Today is hotter than tomorrow`;
+
+  const firstIndex = currentIndex === 0;
   return (
-    <View className="px-4">
-      <ModalTextBox
-        title={
-          currentIndex === 0 ? "Precipitation Totals" : "Precipitation Total"
-        }
-      >
-        {currentIndex === 0 ? (
-          // Current Date
+    <>
+      <View className="px-4">
+        {firstIndex ? (
           <>
-            <PrecipitationDotTable entryArr={currentDayData} />
+            <ModalTextBox title={"Precipitation Totals"}>
+              <PrecipitationDotTable entryArr={currentDayData} />
+            </ModalTextBox>
+
+            <ModalTextBox title={"Forecast"}>
+              <DescriptionText>{forecastText}</DescriptionText>
+            </ModalTextBox>
+
+            <ModalTextBox title="Daily Comparison" removeHorizontalPadding>
+              <View className="gap-y-2 px-4">
+                <DescriptionText>{dailyComparisonText}</DescriptionText>
+              </View>
+
+              <HorizontalLine />
+
+              <ComparisonComponent
+                rangeHigh={weekTempHigh}
+                rangeLow={weekTempLow}
+                arr={dailyComparisonArr}
+              />
+            </ModalTextBox>
           </>
         ) : (
-          // Non-current Date
           <>
-            <PrecipitationDotTable entryArr={dailyPrecip} />
+            <ModalTextBox title={"Precipitation Total"}>
+              <PrecipitationDotTable entryArr={dailyPrecip} />
+            </ModalTextBox>
+
+            <ModalTextBox title="Daily Summary">
+              <DescriptionText>{dailySummaryText}</DescriptionText>
+            </ModalTextBox>
           </>
         )}
-      </ModalTextBox>
 
-      {currentIndex === 0 ? (
-        <>
-          <ModalTextBox title={"Forecast"}>
-            <DefaultText>{forecastText}</DefaultText>
-          </ModalTextBox>
-
-          <ModalTextBox title="Daily Comparison" removeHorizontalPadding>
-            <View className="gap-y-2 px-4">
-              <DefaultText>Today is hotter than tomorrow</DefaultText>
-            </View>
-
-            <HorizontalLine />
-
-            <View className="gap-y-2 px-4">
-              <View className="flex-row justify-between">
-                <DefaultText className=" font-semibold">Today</DefaultText>
-
-                <TemperatureBar
-                  barWidth={160}
-                  weekHigh={weekHigh}
-                  weekLow={weekLow}
-                  tempHigh={todaysHigh}
-                  tempLow={todaysLow}
-                  currentTemperature={parseFloat(data.current.temp_c)}
-                />
-              </View>
-
-              <View className="flex-row justify-between">
-                <DefaultText className=" font-semibold">Tomorrow</DefaultText>
-                <TemperatureBar
-                  barWidth={160}
-                  weekHigh={weekHigh}
-                  weekLow={weekLow}
-                  tempHigh={tomorrowsHigh}
-                  tempLow={tomorrowsLow}
-                />
-              </View>
-            </View>
-          </ModalTextBox>
-        </>
-      ) : (
-        <ModalTextBox title="Daily Overview">
-          <DefaultText>
-            Monday's lowest temperature is 2 at midnight. Highest temp is 13 at
-            midnight
-          </DefaultText>
+        <ModalTextBox title={"Option"}>
+          <TempOption />
         </ModalTextBox>
-      )}
-
-      <ModalOption title={"Option"} />
-    </View>
+      </View>
+    </>
   );
 };
 
-export default ModalDescription;
+export default ConditionsModalDescription;

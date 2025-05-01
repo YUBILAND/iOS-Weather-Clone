@@ -1,17 +1,18 @@
+import { useOtherUnits } from "@/hooks/useOtherUnits";
 import { RootState } from "@/state/store";
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, View, Image, ImageSourcePropType } from "react-native";
+import { AnimatedCircularProgress } from "react-native-circular-progress";
 import { EyeIcon } from "react-native-heroicons/outline";
+import { Circle } from "react-native-svg";
 import { useSelector } from "react-redux";
-import ColoredBar from "../atoms/ColoredBar";
+import CardTitle from "../atoms/CardTitle";
 import DefaultText from "../atoms/DefaultText";
 import OpacityCard from "../atoms/OpacityCard";
-import { colors } from "@/assets/colors/colors";
-import { FontAwesome } from "@expo/vector-icons";
-import CardTitle from "../atoms/CardTitle";
-import CardStat from "../atoms/CardStat";
-import CardText from "../atoms/CardBottomText";
-import CardBottomText from "../atoms/CardBottomText";
+import { getPressurePercentage } from "./utils/getPressurePercentage";
+import { getPressure } from "@/hooks/useDisplayUnits";
+import { getOddPressureDirectionImages } from "./utils/getOddPressureDirectionImages";
+import { getCurrentHour, getCurrentTime } from "@/hooks/hooks";
 
 interface AirPressureCardProps {
   cityName: string;
@@ -26,11 +27,21 @@ const AirPressureCard = ({
 }: AirPressureCardProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { current } = data[cityName];
+  const pressureUnit = useOtherUnits()["pressure"];
 
-  const currentAirPressure =
-    Math.round(current.pressure_in).toString() + "inHG";
+  const currentAirPressureNumber =
+    pressureUnit === "inHg"
+      ? getPressure(current.pressure_in)
+      : Math.round(getPressure(current.pressure_in));
 
-  const message = "random message";
+  const currentAirPressureUnit = pressureUnit;
+
+  const percentage = getPressurePercentage(current.pressure_in);
+
+  const imageArray = getOddPressureDirectionImages(data[cityName], 0, false);
+
+  const currentLineIndex = getCurrentHour(data[cityName].location.tz_id);
+  console.log(currentLineIndex);
 
   return (
     <OpacityCard>
@@ -45,9 +56,48 @@ const AirPressureCard = ({
           icon={<EyeIcon size={iconSize} color={"white"} />}
         />
 
-        <CardStat stat={currentAirPressure} />
+        <View className="items-center">
+          <AnimatedCircularProgress
+            rotation={230}
+            arcSweepAngle={260}
+            size={115}
+            style={{ marginBottom: -20 }}
+            width={8}
+            fill={percentage}
+            lineCap="square"
+            tintColor="transparent"
+            backgroundColor="#3d5875"
+            padding={4}
+            renderCap={({ center }) => (
+              <Circle cx={center.x} cy={center.y} r={8} fill={"white"} />
+            )}
+          >
+            {() => (
+              <View className="items-center mb-3">
+                {/* <DefaultText style={{ fontSize: 20 }}>Arrow</DefaultText> */}
+                <Image
+                  style={{ width: 30, height: 30 }}
+                  source={
+                    imageArray[
+                      Math.floor(currentLineIndex / 2) + 1
+                    ] as ImageSourcePropType
+                  }
+                />
+                <DefaultText style={{ fontSize: 20, fontWeight: 800 }}>
+                  {currentAirPressureNumber}
+                </DefaultText>
+                <DefaultText style={{ fontSize: 14 }}>
+                  {currentAirPressureUnit}
+                </DefaultText>
+              </View>
+            )}
+          </AnimatedCircularProgress>
 
-        <CardBottomText text={message} />
+          <View className="w-full flex-row justify-around">
+            <DefaultText>Low</DefaultText>
+            <DefaultText>High</DefaultText>
+          </View>
+        </View>
       </Pressable>
     </OpacityCard>
   );

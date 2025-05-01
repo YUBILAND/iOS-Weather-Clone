@@ -38,10 +38,9 @@ interface LocationCardFlatlistProps {
   confirmDeleteIndex: number | null;
   handleConfirmDeleteIndex: (index: number | null) => void;
   changeWeatherScreens: (weatherScreensArr: string[]) => void;
-  searchComponent: React.ReactNode;
 }
 
-export const LocationCardFlatlist = ({
+const LocationCardFlatlist = ({
   weatherScreens,
   closeSetting,
   goToWeatherScreen,
@@ -54,8 +53,9 @@ export const LocationCardFlatlist = ({
   confirmDeleteIndex,
   handleConfirmDeleteIndex,
   changeWeatherScreens,
-  searchComponent,
 }: LocationCardFlatlistProps) => {
+  // console.log("FLATLIST IS RERENDERING");
+
   const initialData: Item[] = useMemo(() => {
     return [...Array(weatherScreens.length)].map((d, index) => {
       return {
@@ -74,6 +74,8 @@ export const LocationCardFlatlist = ({
 
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<Item>) => {
+      // console.log(data);
+
       const firstIndex = item.index === 0;
 
       const left = useSharedValue(0);
@@ -105,10 +107,13 @@ export const LocationCardFlatlist = ({
         };
       });
 
-      const showTrashButton = () => handleConfirmDeleteIndex(item.index);
+      const showTrashButton = useCallback(
+        () => handleConfirmDeleteIndex(item.index),
+        [item]
+      );
 
       // When trash button is pressed
-      const handleRemove = () => {
+      const handleRemove = useCallback(() => {
         handleConfirmDeleteIndex(null);
         const newWeatherScreens = weatherScreens.filter(
           (_, idx) => idx !== item.index
@@ -116,7 +121,7 @@ export const LocationCardFlatlist = ({
         // Ensure deleteData runs *after* `changeWeatherScreens`
         deleteData("city", weatherScreens, item.index); // Remove from storage *after* update
         changeWeatherScreens(newWeatherScreens); // Update the list
-      };
+      }, [weatherScreens]);
 
       return (
         <>
@@ -196,28 +201,46 @@ export const LocationCardFlatlist = ({
     [weatherScreens, isEditingList, confirmDeleteIndex]
   );
 
-  const handleDragSwap = ({ data }: { data: Item[] }) => {
-    setData(data);
-    changeWeatherScreens(data.map((item) => item.cityName));
-    swapData(
-      "city",
-      data.map((item) => item.cityName)
-    );
-  };
+  const handleDragSwap = useCallback(
+    ({ data }: { data: Item[] }) => {
+      setData(data);
+      changeWeatherScreens(data.map((item) => item.cityName));
+      swapData(
+        "city",
+        data.map((item) => item.cityName)
+      );
+    },
+    [data]
+  );
 
+  // This keeps rerendering 16 times even though data and render items renders only 1 time
+  const handleKeyExtractor = useCallback(
+    (item: any) => {
+      return item.index;
+    },
+    [data]
+  );
+
+  const handleScrollChange = useCallback((e: number) => handleScroll(e), []);
+
+  // Prevents reanimated error when pressing settings button
+  // Stopped because kept exiting which i assume is because of key extractor?
+  const MemoizedDraggableFlatList = React.memo(DraggableFlatList);
   return (
     <>
       <DraggableFlatList
         // @ts-ignore not sure which type ref object it requires
         ref={flatlistRef}
         data={data}
+        // @ts-ignore memoize causes type mismatch so temp fix
         onDragEnd={handleDragSwap}
-        keyExtractor={(item) => item.index.toString()}
+        keyExtractor={handleKeyExtractor}
+        // @ts-ignore memoize causes type mismatch so temp fix
         renderItem={renderItem}
         stickyHeaderIndices={[0]}
         ListHeaderComponent={stickyElement}
         showsVerticalScrollIndicator={false}
-        onScrollOffsetChange={(e) => handleScroll(e)}
+        onScrollOffsetChange={handleScrollChange}
         keyboardShouldPersistTaps="handled"
         extraData={weatherScreens}
         contentContainerStyle={{
@@ -236,3 +259,4 @@ export const LocationCardFlatlist = ({
     </>
   );
 };
+export default React.memo(LocationCardFlatlist);

@@ -19,6 +19,7 @@ import {
 // Types and constants for Modal Dropdown
 export type SelectModal =
   | "conditions"
+  | "airQuality"
   | "uv"
   | "wind"
   | "precipitation"
@@ -41,46 +42,50 @@ export const modalDropdownObjects: ModalDropdownObjectsType = {
     label: "Conditions",
     id: 0,
   },
+  airQuality: {
+    label: "Air Quality",
+    id: 1,
+  },
   uv: {
     label: "UV Index",
-    id: 1,
+    id: 2,
   },
   wind: {
     label: "Wind",
-    id: 2,
+    id: 3,
   },
   precipitation: {
     label: "Precipitation",
-    id: 3,
+    id: 4,
   },
   feelsLike: {
     label: "Feels Like",
-    id: 4,
+    id: 5,
   },
   humidity: {
     label: "Humidity",
-    id: 5,
+    id: 6,
   },
   visibility: {
     label: "Visibility",
-    id: 6,
+    id: 7,
   },
   averages: {
     label: "Averages",
-    id: 7,
+    id: 8,
   },
   airPressure: {
     label: "Air Pressure",
-    id: 8,
+    id: 9,
   },
 
   sunPhase: {
     label: "Sun Phase",
-    id: 9,
+    id: 10,
   },
   moonPhase: {
     label: "Moon Phase",
-    id: 10,
+    id: 11,
   },
 };
 
@@ -95,6 +100,7 @@ export type IconObject = {
 
 export const iconMap: IconObject = {
   conditions: ConditionsIcon,
+  airQuality: ConditionsIcon,
   uv: UVIcon,
   wind: WindIcon,
   precipitation: PrecipitationIcon,

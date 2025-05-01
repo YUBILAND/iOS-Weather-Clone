@@ -1,69 +1,51 @@
 import { Colors, colors } from "@/assets/colors/colors";
+import { ChartPressStateNames } from "@/constants/constants";
 import getFont from "@/hooks/getFont";
-import { getCurrentHour, getCurrentTime, militaryHour } from "@/hooks/hooks";
-import { RootState } from "@/state/store";
+import { getCurrentHour } from "@/hooks/hooks";
+import { useWeatherData } from "@/hooks/useWeatherData";
 import {
-  DashPathEffect,
-  LinearGradient,
-  vec,
+  AnimatedProp,
+  Color,
   Image,
-  useImage,
+  LinearGradient,
+  Path,
+  SkImage,
   Text,
+  vec,
 } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
-import { useSelector } from "react-redux";
 import {
-  Area,
-  Bar,
+  runOnUI,
+  useAnimatedReaction,
+  useSharedValue,
+} from "react-native-reanimated";
+import {
+  AreaRange,
   CartesianChart,
-  ChartPressState,
   CurveType,
   Line,
-  Scatter,
+  PointsArray,
+  useLinePath,
 } from "victory-native";
+import { currentPrecipExample } from "../averages/utils/constants";
 import ToolTip from "../graphs/victoryComponents/Tooltip";
-import { regularTimeOnXAxis } from "../sun-phase/utils/getRegularTimeOnXAxis";
-import { ChartPressStateNames, GraphKeyType } from "@/constants/constants";
-import { getOddConditionImages } from "../hourly-forecast/utils/getOddConditionImages";
-import { useWeatherData } from "@/hooks/useWeatherData";
-import { getGraphImageAndCoord } from "./utils/getGraphImageAndCoord";
-import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
-import { getGraphData } from "./utils/getGraphData";
+import CurrentPositionCircle from "./CurrentPositionCircle";
+import DarkenLeft from "./DarkenLeft";
+import DashedLine from "./DashedLine";
+import GraphArea from "./GraphArea";
+import { ChartPressStateType } from "./utils/constants";
+import { getGraphPointsCopy } from "./utils/getGraphPointsCopy";
+import VerticalLine from "./VerticalLine";
 
-// interface GraphConfig {
-//   graphHeight: number;
-//   strokeWidth: number;
-//   yAxisLabel: string;
-//   customColor: Colors;
-//   addImages: boolean;
-//   removeArea?: boolean;
-//   curveType?: CurveType;
-//   areaDarkTop?: string;
-//   areaDarkBottom?: string;
-// }
-
-interface GraphProps<
-  K1 extends keyof ChartPressStateNames,
-  K2 extends keyof ChartPressStateNames | undefined = undefined
-> {
+interface GraphProps {
   cityName: string;
-  state: ChartPressState<{
-    x: number;
-    y: {
-      currentLineTop: number;
-      currentLineBottom: number;
-      currentPosition: number;
-    } & Pick<ChartPressStateNames, K1> &
-      (K2 extends keyof ChartPressStateNames
-        ? Partial<Pick<ChartPressStateNames, K2>>
-        : {});
-  }>;
+  state: ChartPressStateType;
   isActive: boolean;
   graphHeight?: number;
   strokeWidth?: number;
   loadedIndex: number;
-  apiObjectString: keyof GraphKeyType | (keyof GraphKeyType)[];
+  // apiObjectString: keyof GraphKeyType | (keyof GraphKeyType)[];
 
   yAxisLabel: string;
   domainBottom?: number;
@@ -72,15 +54,43 @@ interface GraphProps<
   customColor?: Colors;
   customColor2?: Colors;
 
-  addWeatherImages?: boolean | { amount?: number };
-  addWeatherText?: boolean | { amount?: number; unit: string };
-  removeArea: boolean;
-  curveType: CurveType;
-  areaDarkTop: string;
-  areaDarkBottom: string;
+  removeArea?: boolean;
+  removeShade?: boolean;
+  removeLine?: boolean;
+
+  innerLeftText?: { top?: string; bottom: string };
+  innerRightText?: { top?: string; bottom: string };
+
+  chartImageArrays?: [number[], (SkImage | string)[]];
+
+  curveType?: CurveType;
+  // areaDarkTop?: string;
+  // areaDarkBottom?: string;
+
+  graphData: {
+    mainLine: number | undefined;
+    secondLine: number | undefined;
+    thirdLine: number | undefined;
+    hour: number;
+    currentLineTop: number | undefined;
+    currentLineBottom: number | undefined;
+    currentPosition: number | undefined;
+  }[];
+
+  tickValues?: number[];
+
+  areaRange?: AnimatedProp<Color[]>;
+
+  firstLineColor?: any;
+  secondLineColor?: any;
+  thirdLineColor?: any;
+
+  secondLineDashed?: boolean;
+
+  last30DaysMode?: boolean;
 }
 
-const Graph = <Key extends keyof ChartPressStateNames>({
+const Graph = ({
   cityName,
   state,
   isActive,
@@ -88,103 +98,145 @@ const Graph = <Key extends keyof ChartPressStateNames>({
   strokeWidth = 4,
   yAxisLabel,
   loadedIndex,
-  apiObjectString,
+  // apiObjectString,
   domainBottom = 0,
   domainTop = 120,
   customColor = "bgBlue",
   customColor2 = "bgGreen",
-  addWeatherImages,
-  addWeatherText,
+
   removeArea = false,
+  removeShade = false,
+  removeLine = false,
+
+  innerLeftText,
+  innerRightText,
+
+  chartImageArrays,
+
+  // customGraphData,
+  graphData,
+
   curveType = "linear",
-  areaDarkTop = "rgba(0,0,0,0.2)",
-  areaDarkBottom = "rgba(0,0,0,0.3)",
-}: GraphProps<Key>) => {
+  // areaDarkTop = "rgba(0,0,0,0.2)",
+  // areaDarkBottom = "rgba(0,0,0,0.3)",
+
+  tickValues = [0, 6, 12, 18, 24],
+
+  areaRange,
+
+  firstLineColor = ["white", "white"],
+  secondLineColor = "white",
+  thirdLineColor = "white",
+
+  secondLineDashed = false,
+
+  last30DaysMode = false,
+}: GraphProps) => {
   const data = useWeatherData();
   const { location } = data[cityName];
 
   const font = getFont();
+  const biggerFont = getFont(30);
 
-  // Which y axis key was passed
-  const yAxisKey = Object.keys(state.y).filter(
-    (key) =>
-      key !== "currentLineTop" &&
-      key !== "currentLineBottom" &&
-      key !== "currentPosition"
-  ) as Key[];
+  const graphSizeXShared = useSharedValue(0);
+  const graphSizeYShared = useSharedValue(0);
 
-  // Get Graph Data
-  const graphData = getGraphData(
-    data[cityName],
-    100,
-    0,
-    loadedIndex,
-    Array.isArray(yAxisKey) ? yAxisKey : [yAxisKey],
-    Array.isArray(apiObjectString) ? apiObjectString : [apiObjectString]
+  const pressCutoffX = useSharedValue(0);
+  const pressCutoffY = useSharedValue(0);
+
+  const xValueCutoff = currentPrecipExample.length - 1;
+  // 30 days + 10 extra days on the right
+  const xAxisRange = 40;
+  const yValueCutoff =
+    currentPrecipExample[currentPrecipExample.length - 1].average;
+  const yAxisRange = 4;
+
+  useAnimatedReaction(
+    () => state.x.position.value,
+    (current, previous) => {
+      console.log("position changed:", current);
+      // console.log("xValue changed:", state.x.value.value);
+      // console.log(graphSizeState);
+      pressCutoffX.value =
+        state.x.value.value > xValueCutoff
+          ? graphSizeXShared.value * (xValueCutoff / xAxisRange)
+          : current;
+
+      pressCutoffY.value =
+        state.x.value.value > xValueCutoff
+          ? graphSizeYShared.value * ((yAxisRange - yValueCutoff) / yAxisRange)
+          : state.y.mainLine.position.value;
+    },
+    [state]
   );
 
-  // If addWeatherImages prop included, show defualt 12 images, else take what user typed, else 0
-  const imageAmount =
-    typeof addWeatherImages === "boolean" ? 12 : addWeatherImages?.amount ?? 0;
+  const linearGradientStart = vec(0, 0);
+  const linearGradientEnd = vec(0, 200);
 
-  // Display image at the top of graph
-  const { timeArr, imageArr } = getGraphImageAndCoord(
-    data[cityName],
-    loadedIndex,
-    imageAmount,
-    "condition.code"
-  );
-  const weatherImageArr = imageArr.map((code, index) =>
-    useImage(
-      weatherNameToImage(
-        getWeatherName(parseInt(code)),
-        data[cityName].forecast.forecastday[loadedIndex].hour[timeArr[index]]
-          .is_day
-      )
-    )
-  );
+  function MyCustomLine({ points }: { points: PointsArray }) {
+    // 👇 use the hook to generate a path object.
+    const { path } = useLinePath(points, { curveType: "natural" });
+    return (
+      <Path path={path} style="stroke" strokeWidth={6} color="red">
+        <LinearGradient
+          start={linearGradientStart}
+          end={linearGradientEnd}
+          colors={
+            Array.isArray(firstLineColor)
+              ? firstLineColor
+              : [firstLineColor, firstLineColor]
+          }
+        />
+      </Path>
+    );
+  }
 
-  // If addWeatherText prop included, show defualt 12 texts, else take what user typed, else 0
-  const textAmount =
-    typeof addWeatherText === "boolean" ||
-    (addWeatherText?.amount === undefined && addWeatherText?.unit !== undefined)
-      ? 12
-      : addWeatherText?.amount
-      ? addWeatherText.amount
-      : 0;
+  const yKeys: (
+    | "mainLine"
+    | "currentLineTop"
+    | "currentLineBottom"
+    | "currentPosition"
+    | "secondLine"
+    | "thirdLine"
+  )[] = [
+    "mainLine",
+    "secondLine",
+    "thirdLine",
+    "currentLineTop",
+    "currentLineBottom",
+    "currentPosition",
+  ];
 
-  const textUnit =
-    typeof addWeatherText === "boolean" ? "" : addWeatherText?.unit;
+  const axisOptions = { font, lineWidth: 2 };
 
-  const { timeArr: timeArr2, imageArr: imageArr2 } = getGraphImageAndCoord(
-    data[cityName],
-    loadedIndex,
-    textAmount,
-    Array.isArray(apiObjectString) ? apiObjectString[0] : apiObjectString
-  );
+  const xAxisOptions = {
+    font: font,
+    tickValues: tickValues,
+    labelColor: "white",
+    lineColor: colors.mediumGray,
+  };
+
+  const whiteSpaceForMarginLeft = "                              ";
+  const formatXLabel = (label: number) =>
+    last30DaysMode
+      ? label === 0
+        ? whiteSpaceForMarginLeft + "Last 30 Days"
+        : label === 32
+        ? "Today"
+        : ""
+      : "         " + label.toString();
 
   return (
     <View style={{ height: graphHeight }} className="relative z-0">
       <CartesianChart
         data={graphData!}
         xKey="hour"
-        yKeys={[
-          yAxisKey[0],
-          yAxisKey[1],
-          "currentLineTop",
-          "currentLineBottom",
-          "currentPosition",
-        ]}
+        yKeys={yKeys}
         padding={{ left: 0, right: 20 }} // doesn't affect position outside
-        axisOptions={{
-          font,
-          lineWidth: 2,
-        }}
+        axisOptions={axisOptions}
         xAxis={{
-          font: font,
-          tickValues: [0, 6, 12, 18, 24],
-          labelColor: "white",
-          lineColor: colors.mediumGray,
+          ...xAxisOptions,
+          formatXLabel: formatXLabel,
         }}
         yAxis={[
           {
@@ -200,213 +252,250 @@ const Graph = <Key extends keyof ChartPressStateNames>({
       >
         {({ points, chartBounds }) => {
           const cutoff = getCurrentHour(location!.tz_id);
-          const leftPoints = points[yAxisKey[0]].filter(
-            (point) => (point.xValue! as number) <= cutoff
-          );
-          const rightPoints = points[yAxisKey[0]].filter(
-            (point) => (point.xValue! as number) >= cutoff
-          );
 
-          const leftPoints2 = points[yAxisKey[1] || yAxisKey[0]].filter(
-            (point) => (point.xValue! as number) <= cutoff
-          );
-          const rightPoints2 = points[yAxisKey[1] || yAxisKey[0]].filter(
-            (point) => (point.xValue! as number) >= cutoff
-          );
+          const { leftPoints, rightPoints, leftPoints2, rightPoints2 } =
+            getGraphPointsCopy(points, "mainLine", cutoff);
 
-          const graphSize = chartBounds.right - chartBounds.left;
+          const graphSizeX = Math.abs(chartBounds.right - chartBounds.left);
+          const graphSizeY = Math.abs(chartBounds.top - chartBounds.bottom);
 
-          const imageSize = 18;
-          const imageStartOffset = imageSize / 2;
-          const textStartOffset = 12 / 2;
+          runOnUI(() => {
+            graphSizeXShared.value = graphSizeX;
+            graphSizeYShared.value = graphSizeY;
+          })();
+
+          const IMAGE_SIZE = 18;
+          const IMAGE_START_OFFSET = IMAGE_SIZE / 2;
+          const TEXT_START_OFFSET = 12 / 2;
+
+          const rightLinePoints =
+            loadedIndex === 0 && !removeLine ? rightPoints : points.mainLine;
+
+          const rightAreaPoints =
+            loadedIndex === 0 ? rightPoints : points.mainLine;
 
           return (
             <>
-              {/* Top of graph */}
+              {/* Chart Images on Top of graph */}
               <>
-                {addWeatherImages &&
-                  weatherImageArr.map((img, index) => (
-                    <Image
-                      key={index}
-                      image={img}
-                      fit="contain"
-                      x={-imageStartOffset + (timeArr[index] / 24) * graphSize}
-                      y={10}
-                      width={imageSize}
-                      height={imageSize}
-                    />
-                  ))}
-
-                {addWeatherText !== undefined &&
-                  imageArr2.map((text, index) => (
-                    <Text
-                      key={index}
-                      x={
-                        -textStartOffset / 2 +
-                        (timeArr2[index] / 24) * graphSize
-                      }
-                      y={15}
-                      font={font}
-                      text={text + textUnit}
-                      color={"white"}
-                    />
-                  ))}
+                {chartImageArrays &&
+                  (typeof chartImageArrays[1][0] === "string"
+                    ? chartImageArrays[1].map((text, index) => (
+                        <Text
+                          key={index}
+                          x={
+                            -TEXT_START_OFFSET / 2 +
+                            (chartImageArrays[0][index] / 24) * graphSizeX
+                          }
+                          y={15}
+                          font={font}
+                          text={text as AnimatedProp<string>}
+                          color={"white"}
+                        />
+                      ))
+                    : chartImageArrays[1].map((img, index) => {
+                        return (
+                          <Image
+                            key={index}
+                            image={img as SkImage}
+                            fit="contain"
+                            x={
+                              -IMAGE_START_OFFSET +
+                              (chartImageArrays[0][index] / 24) * graphSizeX
+                            }
+                            y={10}
+                            width={IMAGE_SIZE}
+                            height={IMAGE_SIZE}
+                          />
+                        );
+                      }))}
               </>
 
               {/* Right side of graph*/}
               <>
-                {yAxisKey.length > 1 && (
+                {points.secondLine &&
+                  (secondLineDashed ? (
+                    <DashedLine
+                      points={points.secondLine}
+                      color={secondLineColor}
+                      curveType={curveType}
+                    />
+                  ) : (
+                    <Line
+                      points={points.secondLine}
+                      color={secondLineColor}
+                      strokeWidth={6}
+                      curveType={curveType}
+                    />
+                  ))}
+
+                {points.thirdLine && (
                   <Line
-                    points={
-                      loadedIndex === 0 ? rightPoints2 : points[yAxisKey[1]]
-                    }
-                    color={colors[customColor2](0.3)}
+                    points={points.thirdLine}
+                    color={thirdLineColor}
                     strokeWidth={6}
                     curveType={curveType}
                   />
                 )}
 
-                <Line
-                  points={loadedIndex === 0 ? rightPoints : points[yAxisKey[0]]}
-                  color={colors[customColor](1)}
-                  strokeWidth={6}
-                  curveType={curveType}
-                />
-                {!removeArea && (
-                  <Area
-                    points={
-                      loadedIndex === 0
-                        ? rightPoints
-                        : points[
-                            Array.isArray(yAxisKey) ? yAxisKey[0] : yAxisKey
-                          ]
-                    }
-                    y0={chartBounds.bottom}
+                {/* Area Range between secondLine and thirdLine */}
+                {areaRange && (
+                  <AreaRange
+                    points={points.mainLine.map((point, index) => ({
+                      ...point,
+                      y: points.secondLine[index].y ?? 0, // Upper bound
+                      y0: points.thirdLine[index].y ?? 0, // Lower bound
+                    }))}
+                    // y0={50}
                     animate={{ type: "timing", duration: 300 }}
+                    // color={colors[customColor](0.6)}
                     curveType={curveType}
                   >
                     <LinearGradient
-                      start={vec(chartBounds.bottom, 40)}
-                      end={vec(chartBounds.bottom, chartBounds.bottom)}
-                      colors={[
-                        colors[customColor](0.1),
-                        colors[customColor](0.3),
-                        colors[customColor](0.6),
-                      ]}
+                      start={linearGradientStart}
+                      end={linearGradientEnd}
+                      colors={areaRange}
                     />
-                  </Area>
+                  </AreaRange>
+                )}
+
+                {/* <Line
+                  points={rightLinePoints}
+                  color={colors[customColor](1)}
+                  strokeWidth={6}
+                  curveType={curveType}
+                /> */}
+
+                <Line
+                  points={rightLinePoints}
+                  color={colors.bgWhite(0.2)}
+                  strokeWidth={6}
+                  curveType={curveType}
+                />
+
+                {/* $f42.;2,.<eview?    CustomLine Need to fix to show without linear gradient */}
+                <MyCustomLine points={rightLinePoints} />
+
+                {!removeArea && (
+                  <GraphArea
+                    points={rightAreaPoints}
+                    chartBounds={chartBounds}
+                    customColor={customColor}
+                    curveType={curveType}
+                  />
                 )}
               </>
+
               {loadedIndex === 0 && (
                 <>
-                  {/* Left side of graph*/}
-                  <>
-                    <Line
-                      points={leftPoints2}
-                      color={colors[customColor2](0.3)}
-                      strokeWidth={6}
-                      curveType={curveType}
-                    >
-                      <DashPathEffect intervals={[10, 10]} />
-                    </Line>
-
-                    <Line
-                      points={leftPoints}
-                      color={colors[customColor](0.6)}
-                      strokeWidth={6}
-                      curveType={curveType}
-                    >
-                      <DashPathEffect intervals={[10, 10]} />
-                    </Line>
-
-                    {!removeArea && (
-                      <Area
-                        points={leftPoints}
-                        y0={chartBounds.bottom}
-                        color={colors[customColor](0.6)}
-                        animate={{ type: "timing", duration: 300 }}
+                  {/* Left side of Graph. Dashed Line + Area*/}
+                  {!removeLine && (
+                    <>
+                      <DashedLine
+                        points={leftPoints2}
+                        color={colors[customColor2](0.3)}
                         curveType={curveType}
-                      >
-                        <LinearGradient
-                          start={vec(chartBounds.bottom, 40)}
-                          end={vec(chartBounds.bottom, chartBounds.bottom)}
-                          colors={[
-                            colors[customColor](0.1),
-                            colors[customColor](0.3),
-                            colors[customColor](0.6),
-                          ]}
-                        />
-                      </Area>
+                      />
+                      <DashedLine
+                        points={leftPoints}
+                        color={
+                          removeShade
+                            ? colors[customColor](1)
+                            : colors[customColor](0.6)
+                        }
+                        curveType={curveType}
+                      />
+
+                      <GraphArea
+                        points={leftPoints}
+                        chartBounds={chartBounds}
+                        customColor={customColor}
+                        curveType={curveType}
+                        dark
+                      />
+                    </>
+                  )}
+
+                  {/* Vertical Line */}
+                  {!removeLine && (
+                    <VerticalLine
+                      points={[points.currentLineTop, points.currentLineBottom]}
+                      chartBounds={chartBounds}
+                    />
+                  )}
+                  {/* Inner Text */}
+                  <>
+                    {/* Show inner left text like in Average Modal */}
+                    {!isActive && (
+                      <>
+                        {innerLeftText && innerLeftText.top && (
+                          <Text
+                            x={10}
+                            y={20}
+                            font={font}
+                            text={innerLeftText.top}
+                            color={"white"}
+                          />
+                        )}
+                        {innerLeftText && (
+                          <Text
+                            x={10}
+                            y={innerLeftText?.top ? 50 : 40}
+                            font={biggerFont}
+                            text={innerLeftText.bottom}
+                            color={"white"}
+                          />
+                        )}
+                      </>
+                    )}
+
+                    {/* Show inner left text like in Average Modal */}
+                    {!isActive && (
+                      <>
+                        {innerRightText && innerRightText.top && (
+                          <Text
+                            x={10}
+                            y={20}
+                            font={font}
+                            text={innerRightText.top}
+                            color={"white"}
+                          />
+                        )}
+                        {innerRightText && (
+                          <Text
+                            x={chartBounds.right - 80}
+                            y={innerRightText?.top ? 50 : 40}
+                            font={biggerFont}
+                            text={innerRightText.bottom}
+                            color={"white"}
+                          />
+                        )}
+                      </>
                     )}
                   </>
 
-                  {/* Vertical Line */}
-                  <>
-                    <Bar
-                      points={points.currentLineTop}
-                      chartBounds={chartBounds}
-                      barWidth={1}
-                      color={colors.bgWhite(0.5)}
-                      roundedCorners={{ topLeft: 10, topRight: 10 }}
-                    />
+                  {/* Removing this caused issues so instead made invisible */}
+                  <DarkenLeft
+                    points={leftPoints}
+                    chartBounds={chartBounds}
+                    removeShade={removeShade}
+                    curveType={curveType}
+                  />
 
-                    <Bar
-                      points={points.currentLineBottom}
-                      chartBounds={chartBounds}
-                      barWidth={1}
-                      color={colors.bgWhite(0.5)}
-                      roundedCorners={{ topLeft: 10, topRight: 10 }}
-                    />
-                  </>
-
-                  {/* Left side darken */}
-                  <>
-                    <Area
-                      points={leftPoints}
-                      y0={chartBounds.top}
-                      color={areaDarkTop}
-                      animate={{ type: "timing", duration: 300 }}
-                      curveType={curveType}
-                    />
-
-                    <Area
-                      points={leftPoints}
-                      y0={chartBounds.bottom}
-                      color={areaDarkBottom}
-                      animate={{ type: "timing", duration: 300 }}
-                      curveType={curveType}
-                    />
-                  </>
-
-                  {/* Current Position Circle */}
-                  <>
-                    {/* Black circle border */}
-                    <Scatter
-                      points={points.currentPosition}
-                      shape="circle"
-                      radius={strokeWidth + 2}
-                      style="fill"
-                      color="black"
-                    />
-                    {/* White inner circle */}
-                    <Scatter
-                      points={points.currentPosition}
-                      shape="circle"
-                      radius={strokeWidth - 1}
-                      style="fill"
-                      color="white"
-                    />
-                  </>
+                  <CurrentPositionCircle
+                    points={points.currentPosition}
+                    strokeWidth={strokeWidth}
+                  />
                 </>
               )}
 
               {isActive ? (
                 <ToolTip
-                  x={state.x.position}
-                  y={
-                    state.y[Array.isArray(yAxisKey) ? yAxisKey[0] : yAxisKey]
-                      .position
-                  }
+                  x={pressCutoffX}
+                  y={pressCutoffY}
+
+                  // x={state.x.position}
+                  // y={state.y.mainLine.position}
                 />
               ) : null}
             </>

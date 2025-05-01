@@ -18,7 +18,7 @@ import {
 
 import { fetchLocations } from "@/api/weather";
 import Spinner from "@/components/atoms/Spinner";
-import { getData, getTempUnit } from "@/utils/asyncStorage";
+import { getData } from "@/utils/asyncStorage";
 import { debounce } from "lodash";
 import "../global.css";
 
@@ -35,16 +35,16 @@ import { getWeatherName, weatherNameToCardBg } from "@/utils/exampleForecast";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch, useSelector } from "react-redux";
 
-import { FontAwesome6, Ionicons } from "@expo/vector-icons";
-import { useFonts } from "expo-font";
-import { CrossfadeImage } from "react-native-crossfade-image";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import LocationModal from "@/components/location-modal/LocationModal";
 import {
   fetchIs12Hr,
   fetchOtherUnits,
   fetchTempUnit,
 } from "@/state/settings/settingsSlice";
-import LocationModal from "@/components/location-modal/LocationModal";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
+import { useFonts } from "expo-font";
+import { CrossfadeImage } from "react-native-crossfade-image";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const App = () => {
   // Delete All Weather Screens

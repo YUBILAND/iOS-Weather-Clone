@@ -1,7 +1,7 @@
 import { colors } from "@/assets/colors/colors";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { View } from "react-native";
+import { ColorValue, View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 
 type ProgressBarProps = {
@@ -11,6 +11,8 @@ type ProgressBarProps = {
   weekLow: number;
   dailyHigh: number;
   dailyLow: number;
+  gradientColors?: readonly [string, string, ...string[]];
+  barColor?: ColorValue;
 };
 
 const ProgressBar = ({
@@ -20,6 +22,8 @@ const ProgressBar = ({
   weekLow,
   dailyHigh,
   dailyLow,
+  gradientColors = ["#68CAD4", "#AED06A", "#DACE2C", "#FFC907", "#F8981D"],
+  barColor = colors.bgWhite(0.2),
 }: ProgressBarProps) => {
   const grayRange = weekHigh! - weekLow!;
 
@@ -40,13 +44,13 @@ const ProgressBar = ({
         width: barWidth,
         height: 6,
         borderRadius: 20,
-        backgroundColor: colors.bgWhite(0.2),
+        backgroundColor: barColor,
         paddingLeft: startPadding,
         position: "relative",
       }}
     >
       <LinearGradient
-        colors={["#68CAD4", "#AED06A", "#DACE2C", "#FFC907", "#F8981D"]} // Define your gradient colors
+        colors={gradientColors} // Define your gradient colors
         start={{ x: -leftGrayPercentage + 0.2, y: 0 }} // Start point (left)
         end={{
           x: barWidth / 100 + rightGrayPercentage - 0.2,

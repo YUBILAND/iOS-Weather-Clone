@@ -7,14 +7,14 @@ export const getGraphImageAndCoord = (
   objectKey: keyof HourObject | "condition.code"
 ) => {
   const timeDistance = 24 / imageCount;
-  const offset = timeDistance / 2;
+  const individualOffset = timeDistance / 2;
 
   let timeArr: number[] = [];
 
   let imageArr: string[] = [];
 
   for (let i = 0; i < imageCount; i++) {
-    timeArr.push(offset + i * timeDistance);
+    timeArr.push(individualOffset + i * timeDistance);
   }
   for (let i = 0; i < imageCount; i++) {
     const hourObject = data.forecast.forecastday[currentIndex].hour[timeArr[i]];

@@ -1,26 +1,17 @@
 import ModalContainer from "@/components/modal/ModalContainer";
-import React, { useCallback } from "react";
+import { useOtherUnits } from "@/hooks/useOtherUnits";
+import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
+import { OtherUnitsType } from "@/state/settings/constants";
+import React from "react";
 import { View } from "react-native";
+import { TempUnit } from "../SettingsDropdown";
+import { useChangeIs12Hr } from "./hooks/useChangeIs12Hr";
+import { useChangeOtherUnits } from "./hooks/useChangeOtherUnits";
+import { useChangeTempUnit } from "./hooks/useChangeTempUnit";
 import RestoreDefaults from "./RestoreDefaults";
 import SettingsTextBoxContainer from "./SettingsTextBoxContainer";
 import SettingsTextBoxList from "./SettingsTextBoxList";
 import SmallText from "./SmallText";
-import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/state/store";
-import {
-  storeIs12Hr,
-  storeOtherUnits,
-  storeTempUnit,
-} from "@/utils/asyncStorage";
-import { TempUnit } from "../SettingsDropdown";
-import {
-  setIs12Hr,
-  setOtherUnits,
-  setTempUnit,
-} from "@/state/settings/settingsSlice";
-import { OtherUnitsType } from "@/state/settings/constants";
-import { useOtherUnits } from "@/hooks/useOtherUnits";
 import { otherUnitArr, tempUnitArr, timeUnitArr } from "./utils/constants";
 
 interface UnitModalProps {
@@ -32,28 +23,16 @@ const UnitModal = ({ modalVisible, setModalVisible }: UnitModalProps) => {
   const tempUnit = useTemperatureUnit();
   const otherUnits = useOtherUnits();
 
-  const dispatch = useDispatch<AppDispatch>();
+  const changeTempUnit = useChangeTempUnit();
 
-  const changeTempUnit = useCallback((tempUnit: TempUnit) => {
-    // Update redux state
-    dispatch(setTempUnit(tempUnit));
-    // Update asyncStorage
-    storeTempUnit(tempUnit);
-  }, []);
-  const changeIs12Hr = useCallback((is12Hr: boolean) => {
-    // Update redux state
-    // dispatch(setIs12Hr(is12Hr));
-    // storeIs12Hr(is12Hr);
-    console.log("chose 12hr? ", is12Hr);
-  }, []);
-  const changeOtherUnits = useCallback((newOtherUnits: OtherUnitsType) => {
-    // Update redux state
-    dispatch(setOtherUnits(newOtherUnits));
-    storeOtherUnits(newOtherUnits);
-    // console.log("newOtherUnits is", otherUnits);
-  }, []);
+  const changeOtherUnits = useChangeOtherUnits();
+  const selectOtherUnits = (otherUnit: {
+    [key in keyof OtherUnitsType]: string;
+  }) => {
+    changeOtherUnits(otherUnit);
+  };
 
-  console.log(otherUnits);
+  const changeIs12Hr = useChangeIs12Hr();
 
   return (
     <ModalContainer
@@ -85,9 +64,7 @@ const UnitModal = ({ modalVisible, setModalVisible }: UnitModalProps) => {
             arr={otherUnitArr}
             interactableType="dropdown"
             selectedValue="mph"
-            onSelect={(otherUnits: OtherUnitsType) =>
-              changeOtherUnits(otherUnits)
-            }
+            onSelect={selectOtherUnits}
           />
         </SettingsTextBoxContainer>
 

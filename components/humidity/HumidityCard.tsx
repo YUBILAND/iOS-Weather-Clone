@@ -1,6 +1,6 @@
 import { RootState } from "@/state/store";
 import React from "react";
-import { Pressable, View } from "react-native";
+import { Pressable, StyleProp, View, ViewStyle } from "react-native";
 import { EyeIcon } from "react-native-heroicons/outline";
 import { useSelector } from "react-redux";
 import ColoredBar from "../atoms/ColoredBar";
@@ -12,14 +12,21 @@ import CardTitle from "../atoms/CardTitle";
 import CardStat from "../atoms/CardStat";
 import CardText from "../atoms/CardBottomText";
 import CardBottomText from "../atoms/CardBottomText";
+import Animated, { AnimatedStyle } from "react-native-reanimated";
 
 interface HumidityCardProps {
   cityName: string;
   showModal: () => void;
   iconSize: number;
+  collapseFromTopStyle: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
 }
 
-const HumidityCard = ({ cityName, showModal, iconSize }: HumidityCardProps) => {
+const HumidityCard = ({
+  cityName,
+  showModal,
+  iconSize,
+  collapseFromTopStyle,
+}: HumidityCardProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
   const { current } = data[cityName];
 
@@ -39,10 +46,13 @@ const HumidityCard = ({ cityName, showModal, iconSize }: HumidityCardProps) => {
           title={"Humidity"}
           icon={<FontAwesome6 name="droplet" size={iconSize} color={"white"} />}
         />
+        <View className="overflow-hidden">
+          <Animated.View style={collapseFromTopStyle}>
+            <CardStat stat={currentHumidity} />
 
-        <CardStat stat={currentHumidity} />
-
-        <CardBottomText text={message} />
+            <CardBottomText text={message} />
+          </Animated.View>
+        </View>
       </Pressable>
     </OpacityCard>
   );

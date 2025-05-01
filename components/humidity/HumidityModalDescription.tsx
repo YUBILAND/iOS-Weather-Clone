@@ -1,23 +1,13 @@
+import { WeatherData } from "@/constants/constants";
 import React from "react";
 import { View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
-import ModalBoxTitle from "../modal/ModalBoxTitle";
-import ModalTextBoxContainer from "../modal/ModalTextBoxContainer";
-import { colors } from "@/assets/colors/colors";
-import { WeatherData } from "@/constants/constants";
-import Dot from "../modal/Dot";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
-import ModalTextBox from "../modal/ModalTextBox";
+import BarComparison from "../modal/BarComparison";
 import ModalOption from "../modal/ModalOption";
-import RoundedTemperature from "../atoms/RoundedTemperature";
-import ProgressBar from "../progress-bar/ProgressBar";
-import { getDailyTempArr } from "../daily-forecast/utils/getDailyTempArr";
-import { getWeekTempArr } from "../daily-forecast/utils/getWeekTempArr";
-import TemperatureBar from "../conditions/TemperatureBar";
-import HorizontalBar from "../uv-index/HorizontalBar";
-import { getWeekVisibilityArr } from "../visibility/utils/getWeekVisibilityArr";
-import { getDailyVisibilityArr } from "../visibility/utils/getDailyVisibilityArr";
+import ModalTextBox from "../modal/ModalTextBox";
+import { getDayArr } from "../precipitation/utils/getDayArr";
+import { getMinMaxArr } from "../utils/getMinMaxArr";
 
 interface HumidityModalDescriptionProps {
   data: WeatherData;
@@ -28,74 +18,47 @@ const HumidityModalDescription = ({
   data,
   currentIndex,
 }: HumidityModalDescriptionProps) => {
-  const weekVisibilitylArr = getWeekVisibilityArr(data, "humidity");
-  const weekHigh = Math.max(...weekVisibilitylArr);
-  const weekLow = Math.min(...weekVisibilitylArr);
+  const { arrMax: todaysHigh } = getMinMaxArr(getDayArr(data, 0, "humidity"));
+  const { arrMax: tomorrowsHigh } = getMinMaxArr(
+    getDayArr(data, 1, "humidity")
+  );
 
-  const todaysVisibilityArr = getDailyVisibilityArr(data, "humidity", 0);
-  const todaysHigh = Math.max(...todaysVisibilityArr);
-  const todaysLow = Math.min(...todaysVisibilityArr);
+  const summaryText = "random message";
+  const dailyComparisonText = `Today's Humidity is similar to yesterdays`;
+  const relativeHumidityText = `Relative humidity (RH) is the amount of water vapor in the air compared to the maximum amount of water vapor the air can hold at that temperature. It's expressed as a percentage.`;
+  const dewpointText = `In science, dew point is the temperature at which air is cooled to its maximum water vapor capacity, or 100% relative humidity. At this point, water vapor in the air condenses into liquid, such as fog or precipitation.`;
 
-  const tomorrowsVisibilityArr = getDailyVisibilityArr(data, "humidity", 1);
-  const tomorrowsHigh = Math.max(...tomorrowsVisibilityArr);
-  const tomorrowsLow = Math.min(...tomorrowsVisibilityArr);
-
-  const maxHigh = Math.max(todaysHigh, tomorrowsHigh);
-
-  const dailyOverviewMessage = "random message";
   return (
     <View className="px-4">
-      <ModalTextBox title="Daily Overview">
-        <DefaultText>{dailyOverviewMessage}</DefaultText>
+      <ModalTextBox title="Summary">
+        <DefaultText>{summaryText}</DefaultText>
       </ModalTextBox>
 
       {currentIndex === 0 && (
         <>
-          <ModalTextBox title="Compared to Tomorrow" removeHorizontalPadding>
+          <ModalTextBox title="Daily Comparison" removeHorizontalPadding>
             <View className="gap-y-2 px-4">
-              <DefaultText>
-                Today's Humidity is similar to yesterdays
-              </DefaultText>
+              <DefaultText>{dailyComparisonText}</DefaultText>
             </View>
 
             <HorizontalLine />
 
-            <View className="gap-y-2 px-4">
-              <HorizontalBar
-                title="Today"
-                bgColor="light"
-                currentHigh={Math.round(todaysHigh).toString() + "%"}
-                percentage={todaysHigh / maxHigh}
-              />
-              <HorizontalBar
-                title="Tomorrow"
-                bgColor="dark"
-                currentHigh={Math.round(tomorrowsHigh).toString() + "%"}
-                percentage={tomorrowsHigh / maxHigh}
-              />
-            </View>
+            <BarComparison
+              todaysHigh={Math.round(todaysHigh)}
+              tomorrowsHigh={Math.round(tomorrowsHigh)}
+              unit={"%"}
+            />
           </ModalTextBox>
         </>
       )}
 
       <ModalTextBox title="About Relative Humidity">
-        <DefaultText>
-          Relative humidity (RH) is the amount of water vapor in the air
-          compared to the maximum amount of water vapor the air can hold at that
-          temperature. It's expressed as a percentage.
-        </DefaultText>
+        <DefaultText>{relativeHumidityText}</DefaultText>
       </ModalTextBox>
 
       <ModalTextBox title="About Dewpoint">
-        <DefaultText>
-          In science, dew point is the temperature at which air is cooled to its
-          maximum water vapor capacity, or 100% relative humidity. At this
-          point, water vapor in the air condenses into liquid, such as fog or
-          precipitation.
-        </DefaultText>
+        <DefaultText>{dewpointText}</DefaultText>
       </ModalTextBox>
-
-      <ModalOption title={"Option"} />
     </View>
   );
 };

@@ -1,26 +1,25 @@
 import { WeatherData } from "@/constants/constants";
-import React, { memo, useEffect } from "react";
-import { TextInputProps, View } from "react-native";
-import {
-  AnimatedProps,
-  SharedValue,
-  useAnimatedProps,
-} from "react-native-reanimated";
-import { ChartPressState, useChartPressState } from "victory-native";
-import DefaultText from "../atoms/DefaultText";
-import TitleTemp from "../graphs/conditions/TitleTemp";
-import GraphContainer from "../modal/GraphContainer";
-import Graph from "../graphs/Graph";
-import { getWeekTempArr } from "../daily-forecast/utils/getWeekTempArr";
-import ConditionsModalDescription from "./ConditionsModalDescription";
-import { LeftTextType } from "../modal/Modal";
-import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
-import { updateLeftText } from "../modal/utils/updateLeftText";
-import { getDayArr } from "../precipitation/utils/getDayArr";
-import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
-import { getTemperature } from "@/hooks/getTemperature";
 import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
-import { getDailyTempArr } from "../daily-forecast/utils/getDailyTempArr";
+import React from "react";
+import { View } from "react-native";
+import { SharedValue, useAnimatedProps } from "react-native-reanimated";
+import { useChartPressState } from "victory-native";
+import DefaultText from "../atoms/DefaultText";
+import Graph from "../graphs/Graph";
+import GraphContainer from "../modal/GraphContainer";
+import { LeftTextType } from "../modal/Modal";
+import { updateLeftText } from "../modal/utils/updateLeftText";
+import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
+import { getWeekArr } from "../utils/getWeekArr";
+import { getMinMaxArr } from "../utils/getMinMaxArr";
+import { getTemperature } from "@/hooks/useDisplayUnits";
+import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
+import { SkImage, useImage } from "@shopify/react-native-skia";
+import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
+import { getDayArr } from "../precipitation/utils/getDayArr";
+import { useForecastData } from "../graphs/utils/useForecastData";
+import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
+import { GraphDefaultY } from "../graphs/utils/constants";
 
 interface RenderConditionsGraphsProps {
   data: WeatherData;
@@ -41,83 +40,105 @@ const RenderConditionsGraphs = ({
 }: RenderConditionsGraphsProps) => {
   const tempUnit = useTemperatureUnit();
 
+  // Temperature Graph Chart Press State
   const { state: tempState, isActive: tempIsActive } = useChartPressState({
     x: 0,
-    y: {
-      celsius: 0,
-      currentLineTop: 0,
-      currentLineBottom: 0,
-      currentPosition: 0,
-    },
+    y: GraphDefaultY,
   });
-  const tempScrollInfoBold = useAnimatedProps(() => {
-    const celsius = `${Math.round(tempState.y.celsius.value.value)}°`;
+  // Allows the JS thread tempIsActive to sync with UI thread isActiveShared
+  useSyncAnimatedValue(tempIsActive, isActiveShared);
+  // Temperature Drag Text
+  const tempDragText = useAnimatedProps(() => {
+    const celsius = `${Math.round(tempState.y.mainLine.value.value)}°`;
     return {
       text: celsius,
       value: celsius,
     };
   });
 
+  // Chance of Rain Graph Chart Press State
   const { state: rainState, isActive: rainIsActive } = useChartPressState({
     x: 0,
-    y: {
-      chanceOfRain: 0,
-      currentLineTop: 0,
-      currentLineBottom: 0,
-      currentPosition: 0,
-    },
+    y: GraphDefaultY,
   });
-  const rainScrollInfoBold = useAnimatedProps(() => {
-    const chanceOfRain = `${Math.round(rainState.y.chanceOfRain.value.value)}%`;
+  // Chance of Rain Drag Text
+  const chanceOfRainDragText = useAnimatedProps(() => {
+    const chanceOfRain = `${Math.round(rainState.y.mainLine.value.value)}%`;
     return {
       text: chanceOfRain,
       value: chanceOfRain,
     };
   });
 
-  const weekTempArr = getWeekTempArr(data, tempUnit);
-  const weekMaxTemp = Math.max(...weekTempArr);
-  const weekMinTemp = Math.min(...weekTempArr);
-
-  useSyncAnimatedValue(tempIsActive, isActiveShared);
-  // useSyncAnimatedValue(rainIsActive, isActiveShared);
-
-  const hourlyTempMap = getDailyTempArr(data, 0, tempUnit);
-  const maxCelsius = Math.round(Math.max(...hourlyTempMap));
-  const minCelsius = Math.round(Math.min(...hourlyTempMap));
-
-  const currentTemperature = Math.round(
-    getTemperature(data.current?.temp_c, tempUnit)
+  // Week Temperature Range
+  const { arrMax: weekTempHigh, arrMin: weekTempLow } = getMinMaxArr(
+    getWeekArr(data, "temp_c")
   );
+
+  const currentTemperature = Math.round(getTemperature(data.current?.temp_c));
   const maxTemperature = Math.round(
-    getTemperature(data.forecast?.forecastday[item.id].day.maxtemp_c, tempUnit)
+    getTemperature(data.forecast?.forecastday[item.id].day.maxtemp_c)
   );
   const minTemperature = Math.round(
-    getTemperature(data.forecast?.forecastday[item.id].day.mintemp_c, tempUnit)
+    getTemperature(data.forecast?.forecastday[item.id].day.mintemp_c)
   );
 
-  // const currentWeatherImage = weatherNameToImage(
-  //   getWeatherName(data.current?.condition.code),
-  //   data.current?.is_day
-  // );
-
-  // const DailyWeatherImage = weatherNameToImage(
-  //   getWeatherName(data.forecast?.forecastday[item.id].day.condition.code),
-  //   true
-  // );
-
+  // Left Text
   const currentText: LeftTextType = {
     topText: currentTemperature.toString() + "°",
-    bottomText: `H:${maxCelsius}° L:${minCelsius}°`,
+    bottomText: `H:${maxTemperature}° L:${minTemperature}°`,
     image: "cloudy",
   };
   const otherText: LeftTextType = {
     topText: maxTemperature.toString() + "°",
     topTextGray: minTemperature + "°",
-    bottomText: "Celsius",
+    bottomText: tempUnit.charAt(0).toUpperCase() + tempUnit.slice(1),
   };
-
+  // Change shared value leftText on scroll
   updateLeftText(currentIndex, updateShared, currentText, otherText);
+
+  // Graph Images
+  const { timeArr, imageArr } = getGraphImageAndCoord(
+    data,
+    item.id,
+    12,
+    "condition.code"
+  );
+  const weatherImageArr = imageArr.map((code, index) =>
+    useImage(
+      weatherNameToImage(
+        getWeatherName(parseInt(code)),
+        data.forecast.forecastday[item.id].hour[timeArr[index]].is_day
+      )
+    )
+  );
+
+  // Get Temp Graph Data
+  const tempDayArr = getDayArr(data, currentIndex, "temp_c");
+  const tempForecastWithoutMidnight = tempDayArr.map((temp) => {
+    return {
+      mainLine: temp,
+    };
+  });
+  const tempAvgForecast = useForecastData(tempForecastWithoutMidnight);
+  const tempGraphData = formatGraphDataCopy(data, tempAvgForecast);
+
+  // Get Chance of Rain Graph Data
+  const chanceOfRainDayArr = getDayArr(data, currentIndex, "chance_of_rain");
+  const chanceOfRainForecastWithoutMidnight = chanceOfRainDayArr.map(
+    (chanceOfRain) => {
+      return {
+        mainLine: chanceOfRain,
+      };
+    }
+  );
+  const chanceOfRainAvgForecast = useForecastData(
+    chanceOfRainForecastWithoutMidnight
+  );
+  const chanceOfRainGraphData = formatGraphDataCopy(
+    data,
+    chanceOfRainAvgForecast
+  );
 
   return (
     <>
@@ -126,26 +147,22 @@ const RenderConditionsGraphs = ({
         cityName={cityName}
         state={tempState}
         isActive={tempIsActive}
-        scrollInfoBold={tempScrollInfoBold}
+        scrollInfoBold={tempDragText}
         currentIndex={currentIndex}
-        leftSide={
-          <></>
-          // <TitleTemp data={data} item={item} />
-        }
         hackyWeatherImage
       >
         <Graph
+          graphData={tempGraphData}
           cityName={cityName}
-          // @ts-ignore, used Pick but now sure why it still requires all keys
           state={tempState}
           isActive={tempIsActive}
-          apiObjectString={tempUnit === "celsius" ? "temp_c" : "temp_f"}
           graphHeight={200}
           yAxisLabel="°"
-          domainTop={weekMaxTemp + 10}
-          domainBottom={weekMinTemp - 10}
+          domainTop={weekTempHigh + 10}
+          domainBottom={weekTempLow - 10}
           loadedIndex={item.id}
-          addWeatherImages
+          chartImageArrays={[timeArr, weatherImageArr as SkImage[]]}
+          firstLineColor={"lightblue"}
         />
       </GraphContainer>
 
@@ -154,7 +171,7 @@ const RenderConditionsGraphs = ({
         cityName={cityName}
         state={rainState}
         isActive={rainIsActive}
-        scrollInfoBold={rainScrollInfoBold}
+        scrollInfoBold={chanceOfRainDragText}
         smallBold
         currentIndex={item.id}
         leftSide={
@@ -166,14 +183,14 @@ const RenderConditionsGraphs = ({
         }
       >
         <Graph
+          graphData={chanceOfRainGraphData}
           cityName={cityName}
-          // @ts-ignore, used Pick but now sure why it still requires all keys
           state={rainState}
           isActive={rainIsActive}
           graphHeight={200}
-          apiObjectString="chance_of_rain"
           yAxisLabel="%"
           loadedIndex={item.id}
+          firstLineColor={"lightblue"}
         />
       </GraphContainer>
     </>

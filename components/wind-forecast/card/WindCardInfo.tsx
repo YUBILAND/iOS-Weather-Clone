@@ -3,17 +3,23 @@ import React from "react";
 import WindCardInfoItem from "./WindCardInfoItem";
 import HorizontalLine from "../../atoms/HorizontalLine";
 import { WeatherData } from "@/constants/constants";
+import { convertWindUnits } from "../utils/convertWindUnits";
+import { useOtherUnits } from "@/hooks/useOtherUnits";
 
 interface WindCardInfoProps {
   data: WeatherData;
 }
 
 const WindCardInfo = ({ data }: WindCardInfoProps) => {
-  const windSpeed = Math.round(data.current.wind_mph);
+  const windUnits = useOtherUnits()["wind"];
+
+  const windSpeed = Math.round(
+    convertWindUnits(data.current.wind_mph, windUnits)
+  );
   const maxWindSpeed = Math.round(
     Math.max(
       ...data.forecast.forecastday[0].hour.map((hour) => {
-        return hour.gust_mph;
+        return convertWindUnits(hour.gust_mph, windUnits);
       })
     )
   );

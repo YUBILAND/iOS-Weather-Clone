@@ -10,6 +10,8 @@ import OpacityCard from "../atoms/OpacityCard";
 import DefaultText from "../atoms/DefaultText";
 import { colors } from "@/assets/colors/colors";
 import { Octicons } from "@expo/vector-icons";
+import { getAverageData } from "./AveragesModal";
+import { getTemperature } from "@/hooks/useDisplayUnits";
 
 interface AveragesCardProps {
   cityName: string;
@@ -19,11 +21,19 @@ interface AveragesCardProps {
 
 const AveragesCard = ({ cityName, showModal, iconSize }: AveragesCardProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
-  const { current } = data[cityName];
+  const degSymbol = "°";
 
-  const currentVisibility = Math.round(current.vis_miles).toString() + " mi";
+  const { currentTemperature, averageHigh, tempFromAverage } = getAverageData(
+    data[cityName]
+  );
 
-  const message = "random message";
+  const tempSign = currentTemperature >= averageHigh ? "+" : "-";
+  const currentHigh = getTemperature(
+    data[cityName].forecast.forecastday[0].day.maxtemp_c
+  );
+
+  const fromAverageText =
+    (tempSign === "+" ? " above " : " from ") + "average daily high";
 
   return (
     <OpacityCard>
@@ -38,20 +48,24 @@ const AveragesCard = ({ cityName, showModal, iconSize }: AveragesCardProps) => {
           icon={<Octicons name="graph" size={iconSize} color={"white"} />}
         />
 
-        <CardStat stat={"-7°"} />
+        <CardStat stat={tempSign + tempFromAverage + "°"} />
 
-        <CardBottomText text={"from average daily high"} />
+        <CardBottomText text={fromAverageText} />
 
         <View className="gap-1">
           <View className="flex-row justify-between items-center">
             <DefaultText style={{ color: colors.lightGray }}>Today</DefaultText>
-            <DefaultText style={{ fontWeight: 800 }}>H:7°</DefaultText>
+            <DefaultText style={{ fontWeight: 800 }}>
+              H:{Math.round(currentHigh)}°
+            </DefaultText>
           </View>
           <View className="flex-row justify-between items-center">
             <DefaultText style={{ color: colors.lightGray }}>
               Average
             </DefaultText>
-            <DefaultText style={{ fontWeight: 800 }}>H:14°</DefaultText>
+            <DefaultText style={{ fontWeight: 800 }}>
+              H:{averageHigh}°
+            </DefaultText>
           </View>
         </View>
       </Pressable>

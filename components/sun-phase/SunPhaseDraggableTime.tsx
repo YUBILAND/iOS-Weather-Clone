@@ -50,11 +50,17 @@ const SunPhaseDraggableTime = ({
         ? "0" + minuteConversion.toString()
         : minuteConversion.toString());
 
-    const americanHour = parseInt(timeIn24.split(":")[0]) % 13;
-    const americanMins = timeIn24.split(":")[1].split(" ")[0];
+    const hourIn24 = parseInt(timeIn24.split(":")[0]);
+    const hourIn12 = hourIn24 === 0 || hourIn24 == 12 ? 12 : hourIn24 % 12;
+    const minIn12 = timeIn24.split(":")[1].split(" ")[0];
     const amOrPm = parseInt(timeIn24.split(":")[0]) >= 12 ? " PM" : " AM";
+    const timeIn12 = hourIn12 + ":" + minIn12 + amOrPm;
 
-    const timeIn12 = americanHour + ":" + americanMins + amOrPm;
+    // const americanHour = parseInt(timeIn24.split(":")[0]) % 13;
+    // const americanMins = timeIn24.split(":")[1].split(" ")[0];
+    // const amOrPm = parseInt(timeIn24.split(":")[0]) >= 12 ? " PM" : " AM";
+
+    // const timeIn12 = americanHour + ":" + americanMins + amOrPm;
 
     const time = is12Hr ? timeIn12 : timeIn24;
     return {
@@ -66,13 +72,15 @@ const SunPhaseDraggableTime = ({
   const animatedStyle = useAnimatedStyle(() => {
     const xPosition = state.x.position.value;
     const xValue = state.x.value.value;
-    const stopRight = is12Hr ? 18 : 21;
+
+    const stopLeft = is12Hr ? 4 : 3;
+    const stopRight = is12Hr ? 20 : 21;
     return {
       transform: [
         {
           translateX:
-            xValue < 3
-              ? (3 / 24) * width - 50
+            xValue < stopLeft
+              ? (stopLeft / 24) * width - 50
               : xValue > stopRight
               ? ((stopRight - 2) / 24) * width - 40
               : xPosition - 50,
@@ -84,13 +92,15 @@ const SunPhaseDraggableTime = ({
   const animatedStyle2 = useAnimatedStyle(() => {
     const xPosition = state.x.position.value;
     const xValue = state.x.value.value;
-    const stopRight = is12Hr ? 18 : 21;
+
+    const stopLeft = is12Hr ? 4 : 3;
+    const stopRight = is12Hr ? 20 : 21;
     return {
       transform: [
         {
           translateX:
-            xValue < 3
-              ? (3 / 24) * width - 100
+            xValue < stopLeft
+              ? (stopLeft / 24) * width - 100
               : xValue > stopRight
               ? ((stopRight - 2) / 24) * width - 90
               : xPosition - 100,
@@ -128,16 +138,25 @@ const SunPhaseDraggableTime = ({
       (addZeroToMinute
         ? "0" + minuteConversion.toString()
         : minuteConversion.toString());
-    const americanHour = parseInt(timeIn24.split(":")[0]) % 13;
-    const americanMins = timeIn24.split(":")[1].split(" ")[0];
+
+    const hourIn24 = parseInt(timeIn24.split(":")[0]);
+    const hourIn12 = hourIn24 === 0 || hourIn24 == 12 ? 12 : hourIn24 % 12;
+    const minIn12 = timeIn24.split(":")[1].split(" ")[0];
     const amOrPm = parseInt(timeIn24.split(":")[0]) >= 12 ? " PM" : " AM";
-    const timeIn12 = americanHour + ":" + americanMins + amOrPm;
+    const timeIn12 = hourIn12 + ":" + minIn12 + amOrPm;
     const time = is12Hr ? timeIn12 : timeIn24;
 
     // This gets current dragged time in X Axis Format
-    const draggedTimeHr = parseInt(time.split(":")[0]);
-    const draggedTimeMin = parseInt(time.split(":")[1]) / 60;
-    const draggedTimeX = draggedTimeHr + draggedTimeMin;
+    // const draggedTimeHr = parseInt(time.split(":")[0]);
+    // const draggedTimeMin = parseInt(time.split(":")[1]) / 60;
+
+    // TimeUntilIntersection should always be 24 Hour format
+    const draggedTimeHrIn24 = parseInt(timeIn24.split(":")[0]);
+    const draggedTimeMinIn24 = parseInt(timeIn24.split(":")[1]) / 60;
+
+    // const draggedTimeX = draggedTimeHr + draggedTimeMin;
+
+    const draggedTimeXIn24 = draggedTimeHrIn24 + draggedTimeMinIn24;
 
     const timeStringToX = (timeString: string) => {
       const hourString = timeString.split(":")[0];
@@ -149,7 +168,7 @@ const SunPhaseDraggableTime = ({
 
     const timeUntilIntersection = (x: number) => {
       const intersection = Math.round(x * 100) / 100;
-      const remainingXAxis = Math.abs(intersection - draggedTimeX);
+      const remainingXAxis = Math.abs(intersection - draggedTimeXIn24);
 
       const remainingHour = remainingXAxis.toString().split(".")[0];
       const remainingMinute = Math.round(
@@ -244,7 +263,8 @@ const SunPhaseDraggableTime = ({
           {
             fontSize: 32,
             color: "white",
-            width: 100,
+            width: is12Hr ? 200 : 100,
+            marginLeft: is12Hr ? -50 : 0,
             fontWeight: 600,
           },
           animatedStyle,

@@ -1,19 +1,16 @@
 import { colors } from "@/assets/colors/colors";
+import getFont from "@/hooks/getFont";
 import { getChordLength, getCurrentTime } from "@/hooks/hooks";
-import { RootState } from "@/state/store";
+import { useWeatherData } from "@/hooks/useWeatherData";
 import {
   BlurStyle,
-  Canvas,
   Color,
   LinearGradient,
-  Path,
   Skia,
-  useFont,
   vec,
 } from "@shopify/react-native-skia";
-import React, { useMemo } from "react";
+import React from "react";
 import { View } from "react-native";
-import { useSelector } from "react-redux";
 import {
   Area,
   CartesianChart,
@@ -21,19 +18,16 @@ import {
   Line,
   Scatter,
 } from "victory-native";
-import SpaceMono from "../../assets/fonts/SpaceMono-Regular.ttf";
 import ToolTip from "../graphs/victoryComponents/Tooltip";
 import {
   getFirstIntersectionPostOffset,
   getSecondIntersectionPostOffset,
 } from "./utils/getIntersectionOffset";
+import { getSunGraphPoint } from "./utils/getSunGraphPoints";
 import { getSunPathPercentage } from "./utils/getSunPathPercentage";
 import { getXOffset } from "./utils/getXOffset";
 import { getYShift } from "./utils/getYShift";
 import { useSunPhaseData } from "./utils/useSunPhaseData";
-import Animated from "react-native-reanimated";
-import { useWeatherData } from "@/hooks/useWeatherData";
-import getFont from "@/hooks/getFont";
 
 const SunPhaseGraph = ({
   cityName,
@@ -66,7 +60,8 @@ const SunPhaseGraph = ({
   const font = getFont();
 
   const data = useWeatherData();
-  const { forecast, current, location } = data[cityName];
+
+  const { forecast, location } = data[cityName];
 
   const sunriseTime = forecast?.forecastday[0].astro.sunrise;
   const sunsetTime = forecast?.forecastday[0].astro.sunset;
@@ -140,22 +135,11 @@ const SunPhaseGraph = ({
           padding={{ bottom: addLines ? 10 : 0 }}
         >
           {({ points, chartBounds }) => {
-            const nightTime1 = points.sunPath.filter(
-              (point) =>
-                (point.xValue! as number) <=
-                firstIntersectionPostOffset / (xTicks / 24)
-            );
-            const dayTime = points.sunPath.filter(
-              (point) =>
-                (point.xValue! as number) >=
-                  firstIntersectionPostOffset / (xTicks / 24) &&
-                (point.xValue! as number) <=
-                  secondIntersectionPostOffset / (xTicks / 24)
-            );
-            const nightTime2 = points.sunPath.filter(
-              (point) =>
-                (point.xValue! as number) >=
-                secondIntersectionPostOffset / (xTicks / 24)
+            const { nightTime1, dayTime, nightTime2 } = getSunGraphPoint(
+              points,
+              firstIntersectionPostOffset,
+              secondIntersectionPostOffset,
+              xTicks
             );
 
             const paint = Skia.Paint();
@@ -168,10 +152,6 @@ const SunPhaseGraph = ({
               true
             );
             paint.setMaskFilter(maskFilter);
-
-            // console.log(
-            //   points.sunPosition.filter((arr, idx) => arr.yValue)[0].yValue
-            // );
 
             return (
               <>
@@ -273,29 +253,29 @@ const SunPhaseGraph = ({
   );
 };
 
-const SemiCircle = ({
-  x,
-  y,
-  radius,
-}: {
-  x: number;
-  y: number;
-  radius: number;
-}) => {
-  // Create a Skia Path for a semicircle
-  const skiaPath = useMemo(() => {
-    const path = Skia.Path.Make();
-    path.moveTo(x - radius, y);
-    path.rArcTo(radius * 2, radius * 2, 0, false, true, radius * 2, 0);
-    path.close();
-    return path;
-  }, [x, y, radius]);
+// const SemiCircle = ({
+//   x,
+//   y,
+//   radius,
+// }: {
+//   x: number;
+//   y: number;
+//   radius: number;
+// }) => {
+//   // Create a Skia Path for a semicircle
+//   const skiaPath = useMemo(() => {
+//     const path = Skia.Path.Make();
+//     path.moveTo(x - radius, y);
+//     path.rArcTo(radius * 2, radius * 2, 0, false, true, radius * 2, 0);
+//     path.close();
+//     return path;
+//   }, [x, y, radius]);
 
-  return (
-    <Canvas style={{ width: radius * 2, height: radius, position: "absolute" }}>
-      <Path path={skiaPath} color="blue" />
-    </Canvas>
-  );
-};
+//   return (
+//     <Canvas style={{ width: radius * 2, height: radius, position: "absolute" }}>
+//       <Path path={skiaPath} color="blue" />
+//     </Canvas>
+//   );
+// };
 
 export default React.memo(SunPhaseGraph);

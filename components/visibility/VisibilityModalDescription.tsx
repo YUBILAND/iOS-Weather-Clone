@@ -1,13 +1,14 @@
 import { WeatherData } from "@/constants/constants";
+import { useOtherUnits } from "@/hooks/useOtherUnits";
 import React from "react";
 import { View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
-import ModalOption from "../modal/ModalOption";
+import BarComparison from "../modal/BarComparison";
+import DistanceOption from "../modal/DistanceOption";
 import ModalTextBox from "../modal/ModalTextBox";
-import HorizontalBar from "../uv-index/HorizontalBar";
-import { getDailyVisibilityArr } from "./utils/getDailyVisibilityArr";
-import { getWeekVisibilityArr } from "./utils/getWeekVisibilityArr";
+import { getDayArr } from "../precipitation/utils/getDayArr";
+import { getMinMaxArr } from "../utils/getMinMaxArr";
 
 interface VisibilityModalDescriptionProps {
   data: WeatherData;
@@ -18,68 +19,49 @@ const VisibilityModalDescription = ({
   data,
   currentIndex,
 }: VisibilityModalDescriptionProps) => {
-  const weekVisibilitylArr = getWeekVisibilityArr(data, "vis_miles");
-  const weekHigh = Math.max(...weekVisibilitylArr);
-  const weekLow = Math.min(...weekVisibilitylArr);
+  const distanceUnit = useOtherUnits()["distance"];
 
-  const todaysVisibilityArr = getDailyVisibilityArr(data, "vis_miles", 0);
-  const todaysHigh = Math.max(...todaysVisibilityArr);
-  const todaysLow = Math.min(...todaysVisibilityArr);
+  const { arrMax: todaysHigh } = getMinMaxArr(getDayArr(data, 0, "vis_miles"));
+  const { arrMax: tomorrowsHigh } = getMinMaxArr(
+    getDayArr(data, 1, "vis_miles")
+  );
 
-  const tomorrowsVisibilityArr = getDailyVisibilityArr(data, "vis_miles", 1);
-  const tomorrowsHigh = Math.max(...tomorrowsVisibilityArr);
-  const tomorrowsLow = Math.min(...tomorrowsVisibilityArr);
+  const dailySummaryMessage = "random message";
+  const dailyComparisonText = `Today's UV index is similar to yesterdays`;
+  const visibilityText = `In weather terms, "visibility" refers to the distance at which an object or light can be clearly seen and identified, essentially measuring how far you can see clearly depending on the atmospheric conditions, like fog, haze, or precipitation, which can significantly impact visibility levels; low visibility means you can see only a short distance, while high visibility indicates clear conditions with a long viewing range.`;
 
-  const maxHigh = Math.max(todaysHigh, tomorrowsHigh);
-
-  const dailyOverviewMessage = "random message";
+  const firstIndex = currentIndex === 0;
   return (
     <View className="px-4">
-      <ModalTextBox title="Daily Overview">
-        <DefaultText>{dailyOverviewMessage}</DefaultText>
+      <ModalTextBox title="Daily Summary">
+        <DefaultText>{dailySummaryMessage}</DefaultText>
       </ModalTextBox>
 
-      {currentIndex === 0 && (
+      {firstIndex && (
         <>
-          <ModalTextBox title="Compared to yesterday" removeHorizontalPadding>
+          <ModalTextBox title="Daily Comparison" removeHorizontalPadding>
             <View className="gap-y-2 px-4">
-              <DefaultText>
-                Today's UV index is similar to yesterdays
-              </DefaultText>
+              <DefaultText>{dailyComparisonText}</DefaultText>
             </View>
 
             <HorizontalLine />
 
-            <View className="gap-y-2 px-4">
-              <HorizontalBar
-                title="Today"
-                bgColor="light"
-                currentHigh={Math.round(todaysHigh).toString() + " mph"}
-                percentage={todaysHigh / maxHigh}
-              />
-              <HorizontalBar
-                title="Tomorrow"
-                bgColor="dark"
-                currentHigh={Math.round(tomorrowsHigh).toString() + " mph"}
-                percentage={tomorrowsHigh / maxHigh}
-              />
-            </View>
+            <BarComparison
+              todaysHigh={Math.round(todaysHigh)}
+              tomorrowsHigh={Math.round(tomorrowsHigh)}
+              unit={distanceUnit}
+            />
           </ModalTextBox>
         </>
       )}
 
       <ModalTextBox title="About Visibility">
-        <DefaultText>
-          In weather terms, "visibility" refers to the distance at which an
-          object or light can be clearly seen and identified, essentially
-          measuring how far you can see clearly depending on the atmospheric
-          conditions, like fog, haze, or precipitation, which can significantly
-          impact visibility levels; low visibility means you can see only a
-          short distance, while high visibility indicates clear conditions with
-          a long viewing range.
-        </DefaultText>
+        <DefaultText>{visibilityText}</DefaultText>
       </ModalTextBox>
-      <ModalOption title={"Option"} />
+
+      <ModalTextBox title={"Option"}>
+        <DistanceOption />
+      </ModalTextBox>
     </View>
   );
 };

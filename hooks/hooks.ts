@@ -1,3 +1,4 @@
+import { months } from "@/components/helper-functions/helperFunctions";
 import { days } from "@/utils/exampleForecast";
 
 export const getCurrentHour = (timeZone: string) => {
@@ -42,16 +43,17 @@ export const getCurrentDate = (timeZone: string) => {
 
   // console.log(tzDate);
 
-  const month = parseInt(tzDate.split("/")[0]);
-  const day = parseInt(tzDate.split("/")[1]);
-  const year = parseInt(tzDate.split("/")[2]);
+  const currentMonthIndex = parseInt(tzDate.split("/")[0]) - 1;
+  // const month = parseInt(tzDate.split("/")[0]);
+  const currentDay = parseInt(tzDate.split("/")[1]);
+  const currentYear = parseInt(tzDate.split("/")[2]);
 
-  const weekday = date.toLocaleString("en-US", {
+  const currentWeekday = date.toLocaleString("en-US", {
     timeZone: timeZone,
     weekday: "long",
   });
 
-  return { month, day, year, weekday };
+  return { currentMonthIndex, currentDay, currentYear, currentWeekday };
 };
 
 export function getCalendarDate(timeZone: string, incrementBy: number) {

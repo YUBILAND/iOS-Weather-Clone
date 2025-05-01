@@ -1,17 +1,15 @@
 import { colors } from "@/assets/colors/colors";
 import { getCurrentTime, getRemainingTimeUntilNextPhase } from "@/hooks/hooks";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
 import { useWeatherData } from "@/hooks/useWeatherData";
-import { RootState } from "@/state/store";
 import React from "react";
 import { View } from "react-native";
-import { useSelector } from "react-redux";
 import { useChartPressState } from "victory-native";
 import SunPhaseDraggableTime from "./SunPhaseDraggableTime";
 import SunPhaseGraph from "./SunPhaseGraph";
 import SunPhaseHeader from "./SunPhaseHeader";
 import SunPhaseInfo from "./SunPhaseInfo";
 import { getSunPhaseInfo } from "./utils/getSunPhaseInfo";
-import { useIs12Hr } from "@/hooks/useIs12Hr";
 
 type SunPhaseModalProps = {
   cityName: string;
@@ -30,7 +28,6 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
   const is12Hr = useIs12Hr();
 
   const currentTime = getCurrentTime(location?.tz_id);
-
   const remainingTime = getRemainingTimeUntilNextPhase(
     currentTime,
     nextPhaseTime

@@ -1,19 +1,34 @@
 import { View, Text } from "react-native";
 import React from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { temperatureGradient } from "../averages/utils/constants";
 
 interface DotProps {
-  color: string;
   size?: number;
+  colorsArr: [string, string, ...string[]];
 }
 
-const Dot = ({ color, size = 10 }: DotProps) => {
+const Dot = ({ size = 10, colorsArr }: DotProps) => {
   return (
-    <View
+    // <View
+    //   style={{
+    //     backgroundColor: color,
+    //     width: size,
+    //     height: size,
+    //     borderRadius: "50%",
+    //   }}
+    // />
+    <LinearGradient
+      colors={colorsArr as [string, string, ...string[]]}
+      start={{ x: 0, y: 0 }} // Start point (left)
+      end={{
+        x: 0,
+        y: 1,
+      }}
       style={{
-        backgroundColor: color,
         width: size,
         height: size,
-        borderRadius: "50%",
+        borderRadius: 20,
       }}
     />
   );

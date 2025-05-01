@@ -1,7 +1,13 @@
+import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
+import { setTempUnit } from "@/state/settings/settingsSlice";
+import { AppDispatch } from "@/state/store";
+import { storeTempUnit } from "@/utils/asyncStorage";
 import { Entypo } from "@expo/vector-icons";
-import React, { useState } from "react";
+import React from "react";
 import { Pressable, View } from "react-native";
+import { useDispatch } from "react-redux";
 import DefaultText from "../atoms/DefaultText";
+import DropdownGaps from "../atoms/DropdownGaps";
 import HorizontalLine from "../atoms/HorizontalLine";
 import {
   SelectSetting,
@@ -10,13 +16,6 @@ import {
   settingsIconMap,
 } from "../modal/utils/modalConstants";
 import { TempUnit } from "./SettingsDropdown";
-import DropdownGaps from "../atoms/DropdownGaps";
-import { useDispatch } from "react-redux";
-import { AppDispatch } from "@/state/store";
-import { setTempUnit } from "@/state/settings/settingsSlice";
-import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
-import { storeTempUnit } from "@/utils/asyncStorage";
-import UnitModal from "./unit-modal/UnitModal";
 
 interface SettingsDropdownItemProps {
   item: SettingsDropdownObject;
@@ -24,6 +23,7 @@ interface SettingsDropdownItemProps {
   handleIsOpen: (open: boolean) => void;
   settingName: SelectSetting;
   setModalVisible: (visible: boolean) => void;
+  chooseSetting: (setting: SelectSetting | null) => void;
 }
 
 const SettingsDropdownItem = ({
@@ -32,6 +32,7 @@ const SettingsDropdownItem = ({
   handleIsOpen,
   settingName,
   setModalVisible,
+  chooseSetting,
 }: SettingsDropdownItemProps) => {
   const tempUnit = useTemperatureUnit();
   const dispatch = useDispatch<AppDispatch>();
@@ -59,6 +60,8 @@ const SettingsDropdownItem = ({
       if (settingName === "units") {
         setModalVisible(true);
         console.log("CLICKED UNITS");
+      } else {
+        chooseSetting("editList");
       }
     }
   };

@@ -1,18 +1,25 @@
-import { RootState } from "@/state/store";
-import React, { useEffect } from "react";
+import { getPressure } from "@/hooks/useDisplayUnits";
+import { useOtherUnits } from "@/hooks/useOtherUnits";
+import { useWeatherData } from "@/hooks/useWeatherData";
+import React from "react";
 import { SharedValue, useAnimatedProps } from "react-native-reanimated";
-import { useSelector } from "react-redux";
 import { useChartPressState } from "victory-native";
 import Graph from "../graphs/Graph";
-import GraphLeftText from "../graphs/GraphLeftText";
 import GraphContainer from "../modal/GraphContainer";
-import { getDayArr } from "../precipitation/utils/getDayArr";
-import AirPressureModalDescription from "./AirPressureModalDescription";
-import { getArr } from "./utils/getAirPressureArr";
 import { LeftTextType } from "../modal/Modal";
-import { useWeatherData } from "@/hooks/useWeatherData";
-import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
 import { updateLeftText } from "../modal/utils/updateLeftText";
+import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
+import { getDayArr } from "../precipitation/utils/getDayArr";
+import { getMinMaxArr } from "../utils/getMinMaxArr";
+import { getWeekArr } from "../utils/getWeekArr";
+import { getOddPressureDirectionImages } from "./utils/getOddPressureDirectionImages";
+import { Image, SkImage } from "@shopify/react-native-skia";
+import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
+import { useForecastData } from "../graphs/utils/useForecastData";
+import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
+import { GraphDefaultY } from "../graphs/utils/constants";
+import { View } from "react-native";
+import { colors } from "@/assets/colors/colors";
 
 interface AirPressureModalProps {
   cityName: string;
@@ -29,19 +36,28 @@ const AirPressureModal = ({
   isActiveShared,
 }: AirPressureModalProps) => {
   const data = useWeatherData();
+  const pressureUnit = useOtherUnits()["pressure"];
 
   const { state: airPressureState, isActive: airPressureIsActive } =
     useChartPressState({
       x: 0,
-      y: {
-        airPressure: 0,
-        currentLineTop: 0,
-        currentLineBottom: 0,
-        currentPosition: 0,
-      },
+      y:
+        // {
+        //   airPressure: 0,
+        //   currentLineTop: 0,
+        //   currentLineBottom: 0,
+        //   currentPosition: 0,
+        // },
+        GraphDefaultY,
     });
   const airPressureScrollInfoBold = useAnimatedProps(() => {
-    const airPressure = `${airPressureState.y.airPressure.value.value} inHg`;
+    const airPressure =
+      (pressureUnit === "inHg"
+        ? airPressureState.y.mainLine.value.value.toFixed(2)
+        : Math.round(airPressureState.y.mainLine.value.value)) +
+      " " +
+      pressureUnit;
+
     return {
       text: airPressure,
       value: airPressure,
@@ -50,28 +66,57 @@ const AirPressureModal = ({
 
   useSyncAnimatedValue(airPressureIsActive, isActiveShared);
 
-  const airPressureArr = getArr(data[cityName], "pressure_in");
+  const { arrMax: maxRange, arrMin: minRange } = getMinMaxArr(
+    getWeekArr(data[cityName], "pressure_in")
+  );
 
-  const maxRange = Math.max(...airPressureArr);
-  const minRange = Math.min(...airPressureArr);
-
-  const currentAirPressure = data[cityName].current.pressure_in;
-  const dailyAirPressureArr = getDayArr(data[cityName], id, "pressure_in");
-  const average = getArrAverage(dailyAirPressureArr);
+  const currentAirPressure = getPressure(data[cityName].current.pressure_in);
+  const average = getArrAverage(getDayArr(data[cityName], id, "pressure_in"));
 
   const currentText: LeftTextType = {
-    topText: twoDecimals(currentAirPressure).toString(),
-    topTextSmall: "inHg",
+    topText: twoDecimals(currentAirPressure).toFixed(2).toString(),
+    topTextSmall: pressureUnit,
     bottomText: "Steady",
   };
 
   const otherText: LeftTextType = {
     topText: twoDecimals(average).toString(),
-    topTextSmall: "inHg",
+    topTextSmall: pressureUnit,
     bottomText: "Steady",
   };
 
   updateLeftText(id, updateShared, currentText, otherText);
+
+  const domainRange = ["mbar", "mmHg", "hPa"].includes(pressureUnit)
+    ? 50
+    : pressureUnit === "kPa"
+    ? 5
+    : 2;
+
+  const { timeArr } = getGraphImageAndCoord(
+    data[cityName],
+    id,
+    12,
+    "condition.code"
+  );
+
+  const oddPressureDirectionImages = getOddPressureDirectionImages(
+    data[cityName],
+    id,
+    true
+  );
+
+  const pressureDayArr = getDayArr(data[cityName], id, "pressure_in");
+  const pressureForecastWithoutMidnight = pressureDayArr.map((pressure) => {
+    return {
+      mainLine: pressure,
+    };
+  });
+  const pressureAvgForecast = useForecastData(pressureForecastWithoutMidnight);
+  const pressureGraphData = formatGraphDataCopy(
+    data[cityName],
+    pressureAvgForecast
+  );
 
   return (
     <>
@@ -81,20 +126,22 @@ const AirPressureModal = ({
         isActive={airPressureIsActive}
         scrollInfoBold={airPressureScrollInfoBold}
         currentIndex={currentIndex}
-        leftSide={<></>}
       >
         <Graph
+          graphData={pressureGraphData}
           cityName={cityName}
           // @ts-ignore, used Pick but now sure why it still requires all keys
           state={airPressureState}
           isActive={airPressureIsActive}
-          yAxisLabel="in"
+          yAxisLabel={pressureUnit}
           loadedIndex={id}
-          apiObjectString="pressure_in"
-          domainBottom={minRange - 2}
-          domainTop={maxRange + 2}
+          domainBottom={minRange - domainRange}
+          domainTop={maxRange + domainRange}
           customColor="bgPurple"
-          removeArea
+          firstLineColor={colors.bgPurple()}
+          // removeArea
+          // addPressureImages
+          chartImageArrays={[timeArr, oddPressureDirectionImages as SkImage[]]}
         />
       </GraphContainer>
     </>
@@ -102,6 +149,7 @@ const AirPressureModal = ({
 };
 
 export const twoDecimals = (x: number) => {
+  "worklet";
   return Math.round(x * 100) / 100;
 };
 

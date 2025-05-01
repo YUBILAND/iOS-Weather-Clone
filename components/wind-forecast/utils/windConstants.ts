@@ -18,7 +18,7 @@ export type CompassDirections =
 
 const prefix = "../../../assets/icons/";
 
-type ArrowKey = {
+export type ArrowKey = {
   [key: string]: number;
 };
 

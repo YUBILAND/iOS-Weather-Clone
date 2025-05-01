@@ -5,41 +5,42 @@ import React, { RefObject, useCallback, useRef, useState } from "react";
 import { FlatList, Modal, Pressable, TextInput, View } from "react-native";
 import Search from "../atoms/Search";
 import { SelectSetting } from "../modal/utils/modalConstants";
-import { Item, LocationCardFlatlist } from "./LocationCardFlatlist";
+import LocationCardFlatlist, { Item } from "./LocationCardFlatlist";
 import SettingsDropdown from "./SettingsDropdown";
 import TitleBar from "./TitleBar";
 import VisibleText from "./VisibleText";
 
-const ListHeader = ({
-  hasCrossedPoint,
-  showSearch,
-  searchProps,
-}: {
-  hasCrossedPoint: boolean;
-  showSearch: boolean;
-  searchProps: any;
-}) => {
-  console.log("rerendering?");
-  return (
-    <>
-      {/* Hides when scrolled up  */}
-      <VisibleText
-        text="Weather"
-        visible={hasCrossedPoint}
-        exists={!showSearch}
-        fontSize={32}
-      />
+const ListHeader = React.memo(
+  ({
+    hasCrossedPoint,
+    showSearch,
+    searchProps,
+  }: {
+    hasCrossedPoint: boolean;
+    showSearch: boolean;
+    searchProps: any;
+  }) => {
+    console.log("rerendering?");
+    return (
+      <>
+        {/* Hides when scrolled up  */}
+        <VisibleText
+          text="Weather"
+          visible={hasCrossedPoint}
+          exists={!showSearch}
+          fontSize={32}
+        />
 
-      <BlurView
-        // intensity={100}
-        className=" py-4 relative z-40 flex-row items-center gap-x-2"
-        style={{ opacity: hasCrossedPoint ? 0 : 1 }}
-      >
-        <Search {...searchProps} />
-      </BlurView>
-    </>
-  );
-};
+        <View
+          className=" py-4 relative z-40 flex-row items-center gap-x-2"
+          style={{ opacity: hasCrossedPoint ? 0 : 1 }}
+        >
+          <Search {...searchProps} />
+        </View>
+      </>
+    );
+  }
+);
 
 interface LocationModalProps {
   showLocationModal: boolean;
@@ -79,30 +80,34 @@ const LocationModal = ({
   const flatlistRef = useRef<FlatList<Item>>(null);
 
   // Callbacks
-  const handleSettingsModal = useCallback(() => {
+  const handleSettingsModal = () => {
     setIsSettingsOpen(true);
-  }, []);
-  const handleIsOpen = useCallback((open: boolean) => {
+  };
+  const handleIsOpen = (open: boolean) => {
     setIsSettingsOpen(open);
-  }, []);
-  const closeSetting = useCallback(() => {
+  };
+  const closeSetting = () => {
     setIsSettingsOpen(false);
     setSelectedSetting(null);
-  }, []);
-  const handleScroll = useCallback(
-    (scrollOffset: any) => {
-      const THRESHOLD = 50;
-      const scrollY = scrollOffset;
-      if (scrollY >= THRESHOLD && !hasCrossedPoint) {
-        setHasCrossedPoint(true);
-        console.log("Threshold crossed!");
-      } else if (scrollY <= THRESHOLD && hasCrossedPoint) {
-        setHasCrossedPoint(false);
-        console.log("Threshold NOT crossed!");
-      }
-    },
-    [hasCrossedPoint]
-  );
+  };
+
+  const hasCrossedPointRef = useRef(false);
+
+  const handleScroll = (scrollOffset: any) => {
+    const THRESHOLD = 50;
+    const scrollY = scrollOffset;
+    if (scrollY >= THRESHOLD && !hasCrossedPointRef.current) {
+      setHasCrossedPoint(true);
+      hasCrossedPointRef.current = true;
+      console.log("Threshold crossed!");
+    } else if (scrollY <= THRESHOLD && hasCrossedPointRef.current) {
+      setHasCrossedPoint(false);
+      hasCrossedPointRef.current = false;
+
+      console.log("Threshold NOT crossed!");
+    }
+  };
+
   const handleToggleSearch = useCallback(() => {
     toggleSearch(textInputRef);
     if (flatlistRef.current !== null) {
@@ -112,8 +117,11 @@ const LocationModal = ({
   const handleCancel = () => {
     handleToggleSearch();
   };
-  const chooseSetting = (setting: SelectSetting | null) =>
+  const chooseSetting = (setting: SelectSetting | null) => {
+    console.log("setting chosen is", setting);
     setSelectedSetting(setting);
+  };
+
   const handleConfirmDeleteIndex = (index: number | null) => {
     setConfirmDeleteIndex(index);
   };
@@ -152,7 +160,7 @@ const LocationModal = ({
           style={{
             backgroundColor: colors.bgBlack(1),
           }}
-          className=" h-screen w-screen"
+          className="h-screen w-screen"
         >
           {/* Absolute View that registers presses for hiding dropdown */}
           {isSettingsOpen && (
@@ -165,6 +173,7 @@ const LocationModal = ({
           {/* Weather Title + Search Component WHEN Scrolled past threshold */}
           <View className="relative">
             <BlurView
+              intensity={hasCrossedPoint ? 20 : 0}
               className="absolute top-0 left-0 px-2"
               style={{
                 backgroundColor: hasCrossedPoint ? "transparent" : "black",
@@ -190,6 +199,7 @@ const LocationModal = ({
             <SettingsDropdown
               isOpen={isSettingsOpen}
               handleIsOpen={handleIsOpen}
+              chooseSetting={chooseSetting}
             />
           </View>
 
@@ -197,7 +207,6 @@ const LocationModal = ({
           <View style={{ zIndex: 10 }}>
             <LocationCardFlatlist
               {...flatlistProps}
-              searchComponent={<Search {...searchProps} />}
               // @ts-ignore expects a component rather than react node but useCallback breaks search functionality
               stickyElement={
                 <ListHeader

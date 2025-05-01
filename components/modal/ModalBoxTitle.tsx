@@ -1,11 +1,28 @@
 import { View, Text } from "react-native";
 import React from "react";
 import DefaultText from "../atoms/DefaultText";
+import { colors } from "@/assets/colors/colors";
 
-const ModalBoxTitle = ({ title }: { title: string }) => {
+const ModalBoxTitle = ({
+  title,
+  subTitle,
+}: {
+  title: string;
+  subTitle?: string;
+}) => {
   return (
-    <View className="h-12 pl-2 mt-2 justify-center">
-      <DefaultText className="text-2xl font-semibold ">{title}</DefaultText>
+    <View className="mb-3 mt-6 pl-2 justify-center gap-1">
+      <DefaultText style={{ fontSize: 22, lineHeight: 22, fontWeight: 700 }}>
+        {title}
+      </DefaultText>
+      {subTitle && (
+        <DefaultText
+          // className="text-lg font-semibold "
+          style={{ fontSize: 16, lineHeight: 16, color: colors.lightGray }}
+        >
+          {subTitle}
+        </DefaultText>
+      )}
     </View>
   );
 };

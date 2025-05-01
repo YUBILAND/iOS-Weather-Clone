@@ -1,17 +1,28 @@
 import { GraphKeyType } from "@/constants/constants";
+import { useOtherUnits } from "@/hooks/useOtherUnits";
 import { useWeatherData } from "@/hooks/useWeatherData";
-import React, { useEffect } from "react";
+import React from "react";
 import { View } from "react-native";
 import { SharedValue, useAnimatedProps } from "react-native-reanimated";
 import { useChartPressState } from "victory-native";
 import Graph from "../graphs/Graph";
 import GraphContainer from "../modal/GraphContainer";
 import { LeftTextType } from "../modal/Modal";
-import { getDayArr } from "../precipitation/utils/getDayArr";
-import WindModalDescription from "./WindModalDescription";
-import { getWeekMaxWind } from "./utils/getWeekMaxWind";
-import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
 import { updateLeftText } from "../modal/utils/updateLeftText";
+import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
+import { getDayArr } from "../precipitation/utils/getDayArr";
+import { getMinMaxArr } from "../utils/getMinMaxArr";
+import WindModalDescription from "./WindModalDescription";
+import { convertWindUnits } from "./utils/convertWindUnits";
+import { getWeekMaxWind } from "./utils/getWeekMaxWind";
+import { getOddWindDirectionImages } from "./utils/getOddWindDirectionImages";
+import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
+import { SkImage } from "@shopify/react-native-skia";
+import { getGraphDataCopy } from "../graphs/utils/getGraphDataCopy";
+import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
+import { averageRangeExample } from "../averages/utils/constants";
+import { GraphDefaultY } from "../graphs/utils/constants";
+import { useForecastData } from "../graphs/utils/useForecastData";
 
 interface WindModalProps {
   cityName: string;
@@ -29,20 +40,26 @@ const WindModal = ({
 }: WindModalProps) => {
   const data = useWeatherData();
   const { current, forecast } = data[cityName];
+  const windUnits = useOtherUnits()["wind"];
+
+  // const { state: windState, isActive: windIsActive } = useChartPressState({
+  //   x: 0,
+  //   y: {
+  //     windSpeed: 0,
+  //     currentLineTop: 0,
+  //     currentLineBottom: 0,
+  //     currentPosition: 0,
+  //     secondLine: 0,
+  //   },
+  // });
 
   const { state: windState, isActive: windIsActive } = useChartPressState({
     x: 0,
-    y: {
-      windSpeed: 0,
-      currentLineTop: 0,
-      currentLineBottom: 0,
-      currentPosition: 0,
-      secondLine: 0,
-    },
+    y: GraphDefaultY,
   });
 
   const windScrollInfoBold = useAnimatedProps(() => {
-    const speedAtIndex = windState.y.windSpeed.value.value;
+    const speedAtIndex = windState.y.mainLine.value.value;
     const hour = data[cityName].forecast.forecastday[currentIndex].hour;
     const index = windState.x.value.value;
     const windSpeed = `${Math.round(speedAtIndex)} ${
@@ -58,9 +75,9 @@ const WindModal = ({
     const hour = data[cityName].forecast.forecastday[currentIndex].hour;
     const gustSpeed = `Gusts: ${
       index < 24
-        ? Math.round(hour[index].gust_mph)
-        : Math.round(hour[23].gust_mph)
-    } mph`;
+        ? Math.round(convertWindUnits(hour[index].gust_mph, windUnits))
+        : Math.round(convertWindUnits(hour[23].gust_mph, windUnits))
+    } ${windUnits}`;
     return {
       text: gustSpeed,
       value: gustSpeed,
@@ -74,39 +91,70 @@ const WindModal = ({
   const currentWindDirection = current.wind_dir;
 
   // Get current Wind Speed
-  const currentWindSpeed = Math.round(current.wind_mph);
+  const currentWindSpeed = Math.round(
+    convertWindUnits(current.wind_mph, windUnits)
+  );
 
   // Get daily Max Wind Speed
-  const dailyMaxWindSpeed = forecast.forecastday[id].day.maxwind_mph;
+  const dailyMaxWindSpeed = convertWindUnits(
+    forecast.forecastday[id].day.maxwind_mph,
+    windUnits
+  );
 
   // Get Daily Min Wind Speed
-  const hourlyWindSpeedArr = getDayArr(data[cityName], id, "wind_mph");
-  const dailyMinWindSpeed = Math.min(...hourlyWindSpeedArr);
+  const { arrMin: dailyMinWindSpeed } = getMinMaxArr(
+    getDayArr(data[cityName], id, "wind_mph")
+  );
 
   // Get Current Gust Speed
-  const currentGustSpeed = current.gust_mph;
+  const currentGustSpeed = convertWindUnits(current.gust_mph, windUnits);
 
   // Get Max Gust
-  const gustArr = getDayArr(data[cityName], id, "gust_mph");
-  const dailyMaxGustSpeed = Math.max(...gustArr);
+  const { arrMax: dailyMaxGustSpeed } = getMinMaxArr(
+    getDayArr(data[cityName], id, "gust_mph")
+  );
 
   // Get Week Max Wind for Graph Range
-  const weekMaxWind = getWeekMaxWind(data[cityName]);
+  const weekMaxWind = convertWindUnits(
+    getWeekMaxWind(data[cityName]),
+    windUnits
+  );
 
   const currentText: LeftTextType = {
     topText: currentWindSpeed.toString(),
-    topTextSmall: "mph",
+    topTextSmall: windUnits,
     topTextGray: currentWindDirection,
-    bottomText: `Gusts: ${Math.round(currentGustSpeed)} mph`,
+    bottomText: `Gusts: ${Math.round(currentGustSpeed)} ${windUnits}`,
   };
   const otherText: LeftTextType = {
     topText:
       Math.round(dailyMinWindSpeed) + "–" + Math.round(dailyMaxWindSpeed),
-    topTextSmall: "mph",
-    bottomText: `Gusts up to ${Math.round(dailyMaxGustSpeed)} mph`,
+    topTextSmall: windUnits,
+    bottomText: `Gusts up to ${Math.round(dailyMaxGustSpeed)} ${windUnits}`,
   };
 
   updateLeftText(id, updateShared, currentText, otherText);
+
+  const { timeArr } = getGraphImageAndCoord(
+    data[cityName],
+    id,
+    12,
+    "condition.code"
+  );
+
+  const oddWindDirectionImages = getOddWindDirectionImages(data[cityName], id);
+
+  const windDayArr = getDayArr(data[cityName], id, "wind_mph");
+  const gustDayArr = getDayArr(data[cityName], id, "gust_mph");
+
+  const windForecastWithoutMidnight = windDayArr.map((wind, index) => {
+    return {
+      mainLine: wind,
+      secondLine: gustDayArr[index],
+    };
+  });
+  const windAvgForecast = useForecastData(windForecastWithoutMidnight);
+  const windGraphData = formatGraphDataCopy(data[cityName], windAvgForecast);
 
   return (
     <View className=" pt-[70] mt-[-70]">
@@ -116,24 +164,23 @@ const WindModal = ({
         isActive={windIsActive}
         scrollInfoBold={[windScrollInfoBold, belowWindScroll]}
         currentIndex={currentIndex}
-        leftSide={<></>}
       >
         <Graph
           cityName={cityName}
           // @ts-ignore, used Pick but now sure why it still requires all keys
           state={windState}
           isActive={windIsActive}
-          yAxisLabel="mph"
+          yAxisLabel={windUnits}
           loadedIndex={id}
-          apiObjectString={["wind_mph", "gust_mph"] as (keyof GraphKeyType)[]}
-          domainTop={weekMaxWind + 10}
-          customColor="bgBlue"
-          customColor2="bgGreen"
-          addWeatherText={{ unit: "" }}
+          domainTop={windUnits === "bft" ? 12 : weekMaxWind + 10}
+          // customColor="bgBlue"
+          // customColor2="bgGreen"
+          chartImageArrays={[timeArr, oddWindDirectionImages as SkImage[]]}
+          graphData={windGraphData}
+          firstLineColor={"lightblue"}
+          secondLineColor={"gray"}
         />
       </GraphContainer>
-
-      <WindModalDescription data={data[cityName]} currentIndex={id} />
     </View>
   );
 };

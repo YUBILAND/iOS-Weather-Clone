@@ -1,16 +1,15 @@
-import React from "react";
-import App from "./app";
-import { Provider } from "react-redux";
 import { store } from "@/state/store";
-import Test from "./Test";
+import * as eva from "@eva-design/eva";
+import { ApplicationProvider } from "@ui-kitten/components";
+import React from "react";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { EventProvider } from "react-native-outside-press";
 import {
   initialWindowMetrics,
   SafeAreaProvider,
 } from "react-native-safe-area-context";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import * as eva from "@eva-design/eva";
-import { ApplicationProvider, Layout, Text } from "@ui-kitten/components";
-import { EventProvider } from "react-native-outside-press";
+import { Provider } from "react-redux";
+import App from "./app";
 
 export default function Index() {
   return (

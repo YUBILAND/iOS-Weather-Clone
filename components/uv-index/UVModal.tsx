@@ -9,6 +9,9 @@ import { getDayArr } from "../precipitation/utils/getDayArr";
 import { getUVLevel } from "./utils/getUVLevel";
 import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
 import { updateLeftText } from "../modal/utils/updateLeftText";
+import { useForecastData } from "../graphs/utils/useForecastData";
+import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
+import { GraphDefaultY } from "../graphs/utils/constants";
 
 interface UVModalProps {
   cityName: string;
@@ -28,16 +31,11 @@ const UVModal = ({
 
   const { state: uvState, isActive: uvIsActive } = useChartPressState({
     x: 0,
-    y: {
-      uvIndex: 0,
-      currentLineTop: 0,
-      currentLineBottom: 0,
-      currentPosition: 0,
-    },
+    y: GraphDefaultY,
   });
 
   const uvScrollInfoBold = useAnimatedProps(() => {
-    const pressedValue = uvState.y.uvIndex.value.value;
+    const pressedValue = uvState.y.mainLine.value.value;
     const uvIndex =
       `${Math.round(pressedValue)}` + " " + getUVLevel(pressedValue);
     return {
@@ -66,18 +64,17 @@ const UVModal = ({
     bottomText: "World Health Organization UVI",
   };
 
-  // const currentText: LeftTextType = {
-  //     topText: currentTemperature.toString() + "°",
-  //     bottomText: `H:${maxCelsius}° L:${minCelsius}°`,
-  //     image: "cloudy",
-  //   };
-  //   const otherText: LeftTextType = {
-  //     topText: maxTemperature.toString() + "°",
-  //     topTextGray: minTemperature + "°",
-  //     bottomText: "Celsius",
-  //   };
-
   updateLeftText(id, updateShared, currentText, otherText);
+
+  const uvDayArr = getDayArr(data[cityName], id, "uv");
+
+  const uvForecastWithoutMidnight = uvDayArr.map((uv) => {
+    return {
+      mainLine: uv,
+    };
+  });
+  const uvAvgForecast = useForecastData(uvForecastWithoutMidnight);
+  const uvGraphData = formatGraphDataCopy(data[cityName], uvAvgForecast);
 
   return (
     <>
@@ -87,23 +84,20 @@ const UVModal = ({
         isActive={uvIsActive}
         scrollInfoBold={uvScrollInfoBold}
         currentIndex={currentIndex}
-        leftSide={<></>}
       >
         <Graph
+          graphData={uvGraphData}
           cityName={cityName}
           // @ts-ignore, used Pick but now sure why it still requires all keys
           state={uvState}
           isActive={uvIsActive}
           yAxisLabel="°"
           loadedIndex={id}
-          apiObjectString="uv"
           domainTop={12}
           customColor="bgGreen"
-          addWeatherText={{ unit: "" }}
+          // addWeatherText={{ unit: "" }}
         />
       </GraphContainer>
-
-      {/* <UVModalDescription data={data[cityName]} currentIndex={id} /> */}
     </>
   );
 };

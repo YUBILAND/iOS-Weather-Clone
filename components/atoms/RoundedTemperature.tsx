@@ -6,18 +6,18 @@ type RoundedTemperatureProps = {
   temperature: number | string;
   className?: string;
   style?: TextStyle;
+  unit?: string;
 };
 
 const RoundedTemperature = ({
   temperature,
   className,
   style,
+  unit = "°",
 }: RoundedTemperatureProps) => {
   return (
     <DefaultText className={className} style={style}>
-      {typeof temperature === "number"
-        ? Math.round(temperature) + "°"
-        : temperature}
+      {typeof temperature === "number" ? temperature + unit : temperature}
     </DefaultText>
   );
 };

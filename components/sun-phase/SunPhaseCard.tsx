@@ -1,27 +1,17 @@
-import {
-  getCurrentTime,
-  getRemainingTimeUntilNextPhase,
-  militaryHour,
-  stringToTime,
-} from "@/hooks/hooks";
-import { RootState } from "@/state/store";
+import { getCurrentTime, stringToTime } from "@/hooks/hooks";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
+import { useWeatherData } from "@/hooks/useWeatherData";
 import { FontAwesome } from "@expo/vector-icons";
 import React, { useMemo } from "react";
-import { Pressable, TextInput, View } from "react-native";
-import Animated, { useAnimatedProps } from "react-native-reanimated";
-import { useSelector } from "react-redux";
+import { Pressable, StyleProp, View, ViewStyle } from "react-native";
+import Animated, { AnimatedStyle } from "react-native-reanimated";
 import { useChartPressState } from "victory-native";
-import DefaultText from "../atoms/DefaultText";
-import OpacityCard from "../atoms/OpacityCard";
-import ModalContainer from "../modal/ModalContainer";
-import SunPhaseGraph from "./SunPhaseGraph";
-import SunPhaseModal from "./SunPhaseModal";
-import { getNextPhaseTime } from "./utils/getNextPhaseTime";
-import CardTitle from "../atoms/CardTitle";
 import CardBottomText from "../atoms/CardBottomText";
 import CardStat from "../atoms/CardStat";
-import { useWeatherData } from "@/hooks/useWeatherData";
-import { useIs12Hr } from "@/hooks/useIs12Hr";
+import CardTitle from "../atoms/CardTitle";
+import OpacityCard from "../atoms/OpacityCard";
+import SunPhaseGraph from "./SunPhaseGraph";
+import { getNextPhaseTime } from "./utils/getNextPhaseTime";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
@@ -30,6 +20,7 @@ type SunPhaseCardProps = {
   graphHeight: number;
   showModal: () => void;
   iconSize: number;
+  collapseFromTopStyle: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
 };
 
 const SunPhaseCard = ({
@@ -37,6 +28,7 @@ const SunPhaseCard = ({
   graphHeight,
   showModal,
   iconSize,
+  collapseFromTopStyle,
 }: SunPhaseCardProps) => {
   const { state, isActive } = useChartPressState({
     x: 0,
@@ -64,35 +56,38 @@ const SunPhaseCard = ({
   const domain = useMemo(() => ({ top: 1000, bottom: -800 }), []);
   return (
     <OpacityCard className="h-full">
-      <Pressable
-        onPress={() => {
-          showModal();
-        }}
-      >
-        <View className="px-4 gap-y-2">
+      <Pressable onPress={showModal}>
+        <View className="px-4 pb-2">
           <CardTitle
             title={nextSunPhase}
             icon={<FontAwesome name="sun-o" color="white" size={iconSize} />}
           />
-          <CardStat stat={stringToTime(is12Hr, nextPhaseTime)} />
         </View>
 
-        <SunPhaseGraph
-          cityName={cityName}
-          state={state}
-          isActive={isActive}
-          graphHeight={graphHeight}
-          domain={domain}
-          strokeWidth={4}
-          removePress
-        />
-        <CardBottomText
-          className="px-4"
-          text={`${nextNextSunPhase}: ${stringToTime(
-            is12Hr,
-            nextNextPhaseTime
-          )}`}
-        />
+        <View className="overflow-hidden">
+          <Animated.View style={collapseFromTopStyle}>
+            <View className="px-4">
+              <CardStat stat={stringToTime(is12Hr, nextPhaseTime)} />
+            </View>
+
+            <SunPhaseGraph
+              cityName={cityName}
+              state={state}
+              isActive={isActive}
+              graphHeight={graphHeight}
+              domain={domain}
+              strokeWidth={4}
+              removePress
+            />
+            <CardBottomText
+              className="px-4"
+              text={`${nextNextSunPhase}: ${stringToTime(
+                is12Hr,
+                nextNextPhaseTime
+              )}`}
+            />
+          </Animated.View>
+        </View>
       </Pressable>
     </OpacityCard>
   );

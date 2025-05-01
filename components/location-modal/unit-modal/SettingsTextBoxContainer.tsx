@@ -1,7 +1,7 @@
-import { View, Text } from "react-native";
-import React from "react";
-import DefaultText from "@/components/atoms/DefaultText";
 import { colors } from "@/assets/colors/colors";
+import DefaultText from "@/components/atoms/DefaultText";
+import React from "react";
+import { View } from "react-native";
 
 interface SettingsTextBoxContainerProps {
   title: string;
@@ -20,7 +20,7 @@ const SettingsTextBoxContainer = ({
       </View>
       <View
         style={{ backgroundColor: colors.mediumGray }}
-        className=" w-full pl-4 py-4 rounded-lg gap-3 "
+        className=" w-full px-4 py-4 rounded-lg gap-3 "
       >
         {children}
       </View>

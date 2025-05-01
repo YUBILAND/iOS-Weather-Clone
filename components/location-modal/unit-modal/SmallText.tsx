@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import React from "react";
 import DefaultText from "@/components/atoms/DefaultText";
 import { colors } from "@/assets/colors/colors";

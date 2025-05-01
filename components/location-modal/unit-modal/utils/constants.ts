@@ -39,3 +39,8 @@ export const otherUnitArr = [
   { name: "pressure", label: "Pressure" },
   { name: "distance", label: "Distance" },
 ];
+
+export const windOptionUnitArr = [{ name: "wind", label: "Unit" }];
+export const precipOptionUnitArr = [{ name: "precipitation", label: "Unit" }];
+export const pressureOptionUnitArr = [{ name: "pressure", label: "Unit" }];
+export const distanceOptionUnitArr = [{ name: "distance", label: "Unit" }];

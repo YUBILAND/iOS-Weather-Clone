@@ -12,7 +12,7 @@ export function ToolTip({
 }) {
   return (
     <>
-      <Cursor x={x} y={y} width={1} />
+      <Cursor x={x} y={y} width={1} circleSize={8} />
     </>
   );
 }

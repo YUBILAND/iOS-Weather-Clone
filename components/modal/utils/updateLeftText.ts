@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { LeftTextType } from "../Modal";
+import { useOtherUnits } from "@/hooks/useOtherUnits";
+import { useTemperatureUnit } from "@/hooks/useTemperatureUnit";
 
 export const updateLeftText = (
   id: number,
@@ -7,6 +9,9 @@ export const updateLeftText = (
   currentText: LeftTextType,
   otherText: LeftTextType
 ) => {
+  const tempUnit = useTemperatureUnit();
+  const otherUnits = useOtherUnits();
+
   useEffect(() => {
     const leftText = {
       topText: id === 0 ? currentText.topText ?? "" : otherText.topText ?? "",
@@ -23,5 +28,5 @@ export const updateLeftText = (
     };
 
     updateShared(leftText, id);
-  }, []);
+  }, [tempUnit, otherUnits]);
 };

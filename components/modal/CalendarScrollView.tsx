@@ -32,13 +32,20 @@ const CalendarScrollView = ({
   }, [currentIndex]);
 
   // Get scrollable weekday letters and calendar dates
-  const { month, day, year, weekday } = useMemo(() => {
-    return getCurrentDate(location?.tz_id);
-  }, [location?.tz_id]);
+  const { currentMonthIndex, currentDay, currentYear, currentWeekday } =
+    useMemo(() => {
+      return getCurrentDate(location?.tz_id);
+    }, [location?.tz_id]);
 
   const { scrollWeekdayLetters, scrollDates } = useMemo(() => {
-    return getScrollDates(3, month, day, year, weekday);
-  }, [month, day, year, weekday]);
+    return getScrollDates(
+      3,
+      currentMonthIndex,
+      currentDay,
+      currentYear,
+      currentWeekday
+    );
+  }, [currentMonthIndex, currentDay, currentYear, currentWeekday]);
 
   return (
     <>

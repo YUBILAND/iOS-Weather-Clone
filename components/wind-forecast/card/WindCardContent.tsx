@@ -14,11 +14,11 @@ const WindCardContent = ({ cityName }: WindCardContentProps) => {
   return (
     <>
       <View className="flex-row items-center">
-        <View className="flex-[0.6]">
+        <View className="flex-[0.6] ">
           <WindCardInfo data={data[cityName]} />
         </View>
 
-        <View className="flex-[0.4]">
+        <View className="flex-[0.4] ">
           <WindCardCompass data={data[cityName]} />
         </View>
       </View>

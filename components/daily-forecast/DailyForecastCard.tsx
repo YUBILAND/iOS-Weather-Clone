@@ -1,13 +1,19 @@
-import { RootState } from "@/state/store";
+import { useWeatherData } from "@/hooks/useWeatherData";
 import React, { MutableRefObject } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleProp,
+  View,
+  ViewStyle,
+} from "react-native";
 import { CalendarDaysIcon } from "react-native-heroicons/solid";
-import { useSelector } from "react-redux";
-import DefaultText from "../atoms/DefaultText";
+import CardTitle from "../atoms/CardTitle";
 import OpacityCard from "../atoms/OpacityCard";
 import DailyForecastItem from "./DailyForecastItem";
-import CardTitle from "../atoms/CardTitle";
-import { useWeatherData } from "@/hooks/useWeatherData";
+import Animated, { AnimatedStyle } from "react-native-reanimated";
+import { colors } from "@/assets/colors/colors";
+import HorizontalLine from "../atoms/HorizontalLine";
 
 interface DailyForecastCardProps {
   cityName: string;
@@ -15,6 +21,7 @@ interface DailyForecastCardProps {
   setCurrentIndex: (index: number) => void;
   openModalOnIndexRef: MutableRefObject<boolean>;
   iconSize: number;
+  collapseFromTopStyle: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
 }
 
 const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
@@ -23,39 +30,45 @@ const DailyForecastCard: React.FC<DailyForecastCardProps> = ({
   setCurrentIndex,
   openModalOnIndexRef,
   iconSize,
+  collapseFromTopStyle,
 }) => {
   const data = useWeatherData();
-  const { forecast, current } = data[cityName];
+  const { forecast } = data[cityName];
 
   return (
-    <OpacityCard className="px-4 gap-y-2">
-      <Pressable>
+    <OpacityCard className="px-4">
+      <Pressable className="gap-y-3">
         <CardTitle
-          title={"10-Day Forecast"}
+          title={"3-Day Forecast (FORECAST API FREE PLAN)"}
           icon={<CalendarDaysIcon size={iconSize} color={"white"} />}
-          className={"pb-2"}
         />
 
-        <ScrollView
-          contentContainerStyle={{
-            marginHorizontal: 0,
-          }}
-          showsHorizontalScrollIndicator={false}
-        >
-          <View className="gap-y-3">
-            {forecast?.forecastday.map((item, index) => (
-              <DailyForecastItem
-                key={index}
-                data={data[cityName]}
-                item={item}
-                index={index}
-                showModal={showModal}
-                setCurrentIndex={setCurrentIndex}
-                openModalOnIndexRef={openModalOnIndexRef}
-              />
-            ))}
-          </View>
-        </ScrollView>
+        <View className="overflow-hidden ">
+          <Animated.View style={collapseFromTopStyle} className="gap-y-3">
+            <HorizontalLine />
+
+            <ScrollView
+              contentContainerStyle={{
+                marginHorizontal: 0,
+              }}
+              showsHorizontalScrollIndicator={false}
+            >
+              <View className="gap-y-3">
+                {forecast?.forecastday.map((item, index) => (
+                  <DailyForecastItem
+                    key={index}
+                    data={data[cityName]}
+                    item={item}
+                    index={index}
+                    showModal={showModal}
+                    setCurrentIndex={setCurrentIndex}
+                    openModalOnIndexRef={openModalOnIndexRef}
+                  />
+                ))}
+              </View>
+            </ScrollView>
+          </Animated.View>
+        </View>
       </Pressable>
     </OpacityCard>
   );

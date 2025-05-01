@@ -1,20 +1,15 @@
-import React from "react";
-import { View, Text } from "react-native";
-import DefaultText from "../atoms/DefaultText";
-import HorizontalLine from "../atoms/HorizontalLine";
-import ModalBoxTitle from "../modal/ModalBoxTitle";
-import ModalTextBoxContainer from "../modal/ModalTextBoxContainer";
-import { colors } from "@/assets/colors/colors";
 import { WeatherData } from "@/constants/constants";
-import Dot from "../modal/Dot";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
-import ModalTextBox from "../modal/ModalTextBox";
-import ModalOption from "../modal/ModalOption";
-import ModalTransparentTextBox from "../modal/ModalTransparentTextBox";
-import { getUVArr } from "./utils/getUVArr";
-import HorizontalBar from "./HorizontalBar";
 import { getCurrentTime, stringToTime } from "@/hooks/hooks";
 import { useIs12Hr } from "@/hooks/useIs12Hr";
+import React from "react";
+import { View } from "react-native";
+import DefaultText from "../atoms/DefaultText";
+import HorizontalLine from "../atoms/HorizontalLine";
+import ModalTextBox from "../modal/ModalTextBox";
+import ModalTransparentTextBox from "../modal/ModalTransparentTextBox";
+import { getDayArr } from "../precipitation/utils/getDayArr";
+import { getMinMaxArr } from "../utils/getMinMaxArr";
+import HorizontalBar from "./HorizontalBar";
 
 interface UVModalDescriptionProps {
   data: WeatherData;
@@ -26,33 +21,36 @@ const UVModalDescription = ({
   currentIndex,
 }: UVModalDescriptionProps) => {
   const is12Hr = useIs12Hr();
-  const todaysUVArr = getUVArr(data, 0);
-  const todaysUVHigh = Math.round(Math.max(...todaysUVArr));
 
-  const tomorrowsUVArr = getUVArr(data, 1);
-  const tomorrowsUVHigh = Math.round(Math.max(...tomorrowsUVArr));
+  const { arrMax: todaysUVHigh } = getMinMaxArr(getDayArr(data, 0, "uv"));
+  const { arrMax: tomorrowsUVHigh } = getMinMaxArr(getDayArr(data, 1, "uv"));
 
   const maxUV = Math.max(Math.round(todaysUVHigh), Math.round(tomorrowsUVHigh));
+
+  const currentDescription = `It is currently weak. From 10 to 2, it will become mid level`;
+
+  const dailySummaryText = `The peak UV index today is similar to tomorrow.`;
+  const uvIndexText = `The ultraviolet index, or UV index, is an international standard measurement of the strength of the sunburn-producing ultraviolet radiation at a particular place and time. It is primarily used in daily and hourly forecasts aimed at the general public.`;
+
+  const firstIndex = currentIndex === 0;
 
   return (
     <View className="px-4">
       <ModalTransparentTextBox
         title={
-          currentIndex === 0
+          firstIndex
             ? "Now, " +
               stringToTime(is12Hr, getCurrentTime(data.location.tz_id))
             : "2025, Mar 4th"
         }
-        description="It is currently weak. From 10 to 2, it will become mid level."
+        description={currentDescription}
       />
 
-      {currentIndex === 0 ? (
+      {firstIndex && (
         <>
           <ModalTextBox title="Daily Summary" removeHorizontalPadding>
             <View className="gap-y-2 px-4">
-              <DefaultText>
-                The peak UV index today is similar to tomorrow.
-              </DefaultText>
+              <DefaultText>{dailySummaryText}</DefaultText>
             </View>
 
             <HorizontalLine />
@@ -72,24 +70,11 @@ const UVModalDescription = ({
               />
             </View>
           </ModalTextBox>
-
-          <ModalTextBox title={"About the UV Index"}>
-            <DefaultText>
-              It is currently 10 and cloudy. It is sunny from 8 to 10. At 4 pm
-              it will become sunny. Today's temperature range from 8-20.
-            </DefaultText>
-          </ModalTextBox>
-        </>
-      ) : (
-        <>
-          <ModalTextBox title={"About the UV Index"}>
-            <DefaultText>
-              It is currently 10 and cloudy. It is sunny from 8 to 10. At 4 pm
-              it will become sunny. Today's temperature range from 8-20.
-            </DefaultText>
-          </ModalTextBox>
         </>
       )}
+      <ModalTextBox title={"About the UV Index"}>
+        <DefaultText>{uvIndexText}</DefaultText>
+      </ModalTextBox>
     </View>
   );
 };

@@ -6,18 +6,20 @@ import DefaultText from "../atoms/DefaultText";
 
 interface ModalTextBoxProps {
   title: string;
+  subTitle?: string;
   children: React.ReactNode;
   removeHorizontalPadding?: boolean;
 }
 
 const ModalTextBox = ({
   title,
+  subTitle,
   children,
   removeHorizontalPadding = false,
 }: ModalTextBoxProps) => {
   return (
     <View>
-      <ModalBoxTitle title={title} />
+      <ModalBoxTitle title={title} subTitle={subTitle} />
 
       <ModalTextBoxContainer removeHorizontalPadding={removeHorizontalPadding}>
         {children}

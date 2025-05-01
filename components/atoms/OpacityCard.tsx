@@ -1,7 +1,8 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, StyleProp, ViewStyle } from "react-native";
 import React, { PropsWithChildren } from "react";
 import { colors } from "@/assets/colors/colors";
 import { BlurView } from "expo-blur";
+import Animated, { AnimatedStyle } from "react-native-reanimated";
 
 const OpacityCard = ({
   children,
@@ -11,11 +12,18 @@ const OpacityCard = ({
   className?: string;
 }) => {
   return (
-    <View className="rounded-xl overflow-hidden">
-      <BlurView className={`py-4 ${className}`} intensity={60} tint="dark">
+    <Animated.View
+      className=" overflow-hidden rounded-xl"
+      // style={{ borderRadius: 20 }}
+    >
+      <BlurView
+        className={`rounded-xl py-4 ${className}`}
+        intensity={60}
+        tint="dark"
+      >
         {children}
       </BlurView>
-    </View>
+    </Animated.View>
   );
 };
 

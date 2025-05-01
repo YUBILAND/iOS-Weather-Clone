@@ -13,6 +13,10 @@ import { LeftTextType } from "../modal/Modal";
 import { useWeatherData } from "@/hooks/useWeatherData";
 import { updateLeftText } from "../modal/utils/updateLeftText";
 import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
+import { useForecastData } from "../graphs/utils/useForecastData";
+import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
+import { GraphDefaultY } from "../graphs/utils/constants";
+import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
 
 interface HumidityModalProps {
   cityName: string;
@@ -33,22 +37,16 @@ const HumidityModal = ({
   const { state: humidityState, isActive: humidityIsActive } =
     useChartPressState({
       x: 0,
-      y: {
-        humidity: 0,
-        currentLineTop: 0,
-        currentLineBottom: 0,
-        currentPosition: 0,
-      },
+      y: GraphDefaultY,
     });
+  useSyncAnimatedValue(humidityIsActive, isActiveShared);
   const humidityScrollInfoBold = useAnimatedProps(() => {
-    const humidity = `${humidityState.y.humidity.value.value}%`;
+    const humidity = `${humidityState.y.mainLine.value.value}%`;
     return {
       text: humidity,
       value: humidity,
     };
   });
-
-  useSyncAnimatedValue(humidityIsActive, isActiveShared);
 
   const currentHumidity = data[cityName].current.humidity;
   const currentDewpoint = data[cityName].current.dewpoint_c;
@@ -67,6 +65,27 @@ const HumidityModal = ({
 
   updateLeftText(id, updateShared, currentText, otherText);
 
+  const humidityDayArr = getDayArr(data[cityName], id, "humidity");
+  const humidityForecastWithoutMidnight = humidityDayArr.map((humidity) => {
+    return {
+      mainLine: humidity,
+    };
+  });
+  const humidityAvgForecast = useForecastData(humidityForecastWithoutMidnight);
+  const humidityGraphData = formatGraphDataCopy(
+    data[cityName],
+    humidityAvgForecast
+  );
+
+  const { timeArr: timeArr, imageArr: humidityArr } = getGraphImageAndCoord(
+    data[cityName],
+    id,
+    4,
+    "humidity"
+  );
+
+  const humidityArrWithUnit = humidityArr.map((humidity) => humidity + "%");
+
   return (
     <>
       <GraphContainer
@@ -75,18 +94,17 @@ const HumidityModal = ({
         isActive={humidityIsActive}
         scrollInfoBold={humidityScrollInfoBold}
         currentIndex={currentIndex}
-        leftSide={<></>}
       >
         <Graph
+          graphData={humidityGraphData}
           cityName={cityName}
-          // @ts-ignore, used Pick but now sure why it still requires all keys
           state={humidityState}
           isActive={humidityIsActive}
           yAxisLabel="%"
           loadedIndex={id}
-          apiObjectString="humidity"
           customColor="bgGreen"
-          addWeatherText={{ amount: 4, unit: "%" }}
+          firstLineColor={"green"}
+          chartImageArrays={[timeArr, humidityArrWithUnit]}
         />
       </GraphContainer>
     </>
