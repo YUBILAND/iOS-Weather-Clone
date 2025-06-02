@@ -1,5 +1,6 @@
 import { RootState } from "@/state/store";
 import { useSelector } from "react-redux";
+import { shallowEqual } from "react-redux";
 
 // export const useTemperatureUnit = () => {
 //   const { tempUnit } = useSelector((state: RootState) => state.settings);
@@ -7,4 +8,4 @@ import { useSelector } from "react-redux";
 // };
 
 export const useTemperatureUnit = () =>
-  useSelector((state: RootState) => state.settings.tempUnit);
+  useSelector((state: RootState) => state.settings.tempUnit, shallowEqual);

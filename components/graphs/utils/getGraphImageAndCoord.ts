@@ -6,29 +6,48 @@ export const getGraphImageAndCoord = (
   imageCount: number,
   objectKey: keyof HourObject | "condition.code"
 ) => {
-  const timeDistance = 24 / imageCount;
-  const individualOffset = timeDistance / 2;
-
-  let timeArr: number[] = [];
+  // For imageCount 12 it produces [1,3,5,7,..]
+  const timeArr: number[] = getTimeArr(imageCount);
 
   let imageArr: string[] = [];
 
-  for (let i = 0; i < imageCount; i++) {
-    timeArr.push(individualOffset + i * timeDistance);
-  }
-  for (let i = 0; i < imageCount; i++) {
-    const hourObject = data.forecast.forecastday[currentIndex].hour[timeArr[i]];
+  const dataHour = data.forecast.forecastday[currentIndex].hour;
 
-    const weatherDataItem =
-      objectKey === "condition.code"
-        ? hourObject.condition.code
-        : hourObject[objectKey];
+  const wantWeatherCode = objectKey === "condition.code";
+
+  for (let i = 0; i < imageCount; i++) {
+    const hourObject = dataHour[timeArr[i]];
+
+    const weatherDataItem = wantWeatherCode
+      ? hourObject.condition.code
+      : hourObject[objectKey];
+
+    const isWeatherCode = typeof weatherDataItem === "number";
+
     imageArr.push(
-      typeof weatherDataItem === "number"
+      isWeatherCode
         ? Math.round(weatherDataItem).toString()
         : weatherDataItem.toString()
     );
   }
 
   return { timeArr, imageArr };
+};
+
+export const getTimeArr = (imageCount: number) => {
+  const timeGap = 24 / imageCount;
+  const individualOffset = timeGap / 2;
+
+  let timeArr: number[] = [];
+  for (let i = 0; i < imageCount; i++) {
+    timeArr.push(individualOffset + i * timeGap);
+  }
+
+  return timeArr;
+};
+
+export const getGapArr = (timeArr: number[], arr: number[]) => {
+  return timeArr
+    .filter((val) => arr[val])
+    .map((val) => Math.round(arr[val]).toString());
 };

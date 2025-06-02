@@ -12,6 +12,7 @@ import { updateLeftText } from "../modal/utils/updateLeftText";
 import { useForecastData } from "../graphs/utils/useForecastData";
 import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
 import { GraphDefaultY } from "../graphs/utils/constants";
+import { Colors, colors } from "@/assets/colors/colors";
 
 interface UVModalProps {
   cityName: string;
@@ -34,7 +35,7 @@ const UVModal = ({
     y: GraphDefaultY,
   });
 
-  const uvScrollInfoBold = useAnimatedProps(() => {
+  const uvDragText = useAnimatedProps(() => {
     const pressedValue = uvState.y.mainLine.value.value;
     const uvIndex =
       `${Math.round(pressedValue)}` + " " + getUVLevel(pressedValue);
@@ -48,55 +49,62 @@ const UVModal = ({
   // Turns out assigning shared value within worklet results rerender, so use runOnJS
   useSyncAnimatedValue(uvIsActive, isActiveShared);
 
-  const currentUVIndex = data[cityName].current.uv;
+  const { currentText, otherText } = (() => {
+    const currentUVIndex = data[cityName].current.uv;
+    const dailyUVArr = getDayArr(data[cityName], id, "uv");
+    const dailyMax = Math.max(...dailyUVArr);
 
-  const dailyUVArr = getDayArr(data[cityName], id, "uv");
-  const dailyMax = Math.max(...dailyUVArr);
-
-  const currentText: LeftTextType = {
-    topText: Math.round(currentUVIndex).toString(),
-    topTextSmall: getUVLevel(currentUVIndex),
-    bottomText: "World Health Organization UVI",
-  };
-  const otherText: LeftTextType = {
-    topText: Math.round(dailyMax).toString(),
-    topTextSmall: getUVLevel(dailyMax),
-    bottomText: "World Health Organization UVI",
-  };
+    const currentText: LeftTextType = {
+      topText: Math.round(currentUVIndex).toString(),
+      topTextSmall: getUVLevel(currentUVIndex),
+      bottomText: "World Health Organization UVI",
+    };
+    const otherText: LeftTextType = {
+      topText: Math.round(dailyMax).toString(),
+      topTextSmall: getUVLevel(dailyMax),
+      bottomText: "World Health Organization UVI",
+    };
+    return { currentText, otherText };
+  })();
 
   updateLeftText(id, updateShared, currentText, otherText);
 
-  const uvDayArr = getDayArr(data[cityName], id, "uv");
+  const uvGraphData = (() => {
+    const uvDayArr = getDayArr(data[cityName], id, "uv");
+    const uvForecastWithoutMidnight = uvDayArr.map((uv) => {
+      return {
+        mainLine: uv,
+      };
+    });
+    const uvAvgForecast = useForecastData(uvForecastWithoutMidnight);
+    const uvGraphData = formatGraphDataCopy(data[cityName], uvAvgForecast);
 
-  const uvForecastWithoutMidnight = uvDayArr.map((uv) => {
-    return {
-      mainLine: uv,
-    };
-  });
-  const uvAvgForecast = useForecastData(uvForecastWithoutMidnight);
-  const uvGraphData = formatGraphDataCopy(data[cityName], uvAvgForecast);
+    return uvGraphData;
+  })();
 
+  const GraphContainerProps = {
+    cityName,
+    state: uvState,
+    isActive: uvIsActive,
+    scrollInfoBold: uvDragText,
+    currentIndex,
+  };
+
+  const GraphProps = {
+    graphData: uvGraphData,
+    cityName,
+    state: uvState,
+    isActive: uvIsActive,
+    yAxisLabel: "°",
+    loadedIndex: id,
+    domainTop: 12,
+    customColor: "bgGreen" as Colors,
+    firstLineColor: "green",
+  };
   return (
     <>
-      <GraphContainer
-        cityName={cityName}
-        state={uvState}
-        isActive={uvIsActive}
-        scrollInfoBold={uvScrollInfoBold}
-        currentIndex={currentIndex}
-      >
-        <Graph
-          graphData={uvGraphData}
-          cityName={cityName}
-          // @ts-ignore, used Pick but now sure why it still requires all keys
-          state={uvState}
-          isActive={uvIsActive}
-          yAxisLabel="°"
-          loadedIndex={id}
-          domainTop={12}
-          customColor="bgGreen"
-          // addWeatherText={{ unit: "" }}
-        />
+      <GraphContainer {...GraphContainerProps}>
+        <Graph {...GraphProps} />
       </GraphContainer>
     </>
   );

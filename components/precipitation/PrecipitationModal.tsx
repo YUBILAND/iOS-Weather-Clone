@@ -18,6 +18,8 @@ import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
 import { SkImage, useImage } from "@shopify/react-native-skia";
 import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
 import Dot from "../modal/Dot";
+import { View } from "react-native";
+import DotText from "../conditions/DotText";
 
 interface PrecipitationModalProps {
   cityName: string;
@@ -120,8 +122,12 @@ const PrecipitationModal = ({
           chartImageArrays={[timeArr, weatherImageArr as SkImage[]]}
         />
       </GraphContainer>
-
-      <Dot colorsArr={["red", "red"]} />
+      <View className="w-full px-2 flex-row justify-between">
+        <DotText dotColor="lightblue" text="Rain" />
+        <DotText dotColor="#035afc" text="Sleet" />
+        <DotText dotColor="#9803fc" text="Wintry Mix" />
+        <DotText dotColor="white" text="Snow" />
+      </View>
     </>
   );
 };

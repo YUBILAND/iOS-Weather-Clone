@@ -1,5 +1,9 @@
 import { colors } from "@/assets/colors/colors";
-import { getCurrentTime, getRemainingTimeUntilNextPhase } from "@/hooks/hooks";
+import {
+  getCurrentTime,
+  getRemainingTimeUntilNextPhase,
+  stringToTime,
+} from "@/hooks/hooks";
 import { useIs12Hr } from "@/hooks/useIs12Hr";
 import { useWeatherData } from "@/hooks/useWeatherData";
 import React from "react";
@@ -10,13 +14,13 @@ import SunPhaseGraph from "./SunPhaseGraph";
 import SunPhaseHeader from "./SunPhaseHeader";
 import SunPhaseInfo from "./SunPhaseInfo";
 import { getSunPhaseInfo } from "./utils/getSunPhaseInfo";
+import { getNextPhaseTime } from "./utils/getNextPhaseTime";
 
 type SunPhaseModalProps = {
   cityName: string;
-  nextPhaseTime: string;
 };
 
-const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
+const SunPhaseModal = ({ cityName }: SunPhaseModalProps) => {
   const { state, isActive } = useChartPressState({
     x: 0,
     y: { sunPath: 0, sunPosition: 0, phaseLine: 0 },
@@ -28,6 +32,10 @@ const SunPhaseModal = ({ cityName, nextPhaseTime }: SunPhaseModalProps) => {
   const is12Hr = useIs12Hr();
 
   const currentTime = getCurrentTime(location?.tz_id);
+  const nextPhaseTime = stringToTime(
+    is12Hr,
+    getNextPhaseTime(data[cityName], currentTime)
+  );
   const remainingTime = getRemainingTimeUntilNextPhase(
     currentTime,
     nextPhaseTime

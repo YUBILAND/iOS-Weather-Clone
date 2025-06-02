@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import {
   FlatList,
+  ImageSourcePropType,
   Pressable,
   TouchableWithoutFeedback,
   useWindowDimensions,
@@ -39,6 +40,9 @@ import WindModal from "../wind-forecast/WindModal";
 import ModalDropdownButton from "./dropdown/ModalDropdownButton";
 import ModalDescriptions from "./ModalDescriptions";
 import AirQualityModal from "../air-quality/AirQualityModal";
+import RainHourModal from "../rain-hour/RainHourModal";
+import ModalContainer from "./ModalContainer";
+import DefaultText from "../atoms/DefaultText";
 
 Animated.addWhitelistedNativeProps({ value: true, source: true });
 
@@ -68,16 +72,31 @@ const Modal = ({
   const isActiveShared = useSharedValue(true);
   const [openModalDropdown, setOpenModalDropdown] = useState<boolean>(false);
   const [leftText, setLeftText] = useState<LeftTextType[]>([
-    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
+    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: null },
+    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: null },
+    { topText: "No Data", topTextGray: "", bottomText: "No Data", image: null },
   ]);
 
   const leftTextSharedRef = useRef(
     useSharedValue<LeftTextType[]>([
-      { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-      { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
-      { topText: "No Data", topTextGray: "", bottomText: "No Data", image: "" },
+      {
+        topText: "No Data",
+        topTextGray: "",
+        bottomText: "No Data",
+        image: null,
+      },
+      {
+        topText: "No Data",
+        topTextGray: "",
+        bottomText: "No Data",
+        image: null,
+      },
+      {
+        topText: "No Data",
+        topTextGray: "",
+        bottomText: "No Data",
+        image: null,
+      },
     ])
   );
   const flatlistRef = useRef<FlatList>(null);
@@ -93,16 +112,22 @@ const Modal = ({
     };
   });
 
+  const flatlistExists = flatlistRef.current;
+  const isCurrentlyScrolling = currentlyScrollingRef.current;
+
+  const scrollToThisIndex = (index: number, animated: boolean = true) =>
+    flatlistExists!.scrollToIndex({ animated: animated, index: index });
+
   // If user is scrolling, animate the scroll
-  if (flatlistRef.current && currentlyScrollingRef.current) {
-    flatlistRef.current.scrollToIndex({ animated: true, index: currentIndex });
+  if (flatlistExists && isCurrentlyScrolling) {
+    scrollToThisIndex(currentIndex);
     currentlyScrollingRef.current = true;
     enableScrollRef.current = true;
   }
 
-  if (flatlistRef.current && openModalOnIndexRef.current) {
-    // console.log("current index is ", currentIndex);
-    flatlistRef.current.scrollToIndex({ animated: false, index: currentIndex });
+  const openDifferentIndex = openModalOnIndexRef.current;
+  if (flatlistExists && openDifferentIndex) {
+    scrollToThisIndex(currentIndex, false);
     openModalOnIndexRef.current = false;
   }
 
@@ -123,10 +148,9 @@ const Modal = ({
             {selectedModal === "conditions" ? (
               <React.Fragment key={"conditions"}>
                 <RenderConditionsGraphs
-                  data={data[cityName]}
                   cityName={cityName}
                   currentIndex={item.id}
-                  item={item}
+                  id={item.id}
                   updateShared={updateLeftTextShared}
                   isActiveShared={isActiveShared}
                 />
@@ -239,16 +263,16 @@ const Modal = ({
         id: number;
       }>[];
     }) => {
-      if (!currentlyScrollingRef.current) {
+      const notCurrentlyScrolling = !currentlyScrollingRef.current;
+      if (notCurrentlyScrolling) {
         //given that only two screens can be visible at a time
-
         if (viewableItems.length === 2) {
           // when two screens are visible
           const indexOfNextScreen = viewableItems.findIndex(
             (item) => item.index !== currentIndex
           );
-
-          setCurrentIndex(viewableItems[indexOfNextScreen]?.index ?? 0);
+          const nextScreen = viewableItems[indexOfNextScreen];
+          setCurrentIndex(nextScreen?.index ?? 0);
         } else if (viewableItems[0].index !== currentIndex) {
           setCurrentIndex(viewableItems[0]?.index ?? 0);
         }
@@ -259,22 +283,22 @@ const Modal = ({
   );
 
   // Props for components
-  const calendarScrollViewProps = {
+  const CalendarScrollViewProps = {
     cityName,
     currentIndex,
     setCurrentIndex,
-    handleOpenModalDropdown,
+    setOpenModalDropdown,
   };
-  const graphLeftTextProps = {
+  const GraphLeftTextProps = {
     leftText,
     selectedModal,
   };
-  const modalDropDownProps = {
+  const ModalDropDownProps = {
     selectedModal,
     openModalDropdown,
-    handleOpenModalDropdown,
+    setOpenModalDropdown,
   };
-  const flatlistProps = {
+  const FlatlistVisualProps = {
     horizontal: true,
     decelerationRate: 0,
     snapToInterval: width, // Use the screen width
@@ -282,24 +306,49 @@ const Modal = ({
     showsHorizontalScrollIndicator: false,
     pagingEnabled: true,
   };
+  const ModalDropdownContainerProps = {
+    selectedModal,
+    setSelectedModal,
+    isOpen: openModalDropdown,
+    handleIsOpen: setOpenModalDropdown,
+  };
+  const FlatListProps = {
+    ...FlatlistVisualProps,
+    onViewableItemsChanged: handleViewableItemsChanged,
+    viewabilityConfig: {
+      itemVisiblePercentThreshold: 50,
+    },
+    ref: flatlistRef,
+    data: flatlistRenderAmount,
+    keyExtractor: keyExtractor,
+    renderItem: renderItem,
+    scrollEnabled: enableScrollRef.current,
+    onMomentumScrollEnd: () => {
+      enableScrollRef.current = true;
+      currentlyScrollingRef.current = false;
+    },
+  };
+  const ModalDescriptionProps = {
+    data: data[cityName],
+    currentIndex,
+    selectedModal,
+  };
 
-  return (
-    <>
-      {!["airQuality", "sunPhase", "averages"].includes(selectedModal) && (
-        <>
-          {/* Calendar */}
-          <View>
-            <CalendarScrollView
-              {...calendarScrollViewProps}
-              scrollRef={currentlyScrollingRef}
-            />
+  const excludeCalendarArr = ["airQuality", "sunPhase", "averages", "rainHour"];
 
-            <HorizontalLine />
-          </View>
-        </>
-      )}
-
-      {/* Popped Up Left Text and Modal Dropdown */}
+  const Calendar = () => {
+    return (
+      <>
+        <CalendarScrollView
+          {...CalendarScrollViewProps}
+          scrollRef={currentlyScrollingRef}
+        />
+        <HorizontalLine />
+      </>
+    );
+  };
+  const GraphDetailBar = () => {
+    return (
       <View className="relative">
         <View
           className="absolute top-0 left-0 w-screen flex-row justify-between items-center h-20"
@@ -307,64 +356,71 @@ const Modal = ({
         >
           <View className="z-0">
             <Animated.View style={isBallenActive}>
-              <GraphLeftText
-                {...graphLeftTextProps}
-                id={currentIndex}
-                leftTextShared={leftTextSharedRef}
-              />
+              <GraphLeftText {...GraphLeftTextProps} id={currentIndex} />
             </Animated.View>
           </View>
           <Animated.View className="z-20 relative" style={isBallenActive}>
-            <ModalDropdownButton {...modalDropDownProps} />
+            <ModalDropdownButton {...ModalDropDownProps} />
 
-            <ModalDropdownContainer
-              selectedModal={selectedModal}
-              setSelectedModal={setSelectedModal}
-              isOpen={openModalDropdown}
-              handleIsOpen={handleOpenModalDropdown}
-            />
+            <ModalDropdownContainer {...ModalDropdownContainerProps} />
           </Animated.View>
         </View>
       </View>
+    );
+  };
+
+  return (
+    <>
+      {!excludeCalendarArr.includes(selectedModal) && <Calendar />}
+
+      {/* Popped Up Left Text and Modal Dropdown */}
+      <GraphDetailBar />
 
       {/* Graphs and FlatList */}
-      <>
-        <FlatList
-          onViewableItemsChanged={handleViewableItemsChanged}
-          viewabilityConfig={{
-            itemVisiblePercentThreshold: 50,
-          }}
-          {...flatlistProps}
-          ref={flatlistRef}
-          data={flatlistRenderAmount}
-          keyExtractor={keyExtractor}
-          renderItem={renderItem}
-          scrollEnabled={enableScrollRef.current}
-          onMomentumScrollEnd={() => {
-            enableScrollRef.current = true;
-            currentlyScrollingRef.current = false;
-          }}
-        />
-      </>
+      {!excludeCalendarArr.includes(selectedModal) ? (
+        <>
+          <View>
+            <FlatList {...FlatListProps} />
 
-      {selectedModal === "airQuality" && (
-        <View className="px-4">
-          <AirQualityModal cityName={cityName} />
-        </View>
+            {/* For Chance of Precipitation Text in the Conditions */}
+            {selectedModal === "conditions" && (
+              <View className="absolute top-[280] left-0">
+                <View
+                  className="h-12 pl-6"
+                  style={{ justifyContent: "center" }}
+                >
+                  <DefaultText className="text-2xl font-semibold ">
+                    Chance of Precipitation
+                  </DefaultText>
+                </View>
+              </View>
+            )}
+          </View>
+        </>
+      ) : (
+        <>
+          {selectedModal === "airQuality" && (
+            <View className="px-4">
+              <AirQualityModal cityName={cityName} />
+            </View>
+          )}
+
+          {selectedModal === "averages" && (
+            <View className="px-4">
+              <AveragesModal cityName={cityName} />
+            </View>
+          )}
+
+          {selectedModal === "rainHour" && (
+            <View className="px-4">
+              <RainHourModal cityName={cityName} />
+            </View>
+          )}
+        </>
       )}
 
-      {selectedModal === "averages" && (
-        <View className="px-4">
-          <AveragesModal cityName={cityName} />
-        </View>
-      )}
-
-      <Pressable onPressIn={() => handleOpenModalDropdown(false)}>
-        <ModalDescriptions
-          data={data[cityName]}
-          currentIndex={currentIndex}
-          selectedModal={selectedModal}
-        />
+      <Pressable onPressIn={() => setOpenModalDropdown(false)}>
+        <ModalDescriptions {...ModalDescriptionProps} />
       </Pressable>
     </>
   );
@@ -375,7 +431,7 @@ export type LeftTextType = {
   topTextSmall?: string;
   topTextGray?: string;
   bottomText: string;
-  image?: string;
+  image?: ImageSourcePropType | null;
 };
 
 export default React.memo(Modal);

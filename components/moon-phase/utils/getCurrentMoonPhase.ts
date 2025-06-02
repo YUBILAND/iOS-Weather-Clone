@@ -1,13 +1,14 @@
 import { WeatherData } from "@/constants/constants";
 import { MoonPhase } from "./constants";
 import { getDaysSincePrevFullMoon } from "./getDaysSincePrevFullMoon";
+import { useMemo } from "react";
 
 export const getCurrentMoonPhase = (
   data: WeatherData,
   userScrolledIndex: number,
   initialScrollIndex: number
 ) => {
-  const daysSincePrevFullMoon = getDaysSincePrevFullMoon();
+  const daysSincePrevFullMoon = useMemo(() => getDaysSincePrevFullMoon(), []);
 
   const distanceUserScrolledFromInitial =
     userScrolledIndex - initialScrollIndex;

@@ -44,9 +44,13 @@ const ConditionsModalDescription = ({
 
   const dailyComparisonArr = getDailyComparisonArr(data, "temp_c");
 
-  const forecastText = `It is currently 10 and cloudy. It is sunny from 8 to 10. At 4 pm it will become sunny. Today's temperature range from 8-20.`;
-  const dailySummaryText = `Monday's lowest temperature is 2 at midnight. Highest temp is 13 at midnight`;
-  const dailyComparisonText = `Today is hotter than tomorrow`;
+  // const forecastText = `It is currently 10 and cloudy. It is sunny from 8 to 10. At 4 pm it will become sunny. Today's temperature range from 8-20.`;
+  // const dailySummaryText = `Monday's lowest temperature is 2 at midnight. Highest temp is 13 at midnight`;
+  // const dailyComparisonText = `Today is hotter than tomorrow`;
+
+  const forecastText = `Forecast Text`;
+  const dailySummaryText = `Daily Summary Text`;
+  const dailyComparisonText = `Daily Comparison Text`;
 
   const firstIndex = currentIndex === 0;
   return (

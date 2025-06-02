@@ -2,7 +2,11 @@ import { colors } from "@/assets/colors/colors";
 import { BlurView } from "expo-blur";
 import React from "react";
 import { View } from "react-native";
-import { modalDropdownObjects, SelectModal } from "../utils/modalConstants";
+import {
+  modalDropdownObjects,
+  ModalDropdownObjectsType,
+  SelectModal,
+} from "../utils/modalConstants";
 import ModalDropdownItem from "./ModalDropdownItem";
 import { shadowViewStyle } from "@/components/location-modal/unit-modal/MyOverflowMenu";
 
@@ -19,6 +23,13 @@ const ModalDropdownContainer = ({
   isOpen,
   handleIsOpen,
 }: ModalDropdownProps) => {
+  const doNotShowInDropDown = [
+    "sunPhase",
+    "moonPhase",
+    "rainHour",
+    "airQuality",
+    "averages",
+  ];
   return (
     <>
       {/* View pushes modal dropdown up which looks better than without */}
@@ -38,14 +49,14 @@ const ModalDropdownContainer = ({
                 selectedModal,
                 setSelectedModal,
               };
-              return (
+              return !doNotShowInDropDown.includes(key) ? (
                 <ModalDropdownItem
                   key={item.id}
                   {...itemProps}
                   modalName={key as SelectModal}
                   handleIsOpen={(open: boolean) => handleIsOpen(open)}
                 />
-              );
+              ) : null;
             })}
           </BlurView>
         )}

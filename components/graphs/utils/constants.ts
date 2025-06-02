@@ -1,4 +1,15 @@
+import { SkImage } from "@shopify/react-native-skia";
 import { ChartPressState } from "victory-native";
+
+export type ChartPressStateY = {
+  mainLine: number | undefined;
+  secondLine: number | undefined;
+  thirdLine: number | undefined;
+  hour: number;
+  currentLineTop: number | undefined;
+  currentLineBottom: number | undefined;
+  currentPosition: number | undefined;
+};
 
 export type ChartPressStateType = ChartPressState<{
   x: number;
@@ -20,3 +31,12 @@ export const GraphDefaultY = {
   secondLine: 0,
   thirdLine: 0,
 };
+
+export type ChartImageArrayType = [number[], (string | SkImage)[]];
+
+export type ChartDomainType =
+  | {
+      x?: [number] | [number, number];
+      y?: [number] | [number, number];
+    }
+  | undefined;

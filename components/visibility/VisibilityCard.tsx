@@ -8,6 +8,12 @@ import CardStat from "../atoms/CardStat";
 import CardTitle from "../atoms/CardTitle";
 import OpacityCard from "../atoms/OpacityCard";
 import Animated, { AnimatedStyle } from "react-native-reanimated";
+import { useExtraData } from "@/hooks/useWeatherData";
+import {
+  chunkenArray,
+  getCurrentVis,
+  getVisMessage,
+} from "./helper/helper-functions";
 
 interface VisibilityCardProps {
   cityName: string;
@@ -23,11 +29,15 @@ const VisibilityCard = ({
   collapseFromTopStyle,
 }: VisibilityCardProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
-  const { current } = data[cityName];
+  const { location } = data[cityName];
 
-  const currentVisibility = Math.round(current.vis_miles).toString() + " mi";
+  const extraData = useExtraData();
 
-  const message = "random message";
+  const visData = extraData[cityName].visData;
+  const visChunkArr = chunkenArray(visData);
+
+  const currentVis = Math.round(getCurrentVis(visChunkArr, location));
+  const message = getVisMessage(currentVis);
 
   return (
     <OpacityCard>
@@ -43,7 +53,7 @@ const VisibilityCard = ({
         />
         <View className="overflow-hidden">
           <Animated.View style={collapseFromTopStyle}>
-            <CardStat stat={currentVisibility} />
+            <CardStat stat={currentVis.toString() + " mi"} />
 
             <CardBottomText text={message} />
           </Animated.View>

@@ -20,6 +20,6 @@ export const getTickArr = (whiteTicks: number, totalTicks: number) => {
     .fill(0)
     .map((_, idx) => ({
       id: idx,
-      weekday: weekdayArr[Math.floor(idx / 12)],
+      weekday: weekdayArr[Math.floor(idx % 12)],
     }));
 };

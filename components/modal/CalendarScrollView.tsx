@@ -10,7 +10,7 @@ interface CalendarScrollViewProps {
   currentIndex: number;
   setCurrentIndex: (index: number) => void;
   scrollRef: MutableRefObject<boolean>;
-  handleOpenModalDropdown: (visible: boolean) => void;
+  setOpenModalDropdown: (visible: boolean) => void;
 }
 
 const CalendarScrollView = ({
@@ -18,7 +18,7 @@ const CalendarScrollView = ({
   currentIndex,
   setCurrentIndex,
   scrollRef,
-  handleOpenModalDropdown,
+  setOpenModalDropdown,
 }: CalendarScrollViewProps) => {
   const data = useWeatherData();
   const { location } = data[cityName];
@@ -47,91 +47,102 @@ const CalendarScrollView = ({
     );
   }, [currentMonthIndex, currentDay, currentYear, currentWeekday]);
 
-  return (
-    <>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{
-          gap: 12,
-          marginTop: 0,
+  const ScrollViewProps = {
+    horizontal: true,
+    showsHorizontalScrollIndicator: false,
+    contentContainerStyle: {
+      gap: 12,
+      marginTop: 0,
+      marginBottom: 12,
+      paddingHorizontal: 12,
+    },
+  };
+
+  const CalendarDates = () => {
+    return scrollWeekdayLetters.map((val, index) => {
+      const calendarDateColor =
+        index === currentIndex
+          ? colors.darkGray
+          : index === 0
+          ? colors.blue
+          : "white";
+
+      const calendarDateBackgroundColor =
+        index === currentIndex
+          ? index === 0
+            ? colors.blue
+            : colors.lightGray
+          : "transparent";
+
+      const setNewIndex = () => {
+        const differentIndex = index !== currentIndex;
+        if (differentIndex) {
+          setCurrentIndex(index);
+          setOpenModalDropdown(false);
+          // why is this true?
+          scrollRef.current = true;
+          // setTimeout(() => {
+          //   scrollRef.current = false;
+          // }, 1000);
+        }
+      };
+
+      return (
+        <Pressable
+          key={index}
+          className="gap-y-1 items-center"
+          onPress={setNewIndex}
+        >
+          <DefaultText key={index} className="font-semibold">
+            {val}
+          </DefaultText>
+
+          <View
+            className="items-center justify-center"
+            style={{
+              width: 40,
+              height: 40,
+              backgroundColor: calendarDateBackgroundColor,
+              borderRadius: index === currentIndex ? 20 : undefined,
+            }}
+          >
+            <DefaultText
+              key={index}
+              className="text-2xl font-semibold"
+              style={{
+                color: calendarDateColor,
+              }}
+            >
+              {scrollDates[index]}
+            </DefaultText>
+          </View>
+        </Pressable>
+      );
+    });
+  };
+
+  const CalendarFullDate = () => {
+    return (
+      <DefaultText
+        style={{
+          fontSize: 18,
+          lineHeight: 18,
           marginBottom: 12,
-          paddingHorizontal: 12,
+          fontWeight: 600,
         }}
       >
-        {scrollWeekdayLetters.map((val, index) => {
-          const calendarDateColor =
-            index === currentIndex
-              ? colors.darkGray
-              : index === 0
-              ? colors.blue
-              : "white";
-
-          const calendarDateBackgroundColor =
-            index === currentIndex
-              ? index === 0
-                ? colors.blue
-                : colors.lightGray
-              : "transparent";
-
-          const handleNewIndex = () => {
-            const differentIndex = index !== currentIndex;
-            if (differentIndex) {
-              setCurrentIndex(index);
-              handleOpenModalDropdown(false);
-              // why is this true?
-              scrollRef.current = true;
-              // setTimeout(() => {
-              //   scrollRef.current = false;
-              // }, 1000);
-            }
-          };
-
-          return (
-            <Pressable
-              key={index}
-              className="gap-y-1 items-center"
-              onPress={() => handleNewIndex()}
-            >
-              <DefaultText key={index} className="font-semibold">
-                {val}
-              </DefaultText>
-
-              <View
-                className="items-center justify-center"
-                style={{
-                  width: 40,
-                  height: 40,
-                  backgroundColor: calendarDateBackgroundColor,
-                  borderRadius: index === currentIndex ? 20 : undefined,
-                }}
-              >
-                <DefaultText
-                  key={index}
-                  className="text-2xl font-semibold"
-                  style={{
-                    color: calendarDateColor,
-                  }}
-                >
-                  {scrollDates[index]}
-                </DefaultText>
-              </View>
-            </Pressable>
-          );
-        })}
+        {calendarDate}
+      </DefaultText>
+    );
+  };
+  return (
+    <>
+      <ScrollView {...ScrollViewProps}>
+        <CalendarDates />
       </ScrollView>
 
       <View className="items-center ">
-        <DefaultText
-          style={{
-            fontSize: 18,
-            lineHeight: 18,
-            marginBottom: 12,
-            fontWeight: 600,
-          }}
-        >
-          {calendarDate}
-        </DefaultText>
+        <CalendarFullDate />
       </View>
     </>
   );

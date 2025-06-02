@@ -184,7 +184,6 @@ import { convertWindUnits } from "./utils/convertWindUnits";
 
 const BeaufortScale = () => {
   const windUnit = useOtherUnits()["wind"];
-
   return (
     <>
       <View className="flex-row " style={{ paddingHorizontal: 16 }}>
@@ -252,4 +251,4 @@ const BeaufortScale = () => {
   );
 };
 
-export default BeaufortScale;
+export default React.memo(BeaufortScale);

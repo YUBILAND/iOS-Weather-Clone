@@ -57,7 +57,7 @@ const AirQualityCard = ({
         />
 
         <View className="overflow-hidden">
-          <Animated.View style={collapseFromTopStyle}>
+          <Animated.View style={collapseFromTopStyle} className="gap-y-2">
             <DefaultText className="text-4xl font-semibold">{AQI}</DefaultText>
             <DefaultText className="text-xl font-semibold">
               {rating}
@@ -65,8 +65,8 @@ const AirQualityCard = ({
 
             <ColoredBar
               cityName={cityName}
-              index={AQI}
-              maxIndex={500}
+              // index={AQI}
+              // maxIndex={500}
               label={"AQI"}
               colorsArr={gradientColors}
               locationsArr={[0.05, 0.2, 0.3, 0.4, 0.5, 0.8, 1]}

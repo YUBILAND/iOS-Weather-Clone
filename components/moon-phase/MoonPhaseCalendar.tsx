@@ -3,31 +3,34 @@ import { WeatherData } from "@/constants/constants";
 import React, { RefObject, useEffect, useRef, useState } from "react";
 import { FlatList, View } from "react-native";
 import { Calendar } from "react-native-calendars";
-import { SharedValue } from "react-native-reanimated";
+import { runOnUI, SharedValue } from "react-native-reanimated";
 import DefaultText from "../atoms/DefaultText";
 import HorizontalLine from "../atoms/HorizontalLine";
 import { TICKS_PER_DAY } from "./utils/constants";
 import { getDaysSincePrevMonth } from "./utils/getDaysSincePrevMonth";
 import { getTimeUntilNextFullMoonDate } from "./utils/getNextFullMoonDate";
 import { getTicksAmount } from "./utils/getTicksAmount";
+import { getCurrentDate, getDaysOfMonth } from "@/hooks/hooks";
 
 interface MoonPhaseCalendarProps {
   data: WeatherData;
-  currentCalendarDate: string;
   userScrolledIndex: number;
   flatlistRef: RefObject<FlatList>;
   setUserScrolledIndex: (index: number) => void;
-  offsetX: SharedValue<number>;
+  flatlistPosition: SharedValue<number>;
 }
 
 const MoonPhaseCalendar = ({
   data,
-  currentCalendarDate,
   userScrolledIndex,
   flatlistRef,
   setUserScrolledIndex,
-  offsetX,
+  flatlistPosition,
 }: MoonPhaseCalendarProps) => {
+  const currentCalendarDate = new Date().toLocaleDateString("en-CA", {
+    timeZone: data.location.tz_id,
+  });
+
   const timeUntilNextFullMoonDate = Math.ceil(
     getTimeUntilNextFullMoonDate(data)
   );
@@ -46,9 +49,13 @@ const MoonPhaseCalendar = ({
   const fullMoonWeekday = fullMoonDateString.split(",")[0];
   const fullMoonDate = fullMoonDateString.split(",")[1].split(" ")[1];
 
+  const moonPeriod = 29.53;
+
   const fullMoonDataObjectCopy = fullMoonDateObject;
   const newMoonDateObject = new Date(
-    fullMoonDataObjectCopy.setDate(fullMoonDateObject.getDate() + 29.53 / 2)
+    fullMoonDataObjectCopy.setDate(
+      fullMoonDateObject.getDate() + moonPeriod / 2
+    )
   );
   const newMoonDateString = newMoonDateObject.toLocaleDateString("en-US", {
     timeZone: data.location.tz_id,
@@ -95,26 +102,46 @@ const MoonPhaseCalendar = ({
 
   const scrolledToDate = Math.min(
     Math.max(userScrolledIndex + 1, 1),
-    whiteTicks - 1
+    whiteTicks
   );
 
-  const dateDay =
-    scrolledToDate < 28
-      ? scrolledToDate
-      : scrolledToDate < 28 + 31
-      ? scrolledToDate - 28
-      : scrolledToDate - (28 + 31);
+  const { currentMonthIndex } = getCurrentDate(data.location.tz_id);
 
-  const month = scrolledToDate < 28 ? 2 : scrolledToDate < 28 + 31 ? 3 : 4;
+  const previousMonthDays = getDaysOfMonth(2025, currentMonthIndex);
+  const currentMonthDays = getDaysOfMonth(2025, currentMonthIndex + 1);
+  // const nextMonthDays = getDaysOfMonth(2025, currentMonthIndex + 2);
+  function modFromOne(n: number, max: number): number {
+    return ((n - 1) % max) + 1;
+  }
+  const getScrolled = () => {
+    const scrolledMonth =
+      scrolledToDate <= previousMonthDays
+        ? modFromOne(currentMonthIndex - 1, 12)
+        : scrolledToDate <= previousMonthDays + currentMonthDays
+        ? currentMonthIndex
+        : modFromOne(currentMonthIndex + 1, 12);
 
-  const scrollToThis = new Date(2025, month - 1, dateDay).toLocaleDateString(
-    "en-CA",
-    {
-      timeZone: data.location.tz_id,
-    }
-  );
+    const scrolledDay =
+      scrolledToDate <= previousMonthDays
+        ? scrolledToDate
+        : scrolledToDate <= previousMonthDays + currentMonthDays
+        ? scrolledToDate - previousMonthDays
+        : scrolledToDate - (previousMonthDays + currentMonthDays);
+
+    return { scrolledMonth, scrolledDay };
+  };
+
+  const { scrolledMonth, scrolledDay } = getScrolled();
+
+  const scrollToThis = new Date(
+    2025,
+    scrolledMonth,
+    scrolledDay
+  ).toLocaleDateString("en-CA", {
+    timeZone: data.location.tz_id,
+  });
+
   const selectedRef = useRef(currentCalendarDate);
-
   selectedRef.current = scrollToThis;
 
   const handleDayPress = (day: { dateString: string; timestamp: number }) => {
@@ -122,7 +149,9 @@ const MoonPhaseCalendar = ({
       new Date(day.timestamp)
     );
     setUserScrolledIndex(daysSincePrevMonthOfSelected);
-    offsetX.value = daysSincePrevMonthOfSelected * 120;
+    runOnUI(
+      () => (flatlistPosition.value = daysSincePrevMonthOfSelected * 120)
+    )();
     flatlistRef.current?.scrollToIndex({
       index: daysSincePrevMonthOfSelected * TICKS_PER_DAY,
       animated: false,
@@ -219,7 +248,7 @@ const MoonPhaseCalendar = ({
               },
             },
           }}
-        ></Calendar>
+        />
         <HorizontalLine />
         <View
           style={{

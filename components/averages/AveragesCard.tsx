@@ -1,39 +1,42 @@
+import { getTemperature } from "@/hooks/useDisplayUnits";
 import { RootState } from "@/state/store";
+import { Octicons } from "@expo/vector-icons";
 import React from "react";
-import { Pressable, View } from "react-native";
-import { EyeIcon } from "react-native-heroicons/outline";
+import { Pressable, StyleProp, View, ViewStyle } from "react-native";
+import Animated, { AnimatedStyle } from "react-native-reanimated";
 import { useSelector } from "react-redux";
 import CardBottomText from "../atoms/CardBottomText";
 import CardStat from "../atoms/CardStat";
 import CardTitle from "../atoms/CardTitle";
 import OpacityCard from "../atoms/OpacityCard";
-import DefaultText from "../atoms/DefaultText";
-import { colors } from "@/assets/colors/colors";
-import { Octicons } from "@expo/vector-icons";
-import { getAverageData } from "./AveragesModal";
-import { getTemperature } from "@/hooks/useDisplayUnits";
+import TodayAndAverage from "./TodayAndAverage";
+import { getAverageData } from "./utils/getAverageData";
 
 interface AveragesCardProps {
   cityName: string;
   showModal: () => void;
   iconSize: number;
+  collapseFromTopStyle: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
 }
 
-const AveragesCard = ({ cityName, showModal, iconSize }: AveragesCardProps) => {
+const AveragesCard = ({
+  cityName,
+  showModal,
+  iconSize,
+  collapseFromTopStyle,
+}: AveragesCardProps) => {
   const { data } = useSelector((state: RootState) => state.weather);
-  const degSymbol = "°";
 
   const { currentTemperature, averageHigh, tempFromAverage } = getAverageData(
     data[cityName]
   );
-
   const tempSign = currentTemperature >= averageHigh ? "+" : "-";
   const currentHigh = getTemperature(
     data[cityName].forecast.forecastday[0].day.maxtemp_c
   );
 
   const fromAverageText =
-    (tempSign === "+" ? " above " : " from ") + "average daily high";
+    (tempSign === "+" ? "above " : "from ") + "average daily high";
 
   return (
     <OpacityCard>
@@ -48,25 +51,18 @@ const AveragesCard = ({ cityName, showModal, iconSize }: AveragesCardProps) => {
           icon={<Octicons name="graph" size={iconSize} color={"white"} />}
         />
 
-        <CardStat stat={tempSign + tempFromAverage + "°"} />
+        <View className="overflow-hidden">
+          <Animated.View style={collapseFromTopStyle} className="gap-y-4">
+            <View className="w-[60%]">
+              <CardStat stat={tempSign + tempFromAverage + "°"} />
+              <CardBottomText text={fromAverageText} />
+            </View>
 
-        <CardBottomText text={fromAverageText} />
-
-        <View className="gap-1">
-          <View className="flex-row justify-between items-center">
-            <DefaultText style={{ color: colors.lightGray }}>Today</DefaultText>
-            <DefaultText style={{ fontWeight: 800 }}>
-              H:{Math.round(currentHigh)}°
-            </DefaultText>
-          </View>
-          <View className="flex-row justify-between items-center">
-            <DefaultText style={{ color: colors.lightGray }}>
-              Average
-            </DefaultText>
-            <DefaultText style={{ fontWeight: 800 }}>
-              H:{averageHigh}°
-            </DefaultText>
-          </View>
+            <TodayAndAverage
+              currentHigh={currentHigh}
+              averageHigh={averageHigh}
+            />
+          </Animated.View>
         </View>
       </Pressable>
     </OpacityCard>

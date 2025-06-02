@@ -1,7 +1,9 @@
 import { colors } from "@/assets/colors/colors";
 import React from "react";
 import {
+  ColorValue,
   Dimensions,
+  DimensionValue,
   Modal,
   SafeAreaView,
   ScrollView,
@@ -18,20 +20,30 @@ type ConditionModalProps = {
   modalVisible: boolean;
   setModalVisible: (visible: boolean) => void;
   children: React.ReactNode;
-  title: string;
+  title?: string;
   selectedModal?: SelectModal;
   backgroundColor?: string;
   putMoonHere?: React.ReactNode;
+  topPercentage?: DimensionValue;
+  outerColor?: ColorValue;
+  innerColor?: ColorValue;
+  textColor?: ColorValue;
+  onClose?: () => void;
 };
 
 const ModalContainer = ({
   modalVisible,
   setModalVisible,
   children,
-  title,
+  title = "",
   selectedModal,
   backgroundColor = colors.darkGray,
   putMoonHere,
+  topPercentage = 0,
+  outerColor = colors.mediumGray,
+  innerColor = colors.lightGray,
+  textColor = "white",
+  onClose,
 }: ConditionModalProps) => {
   const screenHeight = Dimensions.get("window").height;
   const insets = useSafeAreaInsets();
@@ -45,18 +57,33 @@ const ModalContainer = ({
     <Modal animationType="slide" transparent={true} visible={modalVisible}>
       <SafeAreaView>
         <View
-          style={{ height: calculatedHeight, backgroundColor: backgroundColor }}
+          style={{
+            height: calculatedHeight,
+            top: topPercentage,
+            backgroundColor: backgroundColor,
+          }}
         >
           <View className="flex-row items-center justify-between px-6 py-3">
-            <ModalHeader closeModal={setModalVisible} title={title}>
-              {selectedModal && <IconComponent size={28} />}
+            <ModalHeader
+              outerColor={outerColor}
+              innerColor={innerColor}
+              closeModal={(visible: boolean) => {
+                onClose;
+                setModalVisible(visible);
+              }}
+              title={title}
+              textColor={textColor}
+            >
+              {selectedModal && IconComponent && <IconComponent size={28} />}
             </ModalHeader>
           </View>
 
           <View>{putMoonHere}</View>
-
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View className="pb-16">{children}</View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            // contentContainerClassName="w-full h-full"
+          >
+            <View className="pb-16 ">{children}</View>
           </ScrollView>
         </View>
       </SafeAreaView>

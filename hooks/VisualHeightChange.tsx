@@ -47,4 +47,4 @@ const VisualHeightChange = ({
   );
 };
 
-export default VisualHeightChange;
+export default React.memo(VisualHeightChange);

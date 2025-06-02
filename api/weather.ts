@@ -1,6 +1,6 @@
 import axios from "axios";
 import { apiKey } from "@/constants/constants";
-import tokyo from "@/assets/json/tokyo.json";
+import tokyoJSON from "@/assets/json/tokyo.json";
 
 const forecastEndpoint = (city: string, days: number) =>
   `https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${city}&days=${days}&aqi=yes&alerts=no`;
@@ -18,20 +18,21 @@ const apiCall = async (endpoint: string) => {
     return response.data;
   } catch (err) {
     console.log("error", err);
+    console.log("Calling endpoint:", endpoint);
     return null;
   }
 };
 
-const TESTING = false;
+const TESTING = true;
 
 export const fetchWeatherForecast = (city: string, days: number) => {
   let forecastUrl = forecastEndpoint(city, days);
-  return TESTING ? tokyo : apiCall(forecastUrl);
+  return TESTING ? Promise.resolve(tokyoJSON) : apiCall(forecastUrl);
   // return apiCall(forecastUrl);
 };
 
 export const fetchLocations = (city: string) => {
   let locationsUrl = locationsEndpoint(city);
-  return TESTING ? tokyo : apiCall(locationsUrl);
+  return TESTING ? Promise.resolve(tokyoJSON) : apiCall(locationsUrl);
   // return apiCall(locationsUrl);
 };

@@ -1,6 +1,5 @@
 import { View, Text, Pressable } from "react-native";
 import React from "react";
-import { BlurView } from "expo-blur";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import DefaultText from "../atoms/DefaultText";
 import { SelectSetting } from "../modal/utils/modalConstants";
@@ -8,7 +7,7 @@ import { SelectSetting } from "../modal/utils/modalConstants";
 interface TitleBarProps {
   text: string;
   visible: boolean;
-  handleSettingsModal: () => void;
+  openSettingsModal: () => void;
   selectedSetting: SelectSetting | null;
   chooseSetting: (setting: SelectSetting | null) => void;
   handleConfirmDeleteIndex: (index: number | null) => void;
@@ -16,7 +15,7 @@ interface TitleBarProps {
 const TitleBar = ({
   text,
   visible,
-  handleSettingsModal,
+  openSettingsModal,
   selectedSetting,
   chooseSetting,
   handleConfirmDeleteIndex,
@@ -30,7 +29,7 @@ const TitleBar = ({
         name="dots-horizontal-circle-outline"
         size={24}
         color="transparent"
-        onPress={handleSettingsModal}
+        onPress={openSettingsModal}
       />
       <DefaultText style={{ opacity: visible ? 1 : 0 }} className="text-lg">
         {text}
@@ -49,11 +48,11 @@ const TitleBar = ({
           name="dots-horizontal-circle-outline"
           size={24}
           color={"white"}
-          onPress={handleSettingsModal}
+          onPress={openSettingsModal}
         />
       )}
     </View>
   );
 };
 
-export default TitleBar;
+export default React.memo(TitleBar);

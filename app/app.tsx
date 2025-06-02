@@ -11,6 +11,8 @@ import {
   Animated,
   FlatList,
   Image,
+  ImageStyle,
+  StyleProp,
   TextInput,
   View,
   ViewToken,
@@ -29,13 +31,16 @@ import { useWindowDimensions } from "react-native";
 
 import BottomFooter from "@/components/atoms/BottomFooter";
 import { Location } from "@/constants/constants";
-import { fetchWeatherData } from "@/state/api/apiSlice";
+import { fetchExtraDataArr, fetchWeatherDataArr } from "@/state/api/apiSlice";
 import { AppDispatch, RootState } from "@/state/store";
-import { getWeatherName, weatherNameToCardBg } from "@/utils/exampleForecast";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch, useSelector } from "react-redux";
 
+import { getBackground } from "@/components/helper-functions/helperFunctions";
 import LocationModal from "@/components/location-modal/LocationModal";
+import MapModal from "@/components/map-modal/MapModal";
+import WeatherScreenModalContainer from "@/components/weather-screen/WeatherScreenModalContainer";
+import { useExtraData, useExtraLoading } from "@/hooks/useWeatherData";
 import {
   fetchIs12Hr,
   fetchOtherUnits,
@@ -46,12 +51,13 @@ import { useFonts } from "expo-font";
 import { CrossfadeImage } from "react-native-crossfade-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+const resetWeatherScreens = (reset: boolean) => {
+  reset && AsyncStorage.clear();
+};
+
 const App = () => {
   // Delete All Weather Screens
-  const resetWeatherScreens = false;
-  if (resetWeatherScreens) {
-    AsyncStorage.clear();
-  }
+  resetWeatherScreens(false);
 
   const dispatch = useDispatch<AppDispatch>();
   const { data, loading, error } = useSelector(
@@ -69,30 +75,35 @@ const App = () => {
   };
 
   // Fetch Weather Screens In Async Storage
+
   const FirstCity = async () => {
+    await dispatch(fetchWeatherDataArr({}));
+
     const cityArray = await getData("city");
     setWeatherScreens(cityArray);
+    await dispatch(fetchExtraDataArr(cityArray));
   };
 
-  // Temporary fix for weather screen not showing upon adding new location
   useEffect(() => {
-    dispatch(fetchWeatherData());
-
+    // await dispatch(fetchWeatherDataArr({}));
     FirstCity();
+
     // Should fetch from async storage and update redux
-    dispatch(fetchTempUnit());
-    dispatch(fetchIs12Hr());
-    dispatch(fetchOtherUnits());
+    [fetchTempUnit(), fetchIs12Hr(), fetchOtherUnits()].forEach(dispatch);
   }, []);
 
   // Add New Weather Location when click on city name
-  const handleLocation = async (location: Location) => {
+  const handleAddCity = async (location: Location) => {
     setShowLocationModal(false);
 
     try {
-      await dispatch(fetchWeatherData(location.name));
+      const cityList = await dispatch(
+        fetchWeatherDataArr({ cityName: location.name })
+      );
       setShowSearch(false);
       setSearchResultLocations([]);
+      console.log("city list is", cityList);
+      // Add to flatlist upon click city
       FirstCity();
 
       // setUpdate(!update);
@@ -138,22 +149,22 @@ const App = () => {
 
   // Get Weather Background
   const currentCityName = weatherScreens[currentCardIndex];
-  const background = weatherNameToCardBg(
-    getWeatherName(data[currentCityName]?.current.condition.code),
-    data[currentCityName]?.current.is_day
-  );
+  const background = getBackground(currentCityName);
 
   // For FlatList
-  const { width } = useWindowDimensions();
-  const scrollX = React.useRef(new Animated.Value(0)).current;
+  const flatlistRef = useRef<FlatList>(null);
+  // Expanding dots library requires Animated.value instead of shared value
+  const scrollX = new Animated.Value(0);
   const dataProp: Array<{ id: string } & WeatherAtLocationProps> = useMemo(
     () =>
       weatherScreens.map((city, index) => ({
         id: city,
         cityName: city,
+        showMapModal: showMapModal,
       })),
     [weatherScreens]
   );
+  const { width } = useWindowDimensions();
   const flatlistProps = {
     horizontal: true, // Horizontal
     decelerationRate: 0, //Quick deceleration
@@ -178,14 +189,17 @@ const App = () => {
   const handleRenderItem = useCallback(
     ({ item }: { item: { id: string } & WeatherAtLocationProps }) => {
       const { id, ...restProps } = item;
-      return <WeatherAtLocation {...restProps} />;
+      return (
+        <>
+          <WeatherAtLocation {...restProps} />
+        </>
+      );
     },
     []
   );
 
   // For Location Modal
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const flatlistRef = useRef<FlatList>(null);
   const handleShowWeatherScreen = (index: number) => {
     flatlistRef.current?.scrollToIndex({ index: index });
     setShowLocationModal(false);
@@ -196,12 +210,14 @@ const App = () => {
     showSearch,
     toggleSearch,
     searchResultLocations,
-    handleLocation,
+    handleAddCity,
     weatherScreens,
     currentCardIndex,
   };
-  const handleShowLocationModal = (visible: boolean) =>
-    setShowLocationModal(visible);
+
+  const [showMapModal, setShowMapModal] = useState(false);
+
+  const handleCloseMap = useCallback(() => setShowMapModal(false), []);
 
   // SafeAreaView causes flicker on mount, so get insets directly and use as padding
   const insets = useSafeAreaInsets();
@@ -212,7 +228,11 @@ const App = () => {
     ...FontAwesome6.font,
   });
 
-  if (loading || !fontsLoaded) {
+  const extraData = useExtraData();
+  const extraLoading = useExtraLoading();
+  const extraDataExists = extraData && Object.keys(extraData).length > 0;
+
+  if (loading || !fontsLoaded || extraLoading || !extraDataExists) {
     return (
       <View className="flex-1 relative">
         <StatusBar style="light" />
@@ -226,49 +246,72 @@ const App = () => {
     );
   }
 
+  const ShowMapModal = () => {
+    const MapModalProps = {
+      currentCardIndex,
+      cityName: weatherScreens[currentCardIndex],
+      closeMap: handleCloseMap,
+      goToWeatherScreen: handleShowWeatherScreen,
+      weatherScreens,
+    };
+    return (
+      <WeatherScreenModalContainer modalVisible={showMapModal}>
+        <MapModal {...MapModalProps} />
+      </WeatherScreenModalContainer>
+    );
+  };
+
+  const LocationModalProps = {
+    ...searchProps,
+    goToWeatherScreen: handleShowWeatherScreen,
+    changeWeatherScreens,
+  };
+
+  const FlatListProps = {
+    onViewableItemsChanged: handleViewableItemsChanged,
+    viewabilityConfig: { itemVisiblePercentThreshold: 50 },
+    ref: flatlistRef,
+    data: dataProp,
+    keyExtractor: (item: { id: string }) => item.id,
+    renderItem: handleRenderItem,
+    ...flatlistProps,
+  };
+
+  const BottomFooterProps = {
+    scrollX,
+    weatherScreens,
+    setShowLocationModal,
+    setShowMapModal,
+  };
+
+  const CrossFadeImageProps = {
+    style: {
+      width: "100%",
+      height: "100%",
+      position: "absolute",
+    } as StyleProp<ImageStyle>,
+    source: background,
+    resizeMode: "cover" as const,
+  };
+
   return (
     <View className="flex-1 relative">
       <StatusBar style="light" />
-
-      <CrossfadeImage
-        style={{ width: "100%", height: "100%", position: "absolute" }}
-        source={background}
-        resizeMode="cover"
-      />
-
-      <LocationModal
-        {...searchProps}
-        goToWeatherScreen={(index: number) => handleShowWeatherScreen(index)}
-        changeWeatherScreens={changeWeatherScreens}
-      />
-
+      <CrossfadeImage {...CrossFadeImageProps} />
+      <LocationModal {...LocationModalProps} />
+      <ShowMapModal />
       <View
-        className="flex flex-[0.95]"
+        className="flex-1"
         style={{
           paddingTop: insets.top,
         }}
       >
-        <View className="h-full">
-          {/* Bottom Footer */}
-
-          {/* Weather at location */}
-          <FlatList
-            onViewableItemsChanged={handleViewableItemsChanged}
-            viewabilityConfig={{ itemVisiblePercentThreshold: 50 }}
-            ref={flatlistRef}
-            data={dataProp}
-            keyExtractor={(item: { id: string }) => item.id}
-            renderItem={handleRenderItem}
-            {...flatlistProps}
-          />
-        </View>
+        {/* WeatherScreen Flatlist */}
+        <FlatList {...FlatListProps} />
       </View>
-
-      <BottomFooter
-        scrollX={scrollX}
-        weatherScreens={weatherScreens}
-        setShowLocationModal={handleShowLocationModal}
-      />
+      <View className="mb-8">
+        <BottomFooter {...BottomFooterProps} />
+      </View>
     </View>
   );
 };

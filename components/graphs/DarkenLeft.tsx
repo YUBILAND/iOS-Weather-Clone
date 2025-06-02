@@ -16,23 +16,25 @@ const DarkenLeft = ({
 }: DarkenLeftProps) => {
   const areaDarkTop = "rgba(0,0,0,0.2)";
   const areaDarkBottom = "rgba(0,0,0,0.3)";
+
+  const AreaTopProps = {
+    points,
+    y0: chartBounds.top,
+    color: removeShade ? "rgba(0,0,0,0)" : areaDarkTop,
+    curveType,
+  };
+
+  const AreaBottomProps = {
+    points,
+    y0: chartBounds.bottom,
+    color: removeShade ? "rgba(0,0,0,0)" : areaDarkBottom,
+    curveType,
+  };
   return (
     <>
-      <Area
-        points={points}
-        y0={chartBounds.top}
-        color={removeShade ? "rgba(0,0,0,0)" : areaDarkTop}
-        animate={{ type: "timing", duration: 300 }}
-        curveType={curveType}
-      />
+      <Area {...AreaTopProps} />
 
-      <Area
-        points={points}
-        y0={chartBounds.bottom}
-        color={removeShade ? "rgba(0,0,0,0)" : areaDarkBottom}
-        animate={{ type: "timing", duration: 300 }}
-        curveType={curveType}
-      />
+      <Area {...AreaBottomProps} />
     </>
   );
 };

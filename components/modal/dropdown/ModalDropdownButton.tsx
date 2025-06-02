@@ -6,27 +6,27 @@ import { iconMap, SelectModal } from "../utils/modalConstants";
 
 interface ModalDropdownButtonProps {
   openModalDropdown: boolean;
-  handleOpenModalDropdown: (visible: boolean) => void;
+  setOpenModalDropdown: (visible: boolean) => void;
   selectedModal: SelectModal;
 }
 
 const ModalDropdownButton = ({
   openModalDropdown,
-  handleOpenModalDropdown,
+  setOpenModalDropdown,
   selectedModal,
 }: ModalDropdownButtonProps) => {
   const IconComponent = iconMap[selectedModal];
 
   return (
     <Pressable
-      onPress={() => handleOpenModalDropdown(!openModalDropdown)}
+      onPress={() => setOpenModalDropdown(!openModalDropdown)}
       style={{
         backgroundColor: colors.mediumGray,
         width: 80,
       }}
       className="flex-row items-center px-4 py-2 rounded-full gap-x-2 "
     >
-      <IconComponent />
+      {IconComponent && <IconComponent />}
 
       <Ionicons name="chevron-down-outline" size={22} color={"white"} />
     </Pressable>

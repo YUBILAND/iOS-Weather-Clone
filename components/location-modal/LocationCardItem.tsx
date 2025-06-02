@@ -1,8 +1,8 @@
 import React from "react";
 import { View } from "react-native";
 import DefaultText from "../atoms/DefaultText";
-import { textShadowStyle } from "../WeatherAtLocation";
 import { getLocationCardData } from "./utils/getLocationCardData";
+import { textShadowStyle } from "../weather-screen/utils/constants";
 
 interface LocationCardItemProps {
   city: string;

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { MoonPhase } from "./constants";
 
 export const getRemoveAnimationRef = (currentPhase: MoonPhase) => {

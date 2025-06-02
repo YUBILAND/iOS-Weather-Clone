@@ -1,11 +1,10 @@
-import { View, Text } from "react-native";
-import React from "react";
-import HorizontalLine from "../atoms/HorizontalLine";
 import { WeatherData } from "@/constants/constants";
-import MoonPhaseInfoItem from "./MoonPhaseInfoItem";
 import { stringToTime } from "@/hooks/hooks";
-import { useSelector } from "react-redux";
-import { RootState } from "@/state/store";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
+import React from "react";
+import { View } from "react-native";
+import HorizontalLine from "../atoms/HorizontalLine";
+import MoonPhaseInfoItem from "./MoonPhaseInfoItem";
 import { getTimeUntilNextFullMoonDate } from "./utils/getNextFullMoonDate";
 
 interface MoonPhaseInfoProps {
@@ -17,7 +16,7 @@ const MoonPhaseInfo = ({ data }: MoonPhaseInfoProps) => {
     data.forecast.forecastday[0].astro.moon_illumination;
   const currentMoonrise = data.forecast.forecastday[0].astro.moonrise;
 
-  const { americanTime } = useSelector((state: RootState) => state.settings);
+  const is12Hr = useIs12Hr();
 
   const daysUntilFullMoon = getTimeUntilNextFullMoonDate(data);
 
@@ -35,7 +34,7 @@ const MoonPhaseInfo = ({ data }: MoonPhaseInfoProps) => {
       <HorizontalLine />
       <MoonPhaseInfoItem
         text={"Moonrise"}
-        value={stringToTime(americanTime, currentMoonrise)}
+        value={stringToTime(is12Hr, currentMoonrise)}
       />
       <HorizontalLine />
       <MoonPhaseInfoItem text={"Next Full Moon"} value={timeUntilFormatted} />

@@ -1,19 +1,20 @@
-import { View, Text, Pressable, Animated } from "react-native";
-import React from "react";
-import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { colors } from "@/assets/colors/colors";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
+import React from "react";
+import { Animated, Pressable, View } from "react-native";
 import { ExpandingDot } from "react-native-animated-pagination-dots";
-import { WeatherAtLocationProps } from "../WeatherAtLocation";
 
 interface BottomFooterProps {
   weatherScreens: string[];
   setShowLocationModal: (visible: boolean) => void;
+  setShowMapModal: (visible: boolean) => void;
   scrollX: Animated.Value;
 }
 
 const BottomFooter = ({
   weatherScreens,
   setShowLocationModal,
+  setShowMapModal,
   scrollX,
 }: BottomFooterProps) => {
   const expandingDotProps = {
@@ -42,7 +43,9 @@ const BottomFooter = ({
   );
   return (
     <View className="mx-4 mt-3 flex-row justify-between">
-      <Ionicons name="map-outline" size={25} color={"white"} />
+      <Pressable onPress={() => setShowMapModal(true)}>
+        <Ionicons name="map-outline" size={25} color={"white"} />
+      </Pressable>
 
       <ExpandingDot {...expandingDotProps} data={dataDotProp} />
       <Pressable onPress={() => setShowLocationModal(true)}>

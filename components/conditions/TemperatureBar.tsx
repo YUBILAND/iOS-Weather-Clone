@@ -44,18 +44,16 @@ const TemperatureBar = ({
       )}
 
       {/* Temperature Bar */}
-      <View>
-        <ProgressBar
-          barWidth={barWidth}
-          weekHigh={weekHigh}
-          weekLow={weekLow}
-          dailyHigh={tempHigh}
-          dailyLow={tempLow}
-          currentTemperature={currentTemperature}
-          gradientColors={gradientColors}
-          barColor={barColor}
-        />
-      </View>
+      <ProgressBar
+        barWidth={barWidth}
+        weekHigh={weekHigh}
+        weekLow={weekLow}
+        dailyHigh={tempHigh}
+        dailyLow={tempLow}
+        currentTemperature={currentTemperature}
+        gradientColors={gradientColors}
+        barColor={barColor}
+      />
 
       {/* Daily High */}
       <View style={{ width: hideLeft ? 50 : 40 }}>

@@ -8,7 +8,7 @@ interface TwoCardsProps {
 
 const TwoCards = ({ leftCard, rightCard }: TwoCardsProps) => {
   return (
-    <View className="flex-row gap-x-2 h-48 ">
+    <View className="flex-row gap-x-2 h-48">
       <View
         className="flex-[0.5]"
         style={{ borderRadius: 10, overflow: "hidden" }}

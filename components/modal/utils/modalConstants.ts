@@ -29,7 +29,8 @@ export type SelectModal =
   | "averages"
   | "airPressure"
   | "sunPhase"
-  | "moonPhase";
+  | "moonPhase"
+  | "rainHour";
 export interface ModalDropdownObject {
   label: string;
   id: number;
@@ -78,7 +79,6 @@ export const modalDropdownObjects: ModalDropdownObjectsType = {
     label: "Air Pressure",
     id: 9,
   },
-
   sunPhase: {
     label: "Sun Phase",
     id: 10,
@@ -86,6 +86,10 @@ export const modalDropdownObjects: ModalDropdownObjectsType = {
   moonPhase: {
     label: "Moon Phase",
     id: 11,
+  },
+  rainHour: {
+    label: "Next Hour Precipitation",
+    id: 12,
   },
 };
 
@@ -95,7 +99,7 @@ export interface IconProps {
 }
 
 export type IconObject = {
-  [key in SelectModal]: React.ComponentType<IconProps>;
+  [key in SelectModal]: React.ComponentType<IconProps> | null;
 };
 
 export const iconMap: IconObject = {
@@ -109,8 +113,9 @@ export const iconMap: IconObject = {
   visibility: VisibilityIcon,
   averages: AveragesIcon,
   airPressure: AirPressureIcon,
-  sunPhase: ConditionsIcon,
-  moonPhase: ConditionsIcon,
+  sunPhase: null,
+  moonPhase: null,
+  rainHour: null,
 };
 
 // Types and constants for Settings Dropdown

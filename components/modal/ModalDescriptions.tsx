@@ -51,4 +51,4 @@ const ModalDescriptions = ({
   );
 };
 
-export default ModalDescriptions;
+export default React.memo(ModalDescriptions);

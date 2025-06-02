@@ -1,19 +1,14 @@
-import { View, Text, Pressable } from "react-native";
-import React from "react";
-import OpacityCard from "../atoms/OpacityCard";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
-import DefaultText from "../atoms/DefaultText";
-import HorizontalLine from "../atoms/HorizontalLine";
-import { useSelector } from "react-redux";
-import { RootState } from "@/state/store";
-import MoonPhaseInfo from "./MoonPhaseInfo";
-import MoonPhaseMoon from "./MoonPhaseMoon";
-import { MoonIcon } from "react-native-heroicons/outline";
-import CardTitle from "../atoms/CardTitle";
-import MoonPhaseGraph from "./MoonPhaseGraph";
-import { useChartPressState } from "victory-native";
-import { MoonPhase } from "./utils/constants";
 import { useWeatherData } from "@/hooks/useWeatherData";
+import React from "react";
+import { Pressable, StyleProp, View, ViewStyle } from "react-native";
+import { MoonIcon } from "react-native-heroicons/outline";
+import Animated, { AnimatedStyle } from "react-native-reanimated";
+import { useChartPressState } from "victory-native";
+import CardTitle from "../atoms/CardTitle";
+import OpacityCard from "../atoms/OpacityCard";
+import MoonPhaseGraph from "./MoonPhaseGraph";
+import MoonPhaseInfo from "./MoonPhaseInfo";
+import { MoonPhase } from "./utils/constants";
 
 interface MoonPhaseCardProps {
   cityName: string;
@@ -22,6 +17,7 @@ interface MoonPhaseCardProps {
   userScrolledIndex: number;
   currentMoonPhase: MoonPhase;
   initialScrollIndex: number;
+  collapseFromTopStyle: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
 }
 
 const MoonPhaseCard = ({
@@ -31,6 +27,7 @@ const MoonPhaseCard = ({
   userScrolledIndex,
   currentMoonPhase,
   initialScrollIndex,
+  collapseFromTopStyle,
 }: MoonPhaseCardProps) => {
   const data = useWeatherData();
 
@@ -42,39 +39,41 @@ const MoonPhaseCard = ({
   const actualCurrentMoonPhase =
     data[cityName].forecast.forecastday[0].astro.moon_phase;
 
+  const MoonPhaseGraphProps = {
+    cityName,
+    state,
+    graphHeight: 250,
+    userScrolledIndex,
+    currentMoonPhase,
+    initialScrollIndex,
+    scaleDown: 130,
+  };
+
+  const MoonPhaseCardContent = () => {
+    return (
+      <View className="flex-row items-center gap-x-4">
+        <View className="flex-[0.6]">
+          <MoonPhaseInfo data={data[cityName]} />
+        </View>
+        <View className="flex-[0.4] ">
+          <MoonPhaseGraph {...MoonPhaseGraphProps} />
+        </View>
+      </View>
+    );
+  };
+
   return (
-    <OpacityCard className="px-4 gap-y-2">
-      <Pressable
-        onPress={() => {
-          showModal();
-        }}
-      >
+    <OpacityCard className="px-4 ">
+      <Pressable onPress={showModal}>
         <CardTitle
           title={actualCurrentMoonPhase}
           icon={<MoonIcon color="white" size={iconSize} />}
         />
 
-        <View>
-          <View className="flex-row items-center gap-x-4">
-            <View className="flex-[0.6]">
-              <MoonPhaseInfo data={data[cityName]} />
-            </View>
-            <View className="flex-[0.4] ">
-              <MoonPhaseGraph
-                cityName={cityName}
-                state={state}
-                graphHeight={250}
-                userScrolledIndex={userScrolledIndex}
-                currentMoonPhase={currentMoonPhase}
-                initialScrollIndex={initialScrollIndex}
-                scaleDown={130}
-              />
-            </View>
-
-            {/* <View className="flex-[0.4]">
-              <MoonPhaseMoon data={data[cityName]} />
-            </View> */}
-          </View>
+        <View className="overflow-hidden">
+          <Animated.View style={collapseFromTopStyle}>
+            <MoonPhaseCardContent />
+          </Animated.View>
         </View>
       </Pressable>
     </OpacityCard>

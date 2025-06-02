@@ -18,7 +18,7 @@ interface SearchProps {
   showSearch: boolean;
   handleToggleSearch: () => void;
   searchResultLocations: Location[];
-  handleLocation: (location: Location) => void;
+  handleAddCity: (location: Location) => void;
   textInputRef: RefObject<TextInput>;
   handleCancel: () => void;
 }
@@ -28,7 +28,7 @@ const Search: React.FC<SearchProps> = ({
   showSearch,
   handleToggleSearch,
   searchResultLocations,
-  handleLocation,
+  handleAddCity,
   textInputRef,
   handleCancel,
 }) => {
@@ -77,7 +77,7 @@ const Search: React.FC<SearchProps> = ({
               : "mb-0";
             return (
               <TouchableOpacity
-                onPress={() => handleLocation(location as Location)}
+                onPress={() => handleAddCity(location as Location)}
                 key={location.id}
                 className={`flex-row items-center border-0 p-3 px-4 mb-1 ${borderClass}`}
               >

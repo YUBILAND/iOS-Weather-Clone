@@ -23,44 +23,54 @@ export const getScrolledDate = (
 
   const distance = 120;
 
-  //  add 1 to bounds so that haptic works on both directions
-  const withinBounds =
-    Math.floor(offsetX / distance) >= -1 &&
-    Math.floor(offsetX / distance) <= (totalTicks - 1) / TICKS_PER_DAY + 1;
-  const scrolledPastWhiteLine =
-    Math.floor(offsetX / distance) !==
-      Math.floor(tickPosition.value / distance) && withinBounds;
-  if (scrolledPastWhiteLine) {
+  const scrollIndex = Math.floor(offsetX / distance);
+
+  const isScrollPastBoundary = () => {
+    //  add 1 to bounds so that haptic works on both directions
+    const withinBounds =
+      scrollIndex >= -1 && scrollIndex <= (totalTicks - 1) / TICKS_PER_DAY + 1;
+    const scrolledPastWhiteLine =
+      scrollIndex !== Math.floor(tickPosition.value / distance) && withinBounds;
+    return scrolledPastWhiteLine;
+  };
+
+  const scrolledPastBoundary = isScrollPastBoundary();
+  if (scrolledPastBoundary) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setUserScrolledIndex(Math.floor(offsetX / distance));
+    setUserScrolledIndex(scrollIndex);
   }
 
   tickPosition.value = offsetX;
 
-  const scrollPosInDays = Math.floor(Math.floor(offsetX) / distance);
+  const getScrollPosToDateString = () => {
+    const scrollPosInDays = Math.floor(Math.floor(offsetX) / distance);
+    const leftScrollBound = Math.min(
+      scrollPosInDays,
+      (totalTicks - 1) / TICKS_PER_DAY
+    );
+    const leftAndRightScrollBound = Math.max(leftScrollBound, 0);
 
-  const leftScrollBound = Math.min(
-    scrollPosInDays,
-    (totalTicks - 1) / TICKS_PER_DAY
-  );
+    // Get previous month to add days
+    const dateJustForMonth = new Date(startingDate);
 
-  const leftAndRightScrollBound = Math.max(leftScrollBound, 0);
+    const scrollPosToDateObject = new Date(
+      dateJustForMonth.setDate(startingDate.getDate() + leftAndRightScrollBound)
+    );
 
-  // Get previous month to add days
-  const dateJustForMonth = new Date(startingDate);
+    const scrollPosToDateString = scrollPosToDateObject.toLocaleDateString(
+      "en-US",
+      {
+        timeZone: data.location.tz_id,
+        month: "numeric",
+        day: "numeric",
+        weekday: "short",
+      }
+    );
 
-  const scrollPosToDateObject = new Date(
-    dateJustForMonth.setDate(startingDate.getDate() + leftAndRightScrollBound)
-  );
-  const scrollPosToDateString = scrollPosToDateObject.toLocaleDateString(
-    "en-US",
-    {
-      timeZone: data.location.tz_id,
-      month: "numeric",
-      day: "numeric",
-      weekday: "short",
-    }
-  );
+    return scrollPosToDateString;
+  };
+
+  const scrollPosToDateString = getScrollPosToDateString();
 
   return scrollPosToDateString;
 };

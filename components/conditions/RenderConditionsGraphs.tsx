@@ -19,25 +19,28 @@ import { getWeatherName, weatherNameToImage } from "@/utils/exampleForecast";
 import { getDayArr } from "../precipitation/utils/getDayArr";
 import { useForecastData } from "../graphs/utils/useForecastData";
 import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
-import { GraphDefaultY } from "../graphs/utils/constants";
+import { ChartImageArrayType, GraphDefaultY } from "../graphs/utils/constants";
+import { useWeatherData } from "@/hooks/useWeatherData";
 
 interface RenderConditionsGraphsProps {
-  data: WeatherData;
   cityName: string;
   currentIndex: number;
-  item: { id: number };
+  id: number;
   updateShared: (leftText: LeftTextType, id: number) => void;
   isActiveShared: SharedValue<boolean>;
 }
 
 const RenderConditionsGraphs = ({
-  data,
   cityName,
-  item,
+  id,
   currentIndex,
   updateShared,
   isActiveShared,
 }: RenderConditionsGraphsProps) => {
+  const data = useWeatherData();
+  const cityData = data[cityName];
+  const { location, forecast, current } = data[cityName];
+
   const tempUnit = useTemperatureUnit();
 
   // Temperature Graph Chart Press State
@@ -45,11 +48,13 @@ const RenderConditionsGraphs = ({
     x: 0,
     y: GraphDefaultY,
   });
-  // Allows the JS thread tempIsActive to sync with UI thread isActiveShared
+  // Sync boolean isActive to Shared Value isActive
   useSyncAnimatedValue(tempIsActive, isActiveShared);
+
   // Temperature Drag Text
   const tempDragText = useAnimatedProps(() => {
-    const celsius = `${Math.round(tempState.y.mainLine.value.value)}°`;
+    const tempVal = tempState.y.mainLine.value.value;
+    const celsius = Math.round(tempVal) + "°";
     return {
       text: celsius,
       value: celsius,
@@ -63,35 +68,45 @@ const RenderConditionsGraphs = ({
   });
   // Chance of Rain Drag Text
   const chanceOfRainDragText = useAnimatedProps(() => {
-    const chanceOfRain = `${Math.round(rainState.y.mainLine.value.value)}%`;
+    const rainVal = rainState.y.mainLine.value.value;
+    const chanceOfRain = Math.round(rainVal) + "%";
     return {
       text: chanceOfRain,
       value: chanceOfRain,
     };
   });
 
-  // Week Temperature Range
+  // Temperature Range for the Week
   const { arrMax: weekTempHigh, arrMin: weekTempLow } = getMinMaxArr(
-    getWeekArr(data, "temp_c")
+    getWeekArr(cityData, "temp_c")
   );
 
-  const currentTemperature = Math.round(getTemperature(data.current?.temp_c));
-  const maxTemperature = Math.round(
-    getTemperature(data.forecast?.forecastday[item.id].day.maxtemp_c)
-  );
-  const minTemperature = Math.round(
-    getTemperature(data.forecast?.forecastday[item.id].day.mintemp_c)
-  );
+  // Temperature data for condition
+  const getConditionTemps = () => {
+    const dayArr = forecast?.forecastday[id].day;
+    const currentTemp = Math.round(getTemperature(current?.temp_c));
+    const maxTemp = Math.round(getTemperature(dayArr.maxtemp_c));
+    const minTemp = Math.round(getTemperature(dayArr.mintemp_c));
+    return { currentTemp, maxTemp, minTemp };
+  };
+  const { currentTemp, maxTemp, minTemp } = getConditionTemps();
+
+  const getCurrentConditionImg = () => {
+    const currentCode = current.condition.code;
+    const isDay = current.is_day;
+    console.log(getWeatherName(currentCode), isDay);
+    return weatherNameToImage(getWeatherName(currentCode), isDay);
+  };
 
   // Left Text
   const currentText: LeftTextType = {
-    topText: currentTemperature.toString() + "°",
-    bottomText: `H:${maxTemperature}° L:${minTemperature}°`,
-    image: "cloudy",
+    topText: currentTemp.toString() + "°",
+    bottomText: `H:${maxTemp}° L:${minTemp}°`,
+    image: getCurrentConditionImg(),
   };
   const otherText: LeftTextType = {
-    topText: maxTemperature.toString() + "°",
-    topTextGray: minTemperature + "°",
+    topText: maxTemp.toString() + "°",
+    topTextGray: minTemp + "°",
     bottomText: tempUnit.charAt(0).toUpperCase() + tempUnit.slice(1),
   };
   // Change shared value leftText on scroll
@@ -99,32 +114,37 @@ const RenderConditionsGraphs = ({
 
   // Graph Images
   const { timeArr, imageArr } = getGraphImageAndCoord(
-    data,
-    item.id,
+    cityData,
+    id,
     12,
     "condition.code"
   );
+  const hourArr = forecast.forecastday[id].hour;
   const weatherImageArr = imageArr.map((code, index) =>
     useImage(
       weatherNameToImage(
         getWeatherName(parseInt(code)),
-        data.forecast.forecastday[item.id].hour[timeArr[index]].is_day
+        hourArr[timeArr[index]].is_day
       )
     )
   );
 
   // Get Temp Graph Data
-  const tempDayArr = getDayArr(data, currentIndex, "temp_c");
+  const tempDayArr = getDayArr(cityData, currentIndex, "temp_c");
   const tempForecastWithoutMidnight = tempDayArr.map((temp) => {
     return {
       mainLine: temp,
     };
   });
   const tempAvgForecast = useForecastData(tempForecastWithoutMidnight);
-  const tempGraphData = formatGraphDataCopy(data, tempAvgForecast);
+  const tempGraphData = formatGraphDataCopy(cityData, tempAvgForecast);
 
   // Get Chance of Rain Graph Data
-  const chanceOfRainDayArr = getDayArr(data, currentIndex, "chance_of_rain");
+  const chanceOfRainDayArr = getDayArr(
+    cityData,
+    currentIndex,
+    "chance_of_rain"
+  );
   const chanceOfRainForecastWithoutMidnight = chanceOfRainDayArr.map(
     (chanceOfRain) => {
       return {
@@ -136,62 +156,62 @@ const RenderConditionsGraphs = ({
     chanceOfRainForecastWithoutMidnight
   );
   const chanceOfRainGraphData = formatGraphDataCopy(
-    data,
+    cityData,
     chanceOfRainAvgForecast
   );
 
+  const TempGraphContainerProps = {
+    cityName,
+    state: tempState,
+    isActive: tempIsActive,
+    scrollInfoBold: tempDragText,
+    currentIndex: currentIndex,
+    hackyWeatherImage: true,
+  };
+  const TempGraphProps = {
+    graphData: tempGraphData,
+    cityName,
+    state: tempState,
+    isActive: tempIsActive,
+    graphHeight: 200,
+    yAxisLabel: "°",
+    domainTop: weekTempHigh + 10,
+    domainBottom: weekTempLow - 10,
+    loadedIndex: id,
+    chartImageArrays: [
+      timeArr,
+      weatherImageArr as SkImage[],
+    ] as ChartImageArrayType,
+    firstLineColor: "lightblue",
+  };
+  const PrecipGraphContainerProps = {
+    cityName,
+    state: rainState,
+    isActive: rainIsActive,
+    scrollInfoBold: chanceOfRainDragText,
+    smallBold: true,
+    currentIndex: id,
+  };
+  const PrecipGraphProps = {
+    graphData: chanceOfRainGraphData,
+    cityName,
+    state: rainState,
+    isActive: rainIsActive,
+    graphHeight: 200,
+    yAxisLabel: "%",
+    loadedIndex: id,
+    firstLineColor: "lightblue",
+  };
   return (
     <>
       {/* Temperature graph */}
-      <GraphContainer
-        cityName={cityName}
-        state={tempState}
-        isActive={tempIsActive}
-        scrollInfoBold={tempDragText}
-        currentIndex={currentIndex}
-        hackyWeatherImage
-      >
-        <Graph
-          graphData={tempGraphData}
-          cityName={cityName}
-          state={tempState}
-          isActive={tempIsActive}
-          graphHeight={200}
-          yAxisLabel="°"
-          domainTop={weekTempHigh + 10}
-          domainBottom={weekTempLow - 10}
-          loadedIndex={item.id}
-          chartImageArrays={[timeArr, weatherImageArr as SkImage[]]}
-          firstLineColor={"lightblue"}
-        />
+      <GraphContainer {...TempGraphContainerProps}>
+        <Graph {...TempGraphProps} />
       </GraphContainer>
 
       {/* Precipitation graph */}
-      <GraphContainer
-        cityName={cityName}
-        state={rainState}
-        isActive={rainIsActive}
-        scrollInfoBold={chanceOfRainDragText}
-        smallBold
-        currentIndex={item.id}
-        leftSide={
-          <View className="h-12" style={{ justifyContent: "center" }}>
-            <DefaultText className="text-2xl font-semibold ">
-              Chance of Precipitation
-            </DefaultText>
-          </View>
-        }
-      >
-        <Graph
-          graphData={chanceOfRainGraphData}
-          cityName={cityName}
-          state={rainState}
-          isActive={rainIsActive}
-          graphHeight={200}
-          yAxisLabel="%"
-          loadedIndex={item.id}
-          firstLineColor={"lightblue"}
-        />
+      <GraphContainer {...PrecipGraphContainerProps}>
+        <Graph {...PrecipGraphProps} />
       </GraphContainer>
     </>
   );

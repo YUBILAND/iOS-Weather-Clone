@@ -1,6 +1,6 @@
 import { useWeatherData } from "@/hooks/useWeatherData";
 import { getWeatherName, weatherNameToCardBg } from "@/utils/exampleForecast";
-import React from "react";
+import React, { useEffect } from "react";
 import { ImageBackground, Pressable } from "react-native";
 import Animated, {
   useAnimatedStyle,
@@ -39,9 +39,10 @@ const LocationCardItemContainer = ({
   };
 
   const height1 = useSharedValue(100);
-  const animatedStyle = useAnimatedStyle(() => {
+  useEffect(() => {
     height1.value = isEditingList ? 60 : 100;
-
+  }, [isEditingList]);
+  const animatedStyle = useAnimatedStyle(() => {
     return {
       flex: 1,
       height: withTiming(height1.value, { duration: 300 }),

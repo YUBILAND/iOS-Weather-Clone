@@ -1,28 +1,24 @@
-import { GraphKeyType } from "@/constants/constants";
 import { useOtherUnits } from "@/hooks/useOtherUnits";
 import { useWeatherData } from "@/hooks/useWeatherData";
+import { SkImage } from "@shopify/react-native-skia";
 import React from "react";
 import { View } from "react-native";
 import { SharedValue, useAnimatedProps } from "react-native-reanimated";
 import { useChartPressState } from "victory-native";
 import Graph from "../graphs/Graph";
+import { GraphDefaultY } from "../graphs/utils/constants";
+import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
+import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
+import { useForecastData } from "../graphs/utils/useForecastData";
 import GraphContainer from "../modal/GraphContainer";
 import { LeftTextType } from "../modal/Modal";
 import { updateLeftText } from "../modal/utils/updateLeftText";
 import { useSyncAnimatedValue } from "../modal/utils/useSyncedAnimatedValue";
 import { getDayArr } from "../precipitation/utils/getDayArr";
 import { getMinMaxArr } from "../utils/getMinMaxArr";
-import WindModalDescription from "./WindModalDescription";
 import { convertWindUnits } from "./utils/convertWindUnits";
-import { getWeekMaxWind } from "./utils/getWeekMaxWind";
 import { getOddWindDirectionImages } from "./utils/getOddWindDirectionImages";
-import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
-import { SkImage } from "@shopify/react-native-skia";
-import { getGraphDataCopy } from "../graphs/utils/getGraphDataCopy";
-import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
-import { averageRangeExample } from "../averages/utils/constants";
-import { GraphDefaultY } from "../graphs/utils/constants";
-import { useForecastData } from "../graphs/utils/useForecastData";
+import { getWeekMaxWind } from "./utils/getWeekMaxWind";
 
 interface WindModalProps {
   cityName: string;
@@ -41,17 +37,6 @@ const WindModal = ({
   const data = useWeatherData();
   const { current, forecast } = data[cityName];
   const windUnits = useOtherUnits()["wind"];
-
-  // const { state: windState, isActive: windIsActive } = useChartPressState({
-  //   x: 0,
-  //   y: {
-  //     windSpeed: 0,
-  //     currentLineTop: 0,
-  //     currentLineBottom: 0,
-  //     currentPosition: 0,
-  //     secondLine: 0,
-  //   },
-  // });
 
   const { state: windState, isActive: windIsActive } = useChartPressState({
     x: 0,

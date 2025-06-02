@@ -163,6 +163,8 @@ export type Location = {
   name: string;
   tz_id: string; // region / city
   localtime: string;
+  lat: number;
+  lon: number;
 };
 
 export type Forecast = {

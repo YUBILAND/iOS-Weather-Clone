@@ -1,10 +1,17 @@
+import { Colors, colors } from "@/assets/colors/colors";
 import { getPressure } from "@/hooks/useDisplayUnits";
 import { useOtherUnits } from "@/hooks/useOtherUnits";
 import { useWeatherData } from "@/hooks/useWeatherData";
+import { SkImage } from "@shopify/react-native-skia";
 import React from "react";
 import { SharedValue, useAnimatedProps } from "react-native-reanimated";
 import { useChartPressState } from "victory-native";
 import Graph from "../graphs/Graph";
+import { ChartImageArrayType, GraphDefaultY } from "../graphs/utils/constants";
+import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
+import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
+import { useForecastData } from "../graphs/utils/useForecastData";
+import { getArrAverage } from "../helper-functions/helperFunctions";
 import GraphContainer from "../modal/GraphContainer";
 import { LeftTextType } from "../modal/Modal";
 import { updateLeftText } from "../modal/utils/updateLeftText";
@@ -13,13 +20,6 @@ import { getDayArr } from "../precipitation/utils/getDayArr";
 import { getMinMaxArr } from "../utils/getMinMaxArr";
 import { getWeekArr } from "../utils/getWeekArr";
 import { getOddPressureDirectionImages } from "./utils/getOddPressureDirectionImages";
-import { Image, SkImage } from "@shopify/react-native-skia";
-import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
-import { useForecastData } from "../graphs/utils/useForecastData";
-import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
-import { GraphDefaultY } from "../graphs/utils/constants";
-import { View } from "react-native";
-import { colors } from "@/assets/colors/colors";
 
 interface AirPressureModalProps {
   cityName: string;
@@ -36,25 +36,20 @@ const AirPressureModal = ({
   isActiveShared,
 }: AirPressureModalProps) => {
   const data = useWeatherData();
+  const { current } = data[cityName];
   const pressureUnit = useOtherUnits()["pressure"];
 
   const { state: airPressureState, isActive: airPressureIsActive } =
     useChartPressState({
       x: 0,
-      y:
-        // {
-        //   airPressure: 0,
-        //   currentLineTop: 0,
-        //   currentLineBottom: 0,
-        //   currentPosition: 0,
-        // },
-        GraphDefaultY,
+      y: GraphDefaultY,
     });
-  const airPressureScrollInfoBold = useAnimatedProps(() => {
+  const airPressureDragText = useAnimatedProps(() => {
+    const airPressureVal = airPressureState.y.mainLine.value.value;
     const airPressure =
       (pressureUnit === "inHg"
-        ? airPressureState.y.mainLine.value.value.toFixed(2)
-        : Math.round(airPressureState.y.mainLine.value.value)) +
+        ? airPressureVal.toFixed(2)
+        : Math.round(airPressureVal)) +
       " " +
       pressureUnit;
 
@@ -70,19 +65,32 @@ const AirPressureModal = ({
     getWeekArr(data[cityName], "pressure_in")
   );
 
-  const currentAirPressure = getPressure(data[cityName].current.pressure_in);
+  const currentAirPressure = getPressure(current.pressure_in);
   const average = getArrAverage(getDayArr(data[cityName], id, "pressure_in"));
+
+  const { pressureImgArr, trendForDay } = getOddPressureDirectionImages(
+    data[cityName],
+    id,
+    true
+  );
+
+  const trendText =
+    trendForDay === "up"
+      ? "Rising"
+      : trendForDay === "down"
+      ? "Falling"
+      : "Steady";
 
   const currentText: LeftTextType = {
     topText: twoDecimals(currentAirPressure).toFixed(2).toString(),
     topTextSmall: pressureUnit,
-    bottomText: "Steady",
+    bottomText: trendText,
   };
 
   const otherText: LeftTextType = {
     topText: twoDecimals(average).toString(),
     topTextSmall: pressureUnit,
-    bottomText: "Steady",
+    bottomText: trendText,
   };
 
   updateLeftText(id, updateShared, currentText, otherText);
@@ -100,12 +108,6 @@ const AirPressureModal = ({
     "condition.code"
   );
 
-  const oddPressureDirectionImages = getOddPressureDirectionImages(
-    data[cityName],
-    id,
-    true
-  );
-
   const pressureDayArr = getDayArr(data[cityName], id, "pressure_in");
   const pressureForecastWithoutMidnight = pressureDayArr.map((pressure) => {
     return {
@@ -118,31 +120,35 @@ const AirPressureModal = ({
     pressureAvgForecast
   );
 
+  const GraphContainerProps = {
+    cityName,
+    state: airPressureState,
+    isActive: airPressureIsActive,
+    scrollInfoBold: airPressureDragText,
+    currentIndex,
+  };
+
+  const GraphProps = {
+    graphData: pressureGraphData,
+    cityName,
+    state: airPressureState,
+    isActive: airPressureIsActive,
+    yAxisLabel: pressureUnit,
+    loadedIndex: id,
+    domainBottom: minRange - domainRange,
+    domainTop: maxRange + domainRange,
+    customColor: "bgPurple" as Colors,
+    firstLineColor: colors.bgPurple(),
+    chartImageArrays: [
+      timeArr,
+      pressureImgArr as SkImage[],
+    ] as ChartImageArrayType,
+  };
+
   return (
     <>
-      <GraphContainer
-        cityName={cityName}
-        state={airPressureState}
-        isActive={airPressureIsActive}
-        scrollInfoBold={airPressureScrollInfoBold}
-        currentIndex={currentIndex}
-      >
-        <Graph
-          graphData={pressureGraphData}
-          cityName={cityName}
-          // @ts-ignore, used Pick but now sure why it still requires all keys
-          state={airPressureState}
-          isActive={airPressureIsActive}
-          yAxisLabel={pressureUnit}
-          loadedIndex={id}
-          domainBottom={minRange - domainRange}
-          domainTop={maxRange + domainRange}
-          customColor="bgPurple"
-          firstLineColor={colors.bgPurple()}
-          // removeArea
-          // addPressureImages
-          chartImageArrays={[timeArr, oddPressureDirectionImages as SkImage[]]}
-        />
+      <GraphContainer {...GraphContainerProps}>
+        <Graph {...GraphProps} />
       </GraphContainer>
     </>
   );
@@ -151,12 +157,6 @@ const AirPressureModal = ({
 export const twoDecimals = (x: number) => {
   "worklet";
   return Math.round(x * 100) / 100;
-};
-
-export const getArrAverage = (arr: number[]) => {
-  const average = arr.reduce((acc, val) => acc + val, 0) / arr.length;
-
-  return average;
 };
 
 export default AirPressureModal;

@@ -19,15 +19,21 @@ import {
   Scatter,
 } from "victory-native";
 import ToolTip from "../graphs/victoryComponents/Tooltip";
-import {
-  getFirstIntersectionPostOffset,
-  getSecondIntersectionPostOffset,
-} from "./utils/getIntersectionOffset";
+import { getIntersectionPostOffset } from "./utils/getIntersectionOffset";
 import { getSunGraphPoint } from "./utils/getSunGraphPoints";
 import { getSunPathPercentage } from "./utils/getSunPathPercentage";
 import { getXOffset } from "./utils/getXOffset";
 import { getYShift } from "./utils/getYShift";
 import { useSunPhaseData } from "./utils/useSunPhaseData";
+
+type SunChartPressState = ChartPressState<{
+  x: number;
+  y: {
+    sunPath: number;
+    sunPosition: number;
+    phaseLine: number;
+  };
+}>;
 
 const SunPhaseGraph = ({
   cityName,
@@ -41,14 +47,7 @@ const SunPhaseGraph = ({
   domain = { top: 1200, bottom: -1200 },
 }: {
   cityName: string;
-  state: ChartPressState<{
-    x: number;
-    y: {
-      sunPath: number;
-      sunPosition: number;
-      phaseLine: number;
-    };
-  }>;
+  state: SunChartPressState;
   isActive: boolean;
   graphHeight: number;
   removePress?: boolean;
@@ -87,19 +86,26 @@ const SunPhaseGraph = ({
     xOffset
   );
   // Find X where intersection happens after offset has been applied.
-  const firstIntersectionPostOffset = getFirstIntersectionPostOffset(
-    xTicks,
-    xOffset,
-    yShift
-  );
-
-  const secondIntersectionPostOffset = getSecondIntersectionPostOffset(
-    xTicks,
-    xOffset,
-    yShift
-  );
+  const { firstIntersectionPostOffset, secondIntersectionPostOffset } =
+    getIntersectionPostOffset(xTicks, xOffset, yShift);
 
   const sunPathPercentage = getSunPathPercentage(sunPhaseData);
+
+  const axisOptions = {
+    lineColor: addLines
+      ? {
+          grid: { x: "white" as Color, y: "white" as Color },
+          frame: "white",
+        }
+      : "transparent",
+  };
+
+  const xAxisOptions = {
+    font: addLines ? font : null,
+    labelColor: addLines ? colors.lightGray : "transparent",
+    lineColor: addLines ? "white" : "transparent",
+    tickValues: [0, 6, 12, 18, 24],
+  };
 
   return (
     <>
@@ -113,23 +119,11 @@ const SunPhaseGraph = ({
           data={sunPhaseData}
           xKey="hour"
           yKeys={["sunPath", "sunPosition", "phaseLine"]}
-          axisOptions={{
-            lineColor: addLines
-              ? {
-                  grid: { x: "white" as Color, y: "white" as Color },
-                  frame: "white",
-                }
-              : "transparent",
-          }}
-          xAxis={{
-            font: addLines ? font : null,
-            labelColor: addLines ? colors.lightGray : "transparent",
-            lineColor: addLines ? "white" : "transparent",
-            tickValues: [0, 6, 12, 18, 24],
-          }}
-          frame={{
-            lineColor: "transparent",
-          }}
+          axisOptions={axisOptions}
+          xAxis={xAxisOptions}
+          // frame={{
+          //   lineColor: "transparent",
+          // }}
           domain={{ y: [domain.bottom, domain.top] }}
           chartPressState={state}
           padding={{ bottom: addLines ? 10 : 0 }}
@@ -161,7 +155,6 @@ const SunPhaseGraph = ({
                       <Area
                         points={points.phaseLine}
                         y0={chartBounds.top}
-                        animate={{ type: "timing", duration: 300 }}
                         curveType="natural"
                       >
                         <LinearGradient
@@ -177,7 +170,6 @@ const SunPhaseGraph = ({
                       <Area
                         points={points.phaseLine}
                         y0={chartBounds.bottom}
-                        animate={{ type: "timing", duration: 300 }}
                         curveType="natural"
                       >
                         <LinearGradient
@@ -231,9 +223,6 @@ const SunPhaseGraph = ({
                   <Scatter
                     points={points.sunPosition}
                     shape="circle"
-                    // shape={(props) => (
-                    //   <SemiCircle x={props.x} y={props.y} radius={1000} />
-                    // )}
                     radius={strokeWidth + 2}
                     style="fill"
                     // color="white"
@@ -252,30 +241,5 @@ const SunPhaseGraph = ({
     </>
   );
 };
-
-// const SemiCircle = ({
-//   x,
-//   y,
-//   radius,
-// }: {
-//   x: number;
-//   y: number;
-//   radius: number;
-// }) => {
-//   // Create a Skia Path for a semicircle
-//   const skiaPath = useMemo(() => {
-//     const path = Skia.Path.Make();
-//     path.moveTo(x - radius, y);
-//     path.rArcTo(radius * 2, radius * 2, 0, false, true, radius * 2, 0);
-//     path.close();
-//     return path;
-//   }, [x, y, radius]);
-
-//   return (
-//     <Canvas style={{ width: radius * 2, height: radius, position: "absolute" }}>
-//       <Path path={skiaPath} color="blue" />
-//     </Canvas>
-//   );
-// };
 
 export default React.memo(SunPhaseGraph);

@@ -5,6 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export const getData = async (key: string) => {
   try {
     const value = await AsyncStorage.getItem(key);
+    console.log(value);
 
     return value ? JSON.parse(value) : []; // should be array
   } catch (error) {
@@ -53,6 +54,7 @@ export const deleteData = async (
 };
 
 export const swapData = async (key: string, weatherScreens: string[]) => {
+  console.log("OKAY");
   try {
     await AsyncStorage.setItem(key, JSON.stringify(weatherScreens));
   } catch (error) {
@@ -123,7 +125,7 @@ export const storeOtherUnits = async (otherUnits: OtherUnitsType) => {
 export const getOtherUnits = async () => {
   try {
     const otherUnits = await AsyncStorage.getItem("otherUnits");
-    console.log("grabbing from storage is", otherUnits);
+    // console.log("grabbing from storage is", otherUnits);
     return otherUnits ? JSON.parse(otherUnits) : defaultOtherUnits;
   } catch (error) {
     console.log("Error getting other units: ", error);

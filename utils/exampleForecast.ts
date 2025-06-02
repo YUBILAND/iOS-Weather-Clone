@@ -72,10 +72,10 @@ const weatherCodes = {
 };
 
 const imageLocation = "../assets/images/";
-const dayCodeToImg: { [key: string]: ImageSourcePropType } = {
+export const dayCodeToImg: { [key: string]: ImageSourcePropType } = {
   clear: require(imageLocation + "sun" + ".png"),
   partlyCloudy: require(imageLocation + "partlycloudy" + ".png"),
-  cloudy: require(imageLocation + "cloud" + ".png"),
+  cloudy: require(imageLocation + "cloudy" + ".png"),
   foggy: require(imageLocation + "mist" + ".png"),
   rainy: require(imageLocation + "drizzle" + ".png"),
   snowy: require(imageLocation + "snow" + ".png"),

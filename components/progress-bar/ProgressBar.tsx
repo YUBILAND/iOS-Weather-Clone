@@ -25,7 +25,8 @@ const ProgressBar = ({
   gradientColors = ["#68CAD4", "#AED06A", "#DACE2C", "#FFC907", "#F8981D"],
   barColor = colors.bgWhite(0.2),
 }: ProgressBarProps) => {
-  const grayRange = weekHigh! - weekLow!;
+  // Gray range is used for stepWidth, it has to be rounded value to fit in the space
+  const grayRange = Math.round(weekHigh!) - Math.round(weekLow!);
 
   const stepWidth = barWidth / grayRange;
 

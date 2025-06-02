@@ -1,33 +1,39 @@
-import { useEffect, useState } from "react";
+import {
+  gapLength,
+  scrollTopMargin,
+} from "@/components/weather-screen/utils/constants";
+import { useLayoutHeight } from "@/components/weather-screen/utils/useLayoutHeight";
 import { SharedValue, useAnimatedStyle } from "react-native-reanimated";
-import { useLayout } from "./useLayout";
 
 export const getAnimatedStyles = (
   scrolledDownShared: SharedValue<number>,
-
-  scrollTopMargin: number,
-  gapLength: number,
   previousLayoutHeight: number,
   index: number
 ) => {
-  const { layout, onLayout } = useLayout();
-  const [layoutHeight, setLayoutHeight] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (layout) {
-      console.log("layout height is", layout.height);
-      setLayoutHeight(layout.height);
-    }
-  }, [layout]);
+  const { onLayout, layoutHeight } = useLayoutHeight();
 
   const oldTitleOpacityStyle = useAnimatedStyle(() => {
     return {
-      opacity: 1 - Math.max(scrolledDownShared.value - 180, 0) / 10,
+      opacity:
+        1 -
+        Math.max(
+          scrolledDownShared.value -
+            (180 + index * gapLength) -
+            previousLayoutHeight,
+          0
+        ) /
+          10,
     };
   });
   const newTitleOpacityStyle = useAnimatedStyle(() => {
     return {
-      opacity: Math.max(scrolledDownShared.value - 190, 0) / 10,
+      opacity:
+        Math.max(
+          scrolledDownShared.value -
+            (190 + index * gapLength) -
+            previousLayoutHeight,
+          0
+        ) / 10,
     };
   });
 
@@ -44,7 +50,7 @@ export const getAnimatedStyles = (
 
     const collapseScrollOffset = collapseUp * offsetScrollToElem;
 
-    // if (index === 0 && layoutHeight) console.log(collapseScrollOffset);
+    // if (index === 2 && layoutHeight) console.log(collapseScrollOffset);
 
     return {
       transform: [

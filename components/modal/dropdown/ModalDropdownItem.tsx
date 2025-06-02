@@ -51,7 +51,7 @@ const ModalDropdownItem = ({
         </DefaultText>
         <View className="flex-[0.3]">
           <View className="items-center">
-            <IconComponent />
+            {IconComponent && <IconComponent />}
           </View>
         </View>
       </View>

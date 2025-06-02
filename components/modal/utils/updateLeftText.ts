@@ -12,19 +12,25 @@ export const updateLeftText = (
   const tempUnit = useTemperatureUnit();
   const otherUnits = useOtherUnits();
 
+  const firstIndex = id === 0;
+
+  const { topText, topTextSmall, topTextGray, bottomText, image } = currentText;
+  const {
+    topText: oTopText,
+    topTextSmall: oTopTextSmall,
+    topTextGray: oTopTextGray,
+    bottomText: oBottomText,
+    image: oImage,
+  } = otherText;
+
   useEffect(() => {
     const leftText = {
-      topText: id === 0 ? currentText.topText ?? "" : otherText.topText ?? "",
-      topTextSmall:
-        id === 0
-          ? currentText.topTextSmall ?? ""
-          : otherText.topTextSmall ?? "",
+      topText: firstIndex ? topText ?? "" : oTopText ?? "",
+      topTextSmall: firstIndex ? topTextSmall ?? "" : oTopTextSmall ?? "",
 
-      topTextGray:
-        id === 0 ? currentText.topTextGray ?? "" : otherText.topTextGray ?? "",
-      bottomText:
-        id === 0 ? currentText.bottomText ?? "" : otherText.bottomText ?? "",
-      image: id === 0 ? currentText.image ?? "" : otherText.image ?? "",
+      topTextGray: firstIndex ? topTextGray ?? "" : oTopTextGray ?? "",
+      bottomText: firstIndex ? bottomText ?? "" : oBottomText ?? "",
+      image: firstIndex ? image ?? null : oImage ?? null,
     };
 
     updateShared(leftText, id);

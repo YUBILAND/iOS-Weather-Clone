@@ -24,10 +24,6 @@ interface HourlyForecastProps {
   showModal: () => void;
   style: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
   title: React.ReactNode;
-  onLayout: ((event: LayoutChangeEvent) => void) | undefined;
-  layoutHeight: number | null;
-  heightAnimation: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
-  removalAnimation: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
 }
 
 const HourlyForecast = ({
@@ -35,10 +31,6 @@ const HourlyForecast = ({
   showModal,
   style,
   title,
-  onLayout,
-  layoutHeight,
-  heightAnimation,
-  removalAnimation,
 }: HourlyForecastProps) => {
   const data = useWeatherData();
 
@@ -54,53 +46,44 @@ const HourlyForecast = ({
   }, [showModal]);
 
   return (
-    <VisualHeightChange
-      onLayout={onLayout}
-      layoutHeight={layoutHeight}
-      heightAnimation={heightAnimation}
-      removalAnimation={removalAnimation}
-    >
-      <View>
-        <OpacityCard>
-          <Pressable className="gap-y-3" onPress={handlePress}>
-            {title}
+    <OpacityCard>
+      <Pressable className="gap-y-3" onPress={handlePress}>
+        {title}
 
-            <View className="overflow-hidden ">
-              <Animated.View style={style} className="gap-y-3">
-                <HorizontalLine className="ml-4" />
+        <View className="overflow-hidden ">
+          <Animated.View style={style} className="gap-y-3">
+            <HorizontalLine className="ml-4" />
 
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{
-                    paddingRight: 16,
-                    marginHorizontal: 16,
-                  }}
-                >
-                  {dailyArr.map((hour, index) => {
-                    const isNumber = typeof hour?.celsius === "number";
-                    const temperature = isNumber
-                      ? Math.round(getTemperature(hour?.celsius as number))
-                      : // Would be sunrise/ sunset text so show that, no need to convert units
-                        hour?.celsius;
-                    return (
-                      <HourlyForecastItem
-                        key={hour?.fullDate}
-                        hour={hour}
-                        index={index}
-                        temperature={temperature}
-                        dailyArr={dailyArr}
-                        showModal={showModal}
-                      />
-                    );
-                  })}
-                </ScrollView>
-              </Animated.View>
-            </View>
-          </Pressable>
-        </OpacityCard>
-      </View>
-    </VisualHeightChange>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingRight: 16,
+                marginHorizontal: 16,
+              }}
+            >
+              {dailyArr.map((hour, index) => {
+                const isNumber = typeof hour?.celsius === "number";
+                const temperature = isNumber
+                  ? Math.round(getTemperature(hour?.celsius as number))
+                  : // Would be sunrise/ sunset text so show that, no need to convert units
+                    hour?.celsius;
+                return (
+                  <HourlyForecastItem
+                    key={hour?.fullDate}
+                    hour={hour}
+                    index={index}
+                    temperature={temperature}
+                    dailyArr={dailyArr}
+                    showModal={showModal}
+                  />
+                );
+              })}
+            </ScrollView>
+          </Animated.View>
+        </View>
+      </Pressable>
+    </OpacityCard>
   );
 };
 

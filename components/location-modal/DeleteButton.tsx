@@ -1,12 +1,10 @@
-import { View, Text, Pressable } from "react-native";
-import React, { useEffect } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect } from "react";
+import { Pressable, View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
-  Easing,
-  SharedValue,
 } from "react-native-reanimated";
 
 interface DeleteButtonProps {
@@ -20,18 +18,30 @@ const DeleteButton = ({
   isEditingList,
 }: DeleteButtonProps) => {
   const width = useSharedValue(0);
-
-  width.value = isEditingList ? size : 0;
-
-  const animatedStyle = useAnimatedStyle(() => {
+  useEffect(() => {
+    width.value = withTiming(isEditingList ? size : 0, { duration: 300 });
+  }, [isEditingList]);
+  const animatedWidthStyle = useAnimatedStyle(() => {
     return {
-      width: withTiming(width.value, { duration: 300 }),
+      width: width.value,
       height: size,
     };
   });
 
+  const RemoveCircleIcon = () => {
+    return (
+      <Ionicons
+        name="remove-circle"
+        size={size}
+        color={"red"}
+        className=""
+        style={{ zIndex: 1, color: "#EF3B51" }}
+      />
+    );
+  };
+
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View style={animatedWidthStyle}>
       <Pressable
         onPress={onPress}
         className="relative"
@@ -59,13 +69,7 @@ const DeleteButton = ({
               height: size,
             }}
           >
-            <Ionicons
-              name="remove-circle"
-              size={size}
-              color={"red"}
-              className=""
-              style={{ zIndex: 1, color: "#EF3B51" }}
-            />
+            <RemoveCircleIcon />
           </View>
         </View>
       </Pressable>

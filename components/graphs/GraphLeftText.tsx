@@ -1,42 +1,23 @@
 import { colors } from "@/assets/colors/colors";
-import React, { MutableRefObject } from "react";
+import React from "react";
 import { View } from "react-native";
-import Animated, {
-  SharedValue,
-  useAnimatedProps,
-} from "react-native-reanimated";
-import cloudyImage from "../../assets/images/cloudy.png";
+import Animated from "react-native-reanimated";
 import DefaultText from "../atoms/DefaultText";
 import { LeftTextType } from "../modal/Modal";
 import { SelectModal } from "../modal/utils/modalConstants";
 
 interface GraphLeftTextProps {
   id: number;
-  leftTextShared: MutableRefObject<SharedValue<LeftTextType[]>>;
   selectedModal: SelectModal;
   leftText: LeftTextType[];
 }
 
-const GraphLeftText = ({
-  id,
-  leftTextShared,
-  selectedModal,
-  leftText,
-}: GraphLeftTextProps) => {
-  const animatedImage = useAnimatedProps(() => {
-    const imageSource = {
-      cloudy: cloudyImage,
-    };
-    const topTextImage = leftTextShared.current.value[id].image;
-    console.log(topTextImage === "cloudy");
-
-    return {
-      source: imageSource["cloudy"],
-    };
-  });
-
+const GraphLeftText = ({ id, selectedModal, leftText }: GraphLeftTextProps) => {
+  const { topText, topTextSmall, topTextGray, image, bottomText } =
+    leftText[id];
+  const showImage = id === 0 && selectedModal === "conditions" && image;
   return (
-    <View className="">
+    <View>
       <View
         style={{
           flexDirection: "row",
@@ -44,28 +25,22 @@ const GraphLeftText = ({
           gap: 0,
         }}
       >
-        <DefaultText style={{ fontSize: 30 }}>
-          {leftText[id].topText}
-        </DefaultText>
-        {leftText[id].topTextSmall && (
+        <DefaultText style={{ fontSize: 30 }}>{topText}</DefaultText>
+        {topTextSmall && (
           <DefaultText style={{ fontSize: 25, lineHeight: 33 }}>
-            {leftText[id].topTextSmall}
+            {topTextSmall}
           </DefaultText>
         )}
         <DefaultText style={{ fontSize: 30, color: colors.lightGray }}>
-          {" "}
-          {leftText[id].topTextGray}
+          {topTextGray}
         </DefaultText>
-        {id === 0 && selectedModal === "conditions" && (
-          <Animated.Image
-            style={{ width: 35, height: 35 }}
-            animatedProps={animatedImage}
-          />
+        {showImage && image !== null && (
+          <Animated.Image style={{ width: 35, height: 35 }} source={image} />
         )}
       </View>
 
       <DefaultText style={{ fontSize: 14, color: colors.lightGray }}>
-        {leftText[id].bottomText}
+        {bottomText}
       </DefaultText>
     </View>
   );

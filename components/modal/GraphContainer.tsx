@@ -23,46 +23,62 @@ import {
   xValueToDraggedTime,
 } from "../helper-functions/helperFunctions";
 import { getConditionArray } from "./utils/getConditionArray";
+import { getAnimatedStyles } from "@/hooks/getAnimatedStyles";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-interface GraphContainerProps {
+type AnimationBoundary = {
+  stopLeftXValue?: number;
+  stopRightXValue?: number;
+  tickRange?: number;
+};
+
+type DragTextSettings = {
+  whiteTextFontSize?: number;
+  hackyWeatherImage?: boolean;
+  currentIndex: number;
+  scrollInfoBold:
+    | AnimatedProps<TextInputProps>
+    | AnimatedProps<TextInputProps>[];
+};
+
+type ShowGraphProp = {
+  children: React.ReactNode;
+};
+
+type GraphMode = {
+  last30DaysMode?: boolean;
+};
+
+interface GraphContainerProps
+  extends AnimationBoundary,
+    DragTextSettings,
+    ShowGraphProp,
+    GraphMode {
   cityName: string;
   state: ChartPressStateType;
   isActive: boolean;
-  leftSide?: React.ReactNode;
-  children: React.ReactNode;
-  hackyWeatherImage?: boolean;
-  scrollInfoBold:
-    | Partial<AnimatedProps<TextInputProps>>
-    | Partial<AnimatedProps<TextInputProps>>[];
-  smallBold?: boolean;
-  currentIndex: number;
-  tickRange?: number;
-  stopLeftXValue?: number;
-  stopRightXValue?: number;
-  whiteTextFontSize?: number;
-  last30DaysMode?: boolean;
 }
 
-const GraphContainer = ({
-  cityName,
-  state,
-  isActive,
-  leftSide,
-  children,
-  hackyWeatherImage = false,
-  scrollInfoBold,
-  smallBold = false,
-  currentIndex,
-  tickRange = 24,
-  stopLeftXValue,
-  stopRightXValue = tickRange,
-  whiteTextFontSize = 20,
-  last30DaysMode = false,
-}: GraphContainerProps) => {
+const GraphContainer = (props: GraphContainerProps) => {
+  const { cityName, state, isActive } = props;
+
+  //AnimationBoundary
+  const { tickRange = 24, stopLeftXValue, stopRightXValue = tickRange } = props;
+  //DragTextSettings
+  const {
+    hackyWeatherImage = false,
+    scrollInfoBold,
+    currentIndex,
+    whiteTextFontSize = 20,
+  } = props;
+  //ShowGraphProp
+  const { children: ShowGraph } = props;
+  //GraphMode
+  const { last30DaysMode: monthMode = false } = props;
+
   const data = useWeatherData();
   const is12Hr = useIs12Hr();
   const currentTimeZone = data[cityName].location.tz_id;
@@ -73,9 +89,11 @@ const GraphContainer = ({
 
   // Dynamically show time
   const draggedTime = useAnimatedProps(() => {
-    const xValue = state.x.value.value;
-    const time = is12Hr ? xValueToDraggedTime(xValue) : `${xValue % 24}:00`;
-    const blueLineArr = currentPrecipExample;
+    const { xValue, time } = (() => {
+      const { xValue } = getStateValues(state);
+      const time = is12Hr ? xValueToDraggedTime(xValue) : `${xValue % 24}:00`;
+      return { xValue, time };
+    })();
 
     const calendarDate = getMonthDayDate(
       xValue,
@@ -84,18 +102,30 @@ const GraphContainer = ({
       prevMonth
     );
 
-    const isDraggingPastToday = xValue > blueLineArr.length - 1;
+    const { isDraggingPastToday, monthModeScrollDate, outOfBoundsTime } =
+      (() => {
+        const blueLineArr = currentPrecipExample;
 
-    return {
-      text: last30DaysMode
-        ? isDraggingPastToday
+        const isDraggingPastToday = xValue > blueLineArr.length - 1;
+
+        const monthModeScrollDate = isDraggingPastToday
           ? currentMonth + " " + currentDay
-          : calendarDate
-        : xValue > blueLineArr.length - 1
-        ? is12Hr
+          : calendarDate;
+
+        const outOfBoundsTime = is12Hr
           ? xValueToDraggedTime(blueLineArr.length - 1)
-          : `${(blueLineArr.length - 1) % 24}:00`
-        : time,
+          : `${(blueLineArr.length - 1) % 24}:00`;
+
+        return { isDraggingPastToday, monthModeScrollDate, outOfBoundsTime };
+      })();
+
+    const text = monthMode
+      ? monthModeScrollDate
+      : isDraggingPastToday
+      ? outOfBoundsTime
+      : time;
+    return {
+      text: text,
       value: time,
     };
   });
@@ -103,29 +133,40 @@ const GraphContainer = ({
   const width = 359;
   //Translate X so time follows user drag
   const draggedTimeStyle = useAnimatedStyle(() => {
-    const xPosition = state.x.position.value;
-    const xValue = state.x.value.value;
+    const { xPosition, xValue } = getStateValues(state);
 
     // Default stop when its past 12.5% of graph
-    const stopLeft = hackyWeatherImage
-      ? 3
-      : stopLeftXValue
-      ? stopLeftXValue
-      : tickRange * 0.125;
+    const { stopLeftHere, stopRightHere, overlapLeft, overlapRight } = (() => {
+      const stopLeft = hackyWeatherImage
+        ? 3
+        : stopLeftXValue
+        ? stopLeftXValue
+        : tickRange * 0.125;
 
-    const overlapLeft = xValue < stopLeft;
-    const overlapRight = xValue > stopRightXValue;
+      const overlapLeft = xValue < stopLeft;
+      const overlapRight = xValue > stopRightXValue;
+
+      const stopLeftHere = (stopLeft / tickRange) * width;
+      const stopRightHere = (stopRightXValue / tickRange) * width;
+      return { stopLeftHere, stopRightHere, overlapLeft, overlapRight };
+    })();
+
+    const hackyWeatherOverlap = overlapLeft
+      ? 30
+      : overlapRight
+      ? stopRightHere
+      : xPosition;
+
+    const textTranslate = overlapLeft
+      ? stopLeftHere
+      : overlapRight
+      ? stopRightHere
+      : xPosition;
 
     return {
       transform: [
         {
-          translateX: overlapLeft
-            ? hackyWeatherImage
-              ? 30
-              : (stopLeft / tickRange) * width
-            : overlapRight
-            ? (stopRightXValue / tickRange) * width
-            : xPosition,
+          translateX: hackyWeatherImage ? hackyWeatherOverlap : textTranslate,
         },
       ],
     };
@@ -133,29 +174,38 @@ const GraphContainer = ({
 
   // Translate X so bold text follows user drag, same as above but for bigger text
   const animatedView = useAnimatedStyle(() => {
-    const xPosition = state.x.position.value;
-    const xValue = state.x.value.value;
+    const { xPosition, xValue } = getStateValues(state);
 
-    const stopLeft = hackyWeatherImage
-      ? 3
-      : stopLeftXValue
-      ? stopLeftXValue
-      : tickRange * 0.125;
+    const { stopLeftHere, stopRightHere, overlapLeft, overlapRight } = (() => {
+      const stopLeft = hackyWeatherImage
+        ? 3
+        : stopLeftXValue
+        ? stopLeftXValue
+        : tickRange * 0.125;
+      const overlapLeft = xValue < stopLeft;
+      const overlapRight = xValue > stopRightXValue;
 
-    const overlapLeft = xValue < stopLeft;
-    const overlapRight = xValue > stopRightXValue;
+      const stopLeftHere = (stopLeft / tickRange) * width;
+      const stopRightHere = (stopRightXValue / tickRange) * width;
+      return { stopLeftHere, stopRightHere, overlapLeft, overlapRight };
+    })();
+
+    const hackyWeatherOverlap = overlapLeft
+      ? 10
+      : overlapRight
+      ? -30
+      : xPosition - 20;
+
+    xPosition;
+    const textTranslate2 = overlapLeft
+      ? stopLeftHere
+      : overlapRight
+      ? stopRightHere
+      : xPosition;
     return {
       transform: [
         {
-          translateX: overlapLeft
-            ? hackyWeatherImage
-              ? 10
-              : (stopLeft / tickRange) * width
-            : overlapRight
-            ? hackyWeatherImage
-              ? -30
-              : (stopRightXValue / tickRange) * width
-            : xPosition - (hackyWeatherImage ? 20 : 0),
+          translateX: hackyWeatherImage ? hackyWeatherOverlap : textTranslate2,
         },
       ],
     };
@@ -167,122 +217,127 @@ const GraphContainer = ({
   const scrollInfoWidth = 200;
   const marginLeftToCenter = -(scrollInfoWidth / 2);
 
+  const HoveredTime = () => {
+    return (
+      <AnimatedTextInput
+        textAlign={"center"}
+        editable={false}
+        underlineColorAndroid={"transparent"}
+        style={[
+          {
+            width: scrollInfoWidth,
+            marginLeft: marginLeftToCenter,
+            fontSize: 14,
+            color: colors.lightGray,
+          },
+          draggedTimeStyle,
+        ]}
+        animatedProps={draggedTime}
+      />
+    );
+  };
+
+  const DisplayWeatherImages = () => {
+    return (
+      <View style={{ width: 0, height: 35 }}>
+        <>
+          {/* Overlay all images in same spot but toggle opacity based on user dragged line */}
+          {conditionArray.map((val, index) => (
+            <AnimatedImage
+              key={index}
+              className={"absolute top-0 left-0 "}
+              style={[
+                { width: 35, height: 35 },
+                useAnimatedStyle(() => ({
+                  opacity: state.x.value.value === index ? 100 : 0,
+                })),
+              ]}
+              animatedProps={useAnimatedProps(() => ({
+                source: val as ImageSourcePropType,
+              }))}
+            />
+          ))}
+        </>
+      </View>
+    );
+  };
+
+  const HoveredData = () => {
+    return (
+      <AnimatedTextInput
+        textAlign={hackyWeatherImage ? undefined : "center"}
+        editable={false}
+        underlineColorAndroid={"transparent"}
+        style={[
+          {
+            width: scrollInfoWidth,
+            marginLeft: hackyWeatherImage ? 40 : marginLeftToCenter,
+            // fontSize: smallBold ? 20 : 25,
+            fontSize: whiteTextFontSize,
+
+            color: "white",
+            fontWeight: 600,
+          },
+        ]}
+        animatedProps={
+          Array.isArray(scrollInfoBold) ? scrollInfoBold[0] : scrollInfoBold
+        }
+      />
+    );
+  };
+
+  const showSubText = Array.isArray(scrollInfoBold);
+
+  const HoveredSubText = () => {
+    return (
+      <AnimatedTextInput
+        textAlign={"center"}
+        editable={false}
+        underlineColorAndroid={"transparent"}
+        style={[
+          {
+            width: scrollInfoWidth,
+            marginLeft: marginLeftToCenter,
+            fontSize: 12,
+            lineHeight: 12,
+            color: colors.lightGray,
+            fontWeight: 600,
+          },
+          animatedView,
+        ]}
+        animatedProps={(scrollInfoBold as AnimatedProps<TextInputProps>[])[1]}
+      />
+    );
+  };
+
+  const HoveredTextBox = () => {
+    return (
+      <AnimatedView style={[animatedView]} className="flex-row items-center">
+        {hackyWeatherImage && <DisplayWeatherImages />}
+
+        <HoveredData />
+      </AnimatedView>
+    );
+  };
+
   return (
     <View className=" w-full relative z-0 " style={{ paddingTop: 72 }}>
       <View className="absolute top-0 left-0">
-        {/* Draggable Time */}
         <View
           style={{
             opacity: isActive ? 100 : 0,
             position: "absolute",
           }}
         >
-          {/* Shows user hovered time */}
-          <AnimatedTextInput
-            textAlign={"center"}
-            editable={false}
-            underlineColorAndroid={"transparent"}
-            style={[
-              {
-                width: scrollInfoWidth,
-                marginLeft: marginLeftToCenter,
-                fontSize: 14,
-                color: colors.lightGray,
-              },
-              draggedTimeStyle,
-            ]}
-            animatedProps={draggedTime}
-          />
+          <HoveredTime />
 
-          {/* Shows user hovered weather image and temperature */}
-          <AnimatedView
-            style={[animatedView]}
-            className="flex-row items-center"
-          >
-            <View style={{ width: 0, height: 35 }}>
-              {hackyWeatherImage && (
-                <>
-                  {/* Overlay all images in same spot but toggle opacity based on user dragged line */}
-                  {conditionArray.map((val, index) => (
-                    <AnimatedImage
-                      key={index}
-                      className={"absolute top-0 left-0 "}
-                      style={[
-                        { width: 35, height: 35 },
-                        useAnimatedStyle(() => ({
-                          opacity: state.x.value.value === index ? 100 : 0,
-                        })),
-                      ]}
-                      animatedProps={useAnimatedProps(() => ({
-                        source: val as ImageSourcePropType,
-                      }))}
-                    />
-                  ))}
-                </>
-              )}
-            </View>
+          <HoveredTextBox />
 
-            <AnimatedTextInput
-              textAlign={hackyWeatherImage ? undefined : "center"}
-              editable={false}
-              underlineColorAndroid={"transparent"}
-              style={[
-                {
-                  width: scrollInfoWidth,
-                  marginLeft: hackyWeatherImage ? 40 : marginLeftToCenter,
-                  // fontSize: smallBold ? 20 : 25,
-                  fontSize: whiteTextFontSize,
-
-                  color: "white",
-                  fontWeight: 600,
-                },
-              ]}
-              animatedProps={
-                Array.isArray(scrollInfoBold)
-                  ? scrollInfoBold[0]
-                  : scrollInfoBold
-              }
-            />
-          </AnimatedView>
-
-          {Array.isArray(scrollInfoBold) && (
-            <AnimatedTextInput
-              textAlign={"center"}
-              editable={false}
-              underlineColorAndroid={"transparent"}
-              style={[
-                {
-                  width: scrollInfoWidth,
-                  marginLeft: marginLeftToCenter,
-                  fontSize: 12,
-                  lineHeight: 12,
-                  color: colors.lightGray,
-                  fontWeight: 600,
-                },
-                animatedView,
-              ]}
-              animatedProps={scrollInfoBold[1]}
-            />
-          )}
+          {showSubText && <HoveredSubText />}
         </View>
-
-        {/* Left side  */}
-        {leftSide && (
-          <View
-            style={{
-              paddingLeft: 8,
-              gap: 2,
-              opacity: isActive ? 0 : 100,
-              paddingTop: 8,
-            }}
-          >
-            {leftSide}
-          </View>
-        )}
       </View>
 
       <View
-        // className="pr-4"
         style={{
           borderWidth: 1,
           borderColor: colors.mediumGray,
@@ -290,10 +345,18 @@ const GraphContainer = ({
           overflow: "hidden",
         }}
       >
-        {children}
+        {ShowGraph}
       </View>
     </View>
   );
+};
+
+const getStateValues = (state: ChartPressStateType) => {
+  "worklet";
+  const xPosition = state.x.position.value;
+  const xValue = state.x.value.value;
+
+  return { xPosition, xValue };
 };
 
 export default GraphContainer;

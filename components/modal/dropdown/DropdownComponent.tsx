@@ -134,8 +134,6 @@ const data = [
   { label: "Atmospheric Pressure", value: "8" },
 ];
 
-const { width } = Dimensions.get("window");
-
 const DropdownComponent = () => {
   const [value, setValue] = useState<string>();
   const ref = useRef<IDropdownRef>(null);
@@ -157,29 +155,38 @@ const DropdownComponent = () => {
     );
   };
 
-  return (
-    <Dropdown
-      ref={ref}
-      style={styles.dropdown}
-      containerStyle={styles.containerStyle}
-      iconStyle={styles.iconStyle}
-      itemContainerStyle={styles.itemContainerStyle}
-      itemTextStyle={styles.itemTextStyle}
-      selectedTextStyle={styles.selectedTextStyle}
-      data={data}
-      maxHeight={300}
-      labelField="label"
-      valueField="value"
-      value={value}
-      placeholder={""}
-      onChange={(item) => {
-        setValue(item.value);
-      }}
-      onChangeText={() => {}} // Keep search keyword
-      renderLeftIcon={renderLeftIcon}
-      renderRightIcon={renderRightIcon}
-    />
-  );
+  const {
+    dropdown,
+    containerStyle,
+    iconStyle,
+    itemContainerStyle,
+    itemTextStyle,
+    selectedTextStyle,
+  } = styles;
+
+  const DropdownProps = {
+    ref,
+    style: dropdown,
+    containerStyle: containerStyle,
+    iconStyle: iconStyle,
+    itemContainerStyle: itemContainerStyle,
+    itemTextStyle: itemTextStyle,
+    selectedTextStyle: selectedTextStyle,
+    data,
+    maxHeight: 300,
+    labelField: "label",
+    valueField: "value",
+    value,
+    placeholder: "",
+    onChange: (item: any) => {
+      setValue(item.value);
+    },
+    onChangeText: () => {}, // Keep search keyword
+    renderLeftIcon,
+    renderRightIcon,
+  };
+
+  return <Dropdown {...DropdownProps} />;
 };
 
 export default DropdownComponent;

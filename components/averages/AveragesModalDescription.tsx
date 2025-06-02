@@ -9,11 +9,11 @@ import PrecipOption from "../modal/PrecipOption";
 import TempOption from "../modal/TempOption";
 import {
   getText,
+  SelectAverage,
   useMonthlyAvgArr,
   useMonthlyPrecipArr,
 } from "./utils/constants";
 import PrecipMonthlyAverages from "../modal/PrecipMonthlyAverages";
-import { SelectAverage } from "./AveragesModal";
 
 interface AveragesModalDescriptionProps {
   data: WeatherData;
@@ -39,6 +39,12 @@ const AveragesModalDescription = ({
 
   const monthlyPrecipArr = useMonthlyPrecipArr();
 
+  const ComparisonComponentProps = {
+    rangeHigh: yearlyHigh,
+    rangeLow: yearlyLow,
+    arr: monthlyAvgArr,
+  };
+
   return (
     <>
       <ModalTextBox title="Summary">
@@ -51,11 +57,7 @@ const AveragesModalDescription = ({
             <DefaultText>{monthlyAveragesText}</DefaultText>
             <HorizontalLine />
 
-            <ComparisonComponent
-              rangeHigh={yearlyHigh}
-              rangeLow={yearlyLow}
-              arr={monthlyAvgArr}
-            />
+            <ComparisonComponent {...ComparisonComponentProps} />
           </ModalTextBox>
 
           <ModalTextBox title="About the Normal Range">

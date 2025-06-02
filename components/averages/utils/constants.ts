@@ -188,3 +188,5 @@ export const getText = () => {
     precipText,
   };
 };
+
+export type SelectAverage = "temperature" | "precipitation";

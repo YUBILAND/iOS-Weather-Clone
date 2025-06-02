@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -14,10 +14,10 @@ interface MenuIconProps {
 }
 const MenuIcon = ({ size, isEditingList }: MenuIconProps) => {
   const width = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => {
+  useEffect(() => {
     width.value = isEditingList ? size : 0;
-
+  }, [isEditingList]);
+  const animatedStyle = useAnimatedStyle(() => {
     return {
       width: withTiming(width.value, { duration: 300 }),
       height: size,

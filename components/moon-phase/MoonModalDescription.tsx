@@ -1,20 +1,9 @@
-import React from "react";
-import { View, Text } from "react-native";
-import DefaultText from "../atoms/DefaultText";
-import HorizontalLine from "../atoms/HorizontalLine";
-import ModalBoxTitle from "../modal/ModalBoxTitle";
-import ModalTextBoxContainer from "../modal/ModalTextBoxContainer";
-import { colors } from "@/assets/colors/colors";
 import { WeatherData } from "@/constants/constants";
-import Dot from "../modal/Dot";
-import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
+import React from "react";
+import { View } from "react-native";
+import DefaultText from "../atoms/DefaultText";
 import ModalTextBox from "../modal/ModalTextBox";
-import ModalOption from "../modal/ModalOption";
-import ModalTransparentTextBox from "../modal/ModalTransparentTextBox";
 // import { getUVArr } from "./utils/getUVArr";
-import HorizontalBar from "../uv-index/HorizontalBar";
-import { getUVArr } from "../uv-index/utils/getUVArr";
-import { ListItem } from "tamagui";
 
 interface MoonModalDescriptionProps {
   data: WeatherData;
