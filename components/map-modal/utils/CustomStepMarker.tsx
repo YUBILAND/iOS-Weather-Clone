@@ -12,6 +12,31 @@ const CustomStepMarker = ({
   epochArr,
 }: MarkerProps & { epochArr: number[] | null }) => {
   // Not from weather screen timezone but from user's location
+
+  const { isLastIndex, minsIsZero, label } = getStepMarkerLabel(
+    epochArr,
+    index
+  );
+
+  return (
+    <View style={{ paddingTop: 24 }}>
+      <DefaultText
+        style={{
+          color: "black",
+          fontSize: 12,
+          fontWeight: isLastIndex || minsIsZero ? 700 : 500,
+        }}
+      >
+        {label}
+      </DefaultText>
+    </View>
+  );
+};
+
+export const getStepMarkerLabel = (
+  epochArr: number[] | null,
+  index: number
+) => {
   const mostUpToDateMinute = getMinutesFromEpoch(epochArr);
 
   const currentHour = new Date().getHours();
@@ -21,28 +46,20 @@ const CustomStepMarker = ({
   const mins = getSliderMins(startingMinute, index);
   const hour = getSliderHr(startingMinute, currentHour, index);
 
+  const minsIsZero = mins === 0;
+
   const getSliderStepLabel = () => {
-    const timeLabel = mins === 0 ? hour : ":" + mins;
+    const timeLabel = minsIsZero ? hour : ":" + mins;
+    // const timeLabel = minsIsZero ? hour : "0";
+
     const label = index === lastIndex ? "Now" : timeLabel;
     return label;
   };
 
   const label = getSliderStepLabel();
-
   const isLastIndex = index === lastIndex;
-  return (
-    <View style={{ paddingTop: 24 }}>
-      <DefaultText
-        style={{
-          color: "black",
-          fontSize: 12,
-          fontWeight: isLastIndex || mins === 0 ? 700 : 500,
-        }}
-      >
-        {label}
-      </DefaultText>
-    </View>
-  );
+
+  return { isLastIndex, minsIsZero, label };
 };
 
 export default React.memo(CustomStepMarker);

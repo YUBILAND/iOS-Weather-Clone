@@ -7,7 +7,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Animated, StyleProp, View, ViewStyle } from "react-native";
+import { ImageURISource, StyleProp, View, ViewStyle } from "react-native";
 import MapView from "react-native-maps";
 import RainMapComponent from "../rain-map/RainMapComponent";
 import DoneButton from "./DoneButton";
@@ -25,13 +25,7 @@ import SliderDate from "./SliderDate";
 import CustomStepMarker from "./utils/CustomStepMarker";
 import { getDayBoundaryIndex } from "./utils/getDayBoundaryIndex";
 import { useIncrementSlider } from "./utils/useIncrementSlider";
-import {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
-import { useLayout } from "@/hooks/useLayout";
+import { FontAwesome } from "@expo/vector-icons";
 
 interface MapModalProps {
   currentCardIndex: number;
@@ -48,6 +42,7 @@ const MapModal = ({
   goToWeatherScreen,
   weatherScreens,
 }: MapModalProps) => {
+  console.log(cityName);
   const data = useWeatherData();
   const { location } = data[cityName];
 
@@ -59,8 +54,22 @@ const MapModal = ({
   const mapRef = useRef<MapView>(null);
 
   const ZOOM_LEVEL = 4;
+  const zoomDeltaToChangeMarkerSize = 100;
+
+  const initialRegion = useMemo(
+    () => ({
+      latitude: location.lat,
+      longitude: location.lon,
+      latitudeDelta: 0.6 * ZOOM_LEVEL,
+      longitudeDelta: 0.3 * ZOOM_LEVEL,
+    }),
+    []
+  );
 
   const { epochArr, visibleTileIndex, setVisibleTileIndex } = useTileData();
+
+  // If we should show yesterdays time
+  const { dayBoundaryIndexRef } = getDayBoundaryIndex(epochArr);
 
   // Auto increment slider
   useIncrementSlider(isPlaying, setVisibleTileIndex);
@@ -103,6 +112,11 @@ const MapModal = ({
     setIsPlaying(false);
   }, [weatherScreens]);
 
+  const handleShowCities = useCallback(
+    (visible: boolean) => setShowCities(visible),
+    []
+  );
+
   const pressCity = useCallback((index: number) => {
     goToWeatherScreen(index);
     handleRecenter(
@@ -110,12 +124,9 @@ const MapModal = ({
       data[weatherScreens[index]].location.lon
     );
     setActiveIndex(index);
-    setShowCities(false);
-    setIsPlaying(true);
   }, []);
 
   const handleMarkerSize = useCallback((latDelta: number) => {
-    const zoomDeltaToChangeMarkerSize = 100;
     latDelta > zoomDeltaToChangeMarkerSize
       ? setMarkerSize("small")
       : setMarkerSize("big");
@@ -133,165 +144,47 @@ const MapModal = ({
     [weatherScreens, activeIndex, handleMarkerClick, markerSize]
   );
 
-  const ShowSliderDate = useCallback(
-    ({ visibleTileIndex }: { visibleTileIndex: number }) => {
-      // If we should show yesterdays time
-      const { dayBoundaryIndexRef } = getDayBoundaryIndex(epochArr);
-      const SliderDateProps = {
-        showYesterday: visibleTileIndex < dayBoundaryIndexRef.current,
-        epochArr,
-        index: visibleTileIndex,
-      };
-      return <SliderDate {...SliderDateProps} />;
-    },
-    [visibleTileIndex]
-  );
-
-  const CityListModalProps = {
-    showCities,
-    setShowCities,
-    weatherScreens,
-    pressCity,
+  const SliderDateProps = {
+    showYesterday: visibleTileIndex < dayBoundaryIndexRef.current,
+    epochArr: epochArr,
+    index: visibleTileIndex,
   };
-
-  const handleStepMarker = useCallback(
-    (props: MarkerProps) => <CustomStepMarker {...props} epochArr={epochArr} />,
-    [epochArr]
-  );
-
-  const handleValueChange = useCallback((val: number) => {
-    setVisibleTileIndex(val);
-  }, []);
-
-  const handleSlidingStart = useCallback(() => setIsPlaying(false), []);
-
-  const barStyle = useMemo(
-    () =>
-      ({
+  const SliderProps = useMemo(
+    () => ({
+      style: {
         width: "100%",
         height: 40,
         paddingBottom: 14,
-      } as StyleProp<ViewStyle>),
-    []
-  );
-
-  const initialValue = 0;
-  const max = 0;
-
-  const progress = useSharedValue(initialValue);
-
-  // Animated style for slider thumb (optional, if you want to customize thumb)
-  const animatedThumbStyle = useAnimatedStyle(() => {
-    return {
-      // Example: animate thumb scale based on progress
-      transform: [{ scale: withTiming(progress.value === max ? 1.2 : 1) }],
-    };
-  });
-
-  // When external value changes, animate shared value smoothly
-  useEffect(() => {
-    progress.value = withTiming(initialValue, { duration: 300 });
-  }, [initialValue]);
-
-  // Handle slider value change from user interaction
-  // const handleChange = (val: number) => {
-  //   progress.value = val; // update animated value immediately
-  //   runOnJS(onValueChange)(val); // call external callback on JS thread
-  // };
-
-  const SliderProps = useMemo(() => {
-    console.log("hi");
-    return {
-      style: barStyle,
+      } as StyleProp<ViewStyle>,
       minimumTrackTintColor: "black",
       maximumTrackTintColor: colors.bgBlack(0.2),
       minimumValue: 0,
       maximumValue: 12,
       step: 1,
-      // StepMarker: handleStepMarker,
-      // value: visibleTileIndex,
-      onValueChange: handleValueChange,
-      onSlidingStart: handleSlidingStart,
-    };
-  }, [epochArr]);
-
-  const { layout, onLayout } = useLayout();
-
-  const ShowForecastSliderContainer = useCallback(
-    ({
-      sliderDate,
-      sliderBar,
-    }: {
-      sliderDate: React.ReactNode;
-      sliderBar: React.ReactNode;
-    }) => {
-      return (
-        <View
-          className="w-full h-28 absolute bottom-0 left-0 mb-10 px-6"
-          style={{ zIndex: 100 }}
-        >
-          <ForecastSliderContainer>
-            <View className="h-full justify-center">
-              <View className="flex-row items-center gap-x-8">
-                <PlayPauseIcon
-                  handlePress={handlePlayPause}
-                  isPlaying={isPlaying}
-                />
-                <View>
-                  <ForecastSelect />
-                  {sliderDate}
-                </View>
-              </View>
-              {sliderBar}
-
-              {/* <View className="w-full"> */}
-
-              {/* <Animated.View
-                onLayout={onLayout}
-                style={[
-                  {
-                    width: 100,
-                    height: 20,
-                    borderRadius: 10,
-                    backgroundColor: "black",
-                  },
-                  animatedThumbStyle,
-                ]}
-              /> */}
-              {/* </View> */}
-            </View>
-          </ForecastSliderContainer>
-        </View>
-      );
-    },
-    [layout]
-  );
-
-  const ShowDate = useCallback(() => {
-    return <ShowSliderDate visibleTileIndex={visibleTileIndex} />;
-  }, [visibleTileIndex]);
-
-  const ShowBar = useMemo(() => {
-    return <Slider {...SliderProps} value={visibleTileIndex} />;
-  }, [visibleTileIndex]);
-
-  const initialRegion = useMemo(
-    () => ({
-      latitude: location.lat,
-      longitude: location.lon,
-      latitudeDelta: 0.6 * ZOOM_LEVEL,
-      longitudeDelta: 0.3 * ZOOM_LEVEL,
+      StepMarker: (props: MarkerProps) => (
+        <CustomStepMarker {...props} epochArr={epochArr} />
+      ),
+      onValueChange: (val: number) => {
+        setVisibleTileIndex(val);
+      },
+      onSlidingStart: () => setIsPlaying(false),
     }),
-    []
+    [epochArr]
   );
   const RainMapComponentProps = {
     cityName,
     initialRegion,
     mapRef,
-    markers: memoizedMarkers,
+    marker: memoizedMarkers,
     epochArr,
     visibleTileIndex,
     handleMarkerSize,
+  };
+  const CityListModalProps = {
+    showCities,
+    setShowCities: handleShowCities,
+    weatherScreens,
+    pressCity,
   };
 
   return (
@@ -313,10 +206,22 @@ const MapModal = ({
         </RightSide>
       </View>
       <View className="relative">
-        <ShowForecastSliderContainer
-          sliderDate={<ShowDate />}
-          sliderBar={ShowBar}
-        />
+        <ForecastSliderContainer>
+          <View className="h-full justify-center">
+            <View className="flex-row items-center gap-x-8">
+              <PlayPauseIcon
+                handlePress={handlePlayPause}
+                isPlaying={isPlaying}
+              />
+              <View>
+                <ForecastSelect />
+                <SliderDate {...SliderDateProps} />
+              </View>
+            </View>
+
+            <Slider {...SliderProps} value={visibleTileIndex} />
+          </View>
+        </ForecastSliderContainer>
 
         <RainMapComponent {...RainMapComponentProps} />
       </View>
@@ -338,10 +243,15 @@ const ForecastSliderContainer = ({
   children: React.ReactNode;
 }) => (
   <View
-    className=" w-full h-full px-4 py-4"
-    style={{ borderRadius: 20, backgroundColor: colors.bgWhite(0.9) }}
+    className="w-full h-28 absolute bottom-0 left-0 mb-10 px-6"
+    style={{ zIndex: 100 }}
   >
-    {children}
+    <View
+      className=" w-full h-full px-4 py-4"
+      style={{ borderRadius: 20, backgroundColor: colors.bgWhite(0.9) }}
+    >
+      {children}
+    </View>
   </View>
 );
 

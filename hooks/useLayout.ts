@@ -11,7 +11,18 @@ export const useLayout = () => {
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
     const { x, y, width, height } = event.nativeEvent.layout;
-    setLayout({ x, y, width, height });
+    setLayout((prev) => {
+      if (
+        !prev ||
+        prev.x !== x ||
+        prev.y !== y ||
+        prev.width !== width ||
+        prev.height !== height
+      ) {
+        return { x, y, width, height };
+      }
+      return prev;
+    });
   }, []);
 
   return { layout, onLayout };

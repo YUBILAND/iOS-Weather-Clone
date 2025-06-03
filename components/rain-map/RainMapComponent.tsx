@@ -1,9 +1,6 @@
-import { useWeatherData } from "@/hooks/useWeatherData";
-import React, { ForwardedRef, useEffect, useState } from "react";
-import { Pressable, StyleSheet } from "react-native";
-import MapView, { PROVIDER_DEFAULT, Region, UrlTile } from "react-native-maps";
-import DefaultText from "../atoms/DefaultText";
-import { useTileData } from "./utils/useTileData";
+import React, { ForwardedRef, useMemo } from "react";
+import { StyleSheet } from "react-native";
+import MapView, { PROVIDER_DEFAULT, Region } from "react-native-maps";
 import RainTiles from "./RainTiles";
 
 interface RainMapComponentProps {
@@ -31,16 +28,19 @@ const RainMapComponent = ({
   const displayTileOnMount =
     epochArr && epochArr.length > 0 ? "ready" : "loading";
 
-  const MapViewProps = {
-    style: styles.map,
-    initialRegion,
-    provider: PROVIDER_DEFAULT,
-    scrollEnabled: !disableScroll,
-    ref: mapRef,
-    onRegionChange: (region: Region) => {
-      handleMarkerSize ? handleMarkerSize(region.latitudeDelta) : null;
-    },
-  };
+  const MapViewProps = useMemo(
+    () => ({
+      style: styles.map,
+      initialRegion,
+      provider: PROVIDER_DEFAULT,
+      scrollEnabled: !disableScroll,
+      ref: mapRef,
+      onRegionChange: (region: Region) => {
+        handleMarkerSize ? handleMarkerSize(region.latitudeDelta) : null;
+      },
+    }),
+    [mapRef]
+  );
 
   return (
     <MapView key={displayTileOnMount} {...MapViewProps}>
