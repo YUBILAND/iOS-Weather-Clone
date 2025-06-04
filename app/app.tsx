@@ -20,7 +20,7 @@ import {
 
 import { fetchLocations } from "@/api/weather";
 import Spinner from "@/components/atoms/Spinner";
-import { getData } from "@/utils/asyncStorage";
+import { getData, storeData } from "@/utils/asyncStorage";
 import { debounce } from "lodash";
 import "../global.css";
 
@@ -51,7 +51,7 @@ import { useFonts } from "expo-font";
 import { CrossfadeImage } from "react-native-crossfade-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const resetWeatherScreens = (reset: boolean) => {
+const resetWeatherScreens = async (reset: boolean) => {
   reset && AsyncStorage.clear();
 };
 
@@ -79,7 +79,18 @@ const App = () => {
   const FirstCity = async () => {
     await dispatch(fetchWeatherDataArr({}));
 
-    const cityArray = await getData("city");
+    let cityArray = await getData("city");
+
+    // If no city in local storage, default to Tokyo
+    if (cityArray.length === 0) {
+      cityArray = ["Tokyo", "Korea", "New York", "San Francisco"];
+
+      await Promise.all(
+        cityArray.map((city: string) => storeData("city", [city], true))
+      );
+    }
+    console.log(cityArray);
+
     setWeatherScreens(cityArray);
     await dispatch(fetchExtraDataArr(cityArray));
   };
@@ -91,44 +102,6 @@ const App = () => {
     // Should fetch from async storage and update redux
     [fetchTempUnit(), fetchIs12Hr(), fetchOtherUnits()].forEach(dispatch);
   }, []);
-
-  // Add New Weather Location when click on city name
-  const handleAddCity = async (location: Location) => {
-    setShowLocationModal(false);
-
-    try {
-      const cityList = await dispatch(
-        fetchWeatherDataArr({ cityName: location.name })
-      );
-      setShowSearch(false);
-      setSearchResultLocations([]);
-      console.log("city list is", cityList);
-      // Add to flatlist upon click city
-      FirstCity();
-
-      // setUpdate(!update);
-    } catch (error) {
-      console.error("Error fetching weather data:", error);
-    }
-  };
-  // Handle search functionality
-  const handleSearch = (value: string): void => {
-    // fetch location based on autocomplete of user input
-    let autoCompleteMinimumLength = 2;
-    if (value.length > autoCompleteMinimumLength) {
-      fetchLocations(value).then((data) => {
-        setSearchResultLocations(data);
-        // console.log(data);
-      });
-    }
-  };
-  // Delay in user typing until result to reduce api calls and smoothen experience
-  const handleTextDebounce = useCallback(debounce(handleSearch, 1200), []);
-  // Show Search Text Box
-  const toggleSearch = (textInputRef: RefObject<TextInput>) => {
-    setShowSearch((prevState) => !prevState);
-    !showSearch ? textInputRef.current?.focus() : textInputRef.current?.blur();
-  };
 
   // if (!cityData) {
   //   return (
@@ -152,7 +125,7 @@ const App = () => {
   const background = getBackground(currentCityName);
 
   // For FlatList
-  const flatlistRef = useRef<FlatList>(null);
+  const weatherScreenFlatListRef = useRef<FlatList>(null);
   // Expanding dots library requires Animated.value instead of shared value
   const scrollX = new Animated.Value(0);
   const dataProp: Array<{ id: string } & WeatherAtLocationProps> = useMemo(
@@ -201,18 +174,22 @@ const App = () => {
   // For Location Modal
   const [showLocationModal, setShowLocationModal] = useState(false);
   const handleShowWeatherScreen = (index: number) => {
-    flatlistRef.current?.scrollToIndex({ index: index });
+    weatherScreenFlatListRef.current?.scrollToIndex({ index: index });
     setShowLocationModal(false);
   };
+
+  const handleSelectLocation = async () => {
+    setShowLocationModal(false);
+    await FirstCity();
+  };
   const searchProps = {
+    handleSelectLocation,
     showLocationModal,
-    handleTextDebounce,
     showSearch,
-    toggleSearch,
     searchResultLocations,
-    handleAddCity,
     weatherScreens,
     currentCardIndex,
+    weatherScreenFlatListRef,
   };
 
   const [showMapModal, setShowMapModal] = useState(false);
@@ -232,7 +209,13 @@ const App = () => {
   const extraLoading = useExtraLoading();
   const extraDataExists = extraData && Object.keys(extraData).length > 0;
 
-  if (loading || !fontsLoaded || extraLoading || !extraDataExists) {
+  if (
+    weatherScreens.length === 0 ||
+    loading ||
+    !fontsLoaded ||
+    extraLoading ||
+    !extraDataExists
+  ) {
     return (
       <View className="flex-1 relative">
         <StatusBar style="light" />
@@ -270,7 +253,7 @@ const App = () => {
   const FlatListProps = {
     onViewableItemsChanged: handleViewableItemsChanged,
     viewabilityConfig: { itemVisiblePercentThreshold: 50 },
-    ref: flatlistRef,
+    ref: weatherScreenFlatListRef,
     data: dataProp,
     keyExtractor: (item: { id: string }) => item.id,
     renderItem: handleRenderItem,

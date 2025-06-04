@@ -5,51 +5,99 @@ import {
   TouchableOpacity,
   Pressable,
   TouchableHighlight,
+  FlatList,
 } from "react-native";
-import React, { RefObject, useRef } from "react";
+import React, { RefObject, useCallback, useRef, useState } from "react";
 import { colors } from "@/assets/colors/colors";
 import { MagnifyingGlassIcon } from "react-native-heroicons/outline";
 import { MapPinIcon } from "react-native-heroicons/solid";
 import { Location } from "@/constants/constants";
 import DefaultText from "./DefaultText";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/state/store";
+import { fetchWeatherDataArr } from "@/state/api/apiSlice";
+import { fetchLocations } from "@/api/weather";
+import { debounce } from "lodash";
+import RedBox from "./RedBox";
 
 interface SearchProps {
-  handleTextDebounce: (value: string) => void;
-  showSearch: boolean;
-  handleToggleSearch: () => void;
-  searchResultLocations: Location[];
-  handleAddCity: (location: Location) => void;
+  handleSelectLocation: () => void;
   textInputRef: RefObject<TextInput>;
-  handleCancel: () => void;
+  weatherScreenFlatListRef: RefObject<FlatList>;
 }
 
 const Search: React.FC<SearchProps> = ({
-  handleTextDebounce,
-  showSearch,
-  handleToggleSearch,
-  searchResultLocations,
-  handleAddCity,
+  handleSelectLocation,
   textInputRef,
-  handleCancel,
+  weatherScreenFlatListRef,
 }) => {
   console.log("RERENDERED SEARCH WHY");
+
+  const dispatch = useDispatch<AppDispatch>();
+
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchResultLocations, setSearchResultLocations] = useState<
+    Location[]
+  >([]);
+
+  const handleAddCity = async (location: Location) => {
+    try {
+      await dispatch(fetchWeatherDataArr({ cityName: location.name }));
+      setShowSearch(false);
+      setSearchResultLocations([]);
+
+      handleSelectLocation();
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+    }
+  };
+
+  const handleSearch = (value: string): void => {
+    // fetch location based on autocomplete of user input
+    let autoCompleteMinimumLength = 2;
+    if (value.length > autoCompleteMinimumLength) {
+      fetchLocations(value).then((data) => {
+        setSearchResultLocations(data);
+        console.log(data);
+      });
+    }
+  };
+
+  const handleTextDebounce = useCallback(debounce(handleSearch, 1200), []);
+
+  // const handleToggleSearch = (textInputRef: RefObject<TextInput>) => {
+  //     setShowSearch((prevState) => !prevState);
+  //     !showSearch ? textInputRef.current?.focus() : textInputRef.current?.blur();
+  //   };
+
+  const handleToggleSearch = useCallback(() => {
+    setShowSearch((prevState) => !prevState);
+    !showSearch ? textInputRef.current?.focus() : textInputRef.current?.blur();
+    const flatlistExists = weatherScreenFlatListRef.current !== null;
+    if (flatlistExists) {
+      weatherScreenFlatListRef.current.scrollToOffset({
+        animated: false,
+        offset: 0,
+      });
+    }
+  }, [textInputRef]);
+
+  const handleCancel = () => {
+    handleToggleSearch();
+  };
+
   return (
     <View className="flex-row items-center gap-x-2">
       <TouchableHighlight
         className=" relative flex-row justify-end items-center rounded-xl flex-1"
         style={{
           backgroundColor: colors.bgWhite(0.2),
-          // width: 100,
-          // backgroundColor: colors.bgMediumGray(0.2),
         }}
         onPress={handleToggleSearch}
         underlayColor="rgba(215, 215, 215, 0.77)"
       >
         <>
-          <TouchableOpacity
-            // onPress={() => toggleSearch(textInputRef)}
-            className="px-2 px-1 m-1"
-          >
+          <TouchableOpacity className="px-2 px-1 m-1">
             <MagnifyingGlassIcon size={20} color={"white"} />
           </TouchableOpacity>
 
@@ -61,7 +109,6 @@ const Search: React.FC<SearchProps> = ({
             className="h-10 pb-1 flex-1 text-base text-white"
             style={[
               {
-                // opacity: showSearch ? 1 : 0,
                 pointerEvents: showSearch ? undefined : "none",
               },
             ]}
@@ -69,7 +116,10 @@ const Search: React.FC<SearchProps> = ({
         </>
       </TouchableHighlight>
       {searchResultLocations.length > 0 && showSearch ? (
-        <View className="absolute w-full bg-gray-300 top-16 mt-2 rounded-3xl">
+        <View
+          className="absolute w-full bg-gray-300 rounded-3xl"
+          style={{ top: 50 }}
+        >
           {searchResultLocations.map((location, index) => {
             let showBorder = index + 1 !== searchResultLocations.length;
             let borderClass = showBorder

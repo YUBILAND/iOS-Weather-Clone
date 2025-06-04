@@ -32,6 +32,7 @@ import LocationCardItem from "./LocationCardItem";
 import LocationCardItemContainer from "./LocationCardItemContainer";
 import MenuIcon from "./MenuIcon";
 import TrashButton from "./TrashButton";
+import DefaultText from "../atoms/DefaultText";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -51,7 +52,6 @@ type Actions = {
 type Customization = {
   topOffset?: number;
   activeScale: number;
-  stickyElement: React.ComponentType;
 };
 
 type Behavior = {
@@ -75,7 +75,7 @@ const LocationCardFlatlist = (props: LocationCardFlatlistProps) => {
   } = props;
 
   // Customization
-  const { topOffset, activeScale, stickyElement } = props;
+  const { topOffset, activeScale } = props;
 
   // Behavior
   const { isEditingList, confirmDeleteIndex } = props;
@@ -98,7 +98,7 @@ const LocationCardFlatlist = (props: LocationCardFlatlistProps) => {
           return {
             transform: [
               {
-                translateX: withTiming(left.value),
+                translateX: left.value,
               },
             ],
             width: "100%",
@@ -200,50 +200,41 @@ const LocationCardFlatlist = (props: LocationCardFlatlistProps) => {
       const notFirstIndex = !firstIndex;
 
       return (
-        <>
-          {
-            <Animated.View
-              exiting={FadeOutUp.duration(300).easing(Easing.quad)}
-              className="relative flex-1"
-              style={{ height: isEditingList ? 60 : 100 }}
+        <Animated.View
+          exiting={FadeOutUp.duration(300).easing(Easing.quad)}
+          className="relative flex-1"
+          style={{ height: isEditingList ? 60 : 100 }}
+        >
+          {/* ScaleDecorator allows enlarge on hover */}
+          <ScaleDecorator activeScale={activeScale}>
+            <AnimatedPressable
+              // Expands drag to menu icon
+              onLongPress={drag}
+              disabled={isActive}
+              style={[{ zIndex: 0 }, animatedHeightStyle, animatedLeftStyle]}
+              className="flex-row items-center"
             >
-              {/* ScaleDecorator allows enlarge on hover */}
-              <ScaleDecorator activeScale={activeScale}>
-                <AnimatedPressable
-                  // Expands drag to menu icon
-                  onLongPress={drag}
-                  disabled={isActive}
-                  style={[
-                    { zIndex: 0 },
-                    animatedHeightStyle,
-                    animatedLeftStyle,
-                  ]}
-                  className="flex-row items-center"
-                >
-                  {notFirstIndex && (
-                    <ShowDeleteButton isEditingList={isEditingList} />
-                  )}
-                  <ShowLocationCards isEditingList={isEditingList} />
-                  {notFirstIndex && (
-                    <ShowHamburgerIcon isEditingList={isEditingList} />
-                  )}
-                  <>
-                    {/* Click outside to stop delete */}
-                    {confirmDeleteIndex !== null && <StopDeleteOverlay />}
-                    {notFirstIndex && isEditingList && <DeleteLocationCard />}
-                  </>
-                </AnimatedPressable>
-              </ScaleDecorator>
-            </Animated.View>
-          }
-        </>
+              {notFirstIndex && (
+                <ShowDeleteButton isEditingList={isEditingList} />
+              )}
+              <ShowLocationCards isEditingList={isEditingList} />
+              {notFirstIndex && (
+                <ShowHamburgerIcon isEditingList={isEditingList} />
+              )}
+              <>
+                {/* Click outside to stop delete */}
+                {confirmDeleteIndex !== null && <StopDeleteOverlay />}
+                {notFirstIndex && isEditingList && <DeleteLocationCard />}
+              </>
+            </AnimatedPressable>
+          </ScaleDecorator>
+        </Animated.View>
       );
     },
     [weatherScreens, isEditingList, confirmDeleteIndex]
   );
 
   const handleDragSwap = useCallback(({ data }: { data: Item[] }) => {
-    // setData(data);
     changeWeatherScreens(data.map((item) => item.cityName));
     swapData(
       "city",
@@ -264,26 +255,30 @@ const LocationCardFlatlist = (props: LocationCardFlatlistProps) => {
     height: "100%" as DimensionValue,
   };
 
-  const DraggableFlatlistProps = {
-    ref: flatlistRef as any,
-    data: weatherScreens.map((cityName, index) => ({ index, cityName })),
-    onDragEnd: handleDragSwap,
-    keyExtractor: (item: Item) => item.cityName,
-    renderItem,
-    stickyHeaderIndices: [0],
-    ListHeaderComponent: stickyElement,
-    showsVerticalScrollIndicator: false,
-    onScrollOffsetChange: handleScrollChange,
-    keyboardShouldPersistTaps: "handled" as const,
-    extraData: weatherScreens,
-    contentContainerStyle: contentContainerStyle as StyleProp<ViewStyle>,
-    containerStyle: containerStyle as StyleProp<ViewStyle>,
-    style: { overflowX: "visible" } as StyleProp<ViewStyle>,
-    dragItemOverflow: true,
-  };
+  const flatlistData = useMemo(() => {
+    return weatherScreens.map((cityName, index) => ({
+      index: index,
+      cityName,
+    }));
+  }, [weatherScreens]);
+
   return (
     <>
-      <DraggableFlatList {...DraggableFlatlistProps} />
+      <DraggableFlatList
+        ref={flatlistRef as any}
+        data={flatlistData}
+        onDragEnd={handleDragSwap}
+        keyExtractor={(item: Item) => item.cityName}
+        renderItem={renderItem}
+        showsVerticalScrollIndicator={false}
+        onScrollOffsetChange={handleScrollChange}
+        keyboardShouldPersistTaps={"handled"}
+        extraData={weatherScreens}
+        contentContainerStyle={contentContainerStyle}
+        containerStyle={containerStyle}
+        style={{ overflowX: "visible" }}
+        dragItemOverflow
+      />
     </>
   );
 };

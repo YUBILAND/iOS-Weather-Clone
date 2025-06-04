@@ -23,7 +23,7 @@ const apiCall = async (endpoint: string) => {
   }
 };
 
-const TESTING = true;
+const TESTING = false;
 
 export const fetchWeatherForecast = (city: string, days: number) => {
   let forecastUrl = forecastEndpoint(city, days);

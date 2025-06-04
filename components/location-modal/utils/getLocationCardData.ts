@@ -9,6 +9,8 @@ export const getLocationCardData = (cityName: string) => {
   const data = useWeatherData();
   const is12Hr = useIs12Hr();
 
+  console.log(Object.keys(data));
+
   const currentTemp = Math.round(getTemperature(data[cityName].current.temp_c));
   const currentTimeZone = data[cityName].location.tz_id;
   const cityTime = removeZeroFromTimeString(
