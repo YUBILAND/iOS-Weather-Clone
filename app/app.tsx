@@ -50,6 +50,7 @@ import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 import { CrossfadeImage } from "react-native-crossfade-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useLayout } from "@/hooks/useLayout";
 
 const resetWeatherScreens = async (reset: boolean) => {
   reset && AsyncStorage.clear();
@@ -178,6 +179,10 @@ const App = () => {
     setShowLocationModal(false);
   };
 
+  const handleSwitchCityMap = (index: number) => {
+    weatherScreenFlatListRef.current?.scrollToIndex({ index: index });
+  };
+
   const handleSelectLocation = async () => {
     setShowLocationModal(false);
     await FirstCity();
@@ -209,40 +214,16 @@ const App = () => {
   const extraLoading = useExtraLoading();
   const extraDataExists = extraData && Object.keys(extraData).length > 0;
 
-  if (
-    weatherScreens.length === 0 ||
-    loading ||
-    !fontsLoaded ||
-    extraLoading ||
-    !extraDataExists
-  ) {
-    return (
-      <View className="flex-1 relative">
-        <StatusBar style="light" />
-        <Image
-          blurRadius={70}
-          className="absolute h-full w-full"
-          source={require("../assets/images/bg.png")}
-        />
-        <Spinner />
-      </View>
-    );
-  }
-
-  const ShowMapModal = () => {
-    const MapModalProps = {
+  const MapModalProps = useMemo(
+    () => ({
       currentCardIndex,
       cityName: weatherScreens[currentCardIndex],
       closeMap: handleCloseMap,
-      goToWeatherScreen: handleShowWeatherScreen,
+      goToWeatherScreen: handleSwitchCityMap,
       weatherScreens,
-    };
-    return (
-      <WeatherScreenModalContainer modalVisible={showMapModal}>
-        <MapModal {...MapModalProps} />
-      </WeatherScreenModalContainer>
-    );
-  };
+    }),
+    [weatherScreens]
+  );
 
   const LocationModalProps = {
     ...searchProps,
@@ -277,12 +258,34 @@ const App = () => {
     resizeMode: "cover" as const,
   };
 
+  if (
+    weatherScreens.length === 0 ||
+    loading ||
+    !fontsLoaded ||
+    extraLoading ||
+    !extraDataExists
+  ) {
+    return (
+      <View className="flex-1 relative">
+        <StatusBar style="light" />
+        <Image
+          blurRadius={70}
+          className="absolute h-full w-full"
+          source={require("../assets/images/bg.png")}
+        />
+        <Spinner />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 relative">
       <StatusBar style="light" />
       <CrossfadeImage {...CrossFadeImageProps} />
       <LocationModal {...LocationModalProps} />
-      <ShowMapModal />
+      <WeatherScreenModalContainer modalVisible={showMapModal}>
+        <MapModal {...MapModalProps} />
+      </WeatherScreenModalContainer>
       <View
         className="flex-1"
         style={{

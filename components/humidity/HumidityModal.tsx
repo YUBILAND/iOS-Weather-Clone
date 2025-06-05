@@ -3,7 +3,6 @@ import React, { useEffect } from "react";
 import { SharedValue, useAnimatedProps } from "react-native-reanimated";
 import { useSelector } from "react-redux";
 import { useChartPressState } from "victory-native";
-import { getArrAverage } from "../air-pressure/AirPressureModal";
 import Graph from "../graphs/Graph";
 import GraphLeftText from "../graphs/GraphLeftText";
 import GraphContainer from "../modal/GraphContainer";
@@ -17,6 +16,7 @@ import { useForecastData } from "../graphs/utils/useForecastData";
 import { formatGraphDataCopy } from "../graphs/utils/formatGraphDataCopy";
 import { GraphDefaultY } from "../graphs/utils/constants";
 import { getGraphImageAndCoord } from "../graphs/utils/getGraphImageAndCoord";
+import { getArrAverage } from "../helper-functions/helperFunctions";
 
 interface HumidityModalProps {
   cityName: string;

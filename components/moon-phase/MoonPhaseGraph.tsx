@@ -75,10 +75,6 @@ const MoonPhaseGraph = (props: MoonPhaseGraphProps) => {
 
   const halfSize = -scaleDown;
 
-  const moonImage = useImage(require("../../assets/images/moon.png"));
-  // Rerender moon image
-  rerenderMoonImage(moonImage);
-
   const xAxisOptions = {
     font: addLines ? font : null,
     labelColor: addLines ? colors.lightGray : "transparent",
@@ -138,6 +134,9 @@ const MoonPhaseGraph = (props: MoonPhaseGraphProps) => {
 
   // Remove Animation when transitioning in reverse to prevent flicker
   const removeAnimationRef = getRemoveAnimationRef(currentMoonPhase);
+
+  const moonImage = useImage(require("../../assets/images/moon.png"));
+  if (!moonImage) return null;
 
   return (
     <>
@@ -272,4 +271,4 @@ const rerenderMoonImage = (moonImage: SkImage | null) => {
   }, [moonImage]);
 };
 
-export default MoonPhaseGraph;
+export default React.memo(MoonPhaseGraph);

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Image, Pressable } from "react-native";
+import { View, Text, Image, Pressable, TouchableOpacity } from "react-native";
 import ModalContainer from "../modal/ModalContainer";
 import { colors } from "@/assets/colors/colors";
 import { useWeatherData } from "@/hooks/useWeatherData";
@@ -45,8 +45,11 @@ const CityListModal = ({
           //   console.log(city, "is day?", isDay);
           const imageSize = 40;
           return (
-            <Pressable key={city} onPress={() => pressCity(index)}>
-              <View className="flex-row items-center justify-between px-8 py-2">
+            <TouchableOpacity key={city}>
+              <TouchableOpacity
+                onPress={() => pressCity(index)}
+                className="flex-row items-center justify-between px-8 py-2"
+              >
                 <DefaultText style={{ color: "black", fontSize: 20 }}>
                   {city}
                 </DefaultText>
@@ -58,14 +61,14 @@ const CityListModal = ({
                   )}
                   style={{ width: imageSize, height: imageSize }}
                 />
-              </View>
+              </TouchableOpacity>
 
               {!lastIndex && (
                 <View className="pl-8">
                   <HorizontalLine color="black" />
                 </View>
               )}
-            </Pressable>
+            </TouchableOpacity>
           );
         })}
       </View>

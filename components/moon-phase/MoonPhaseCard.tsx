@@ -42,21 +42,28 @@ const MoonPhaseCard = ({
   const MoonPhaseGraphProps = {
     cityName,
     state,
-    graphHeight: 250,
     userScrolledIndex,
     currentMoonPhase,
     initialScrollIndex,
-    scaleDown: 130,
   };
+
+  const moonHeight = 130;
 
   const MoonPhaseCardContent = () => {
     return (
-      <View className="flex-row items-center gap-x-4">
+      <View
+        className="flex-row items-center gap-x-4 "
+        style={{ height: moonHeight }}
+      >
         <View className="flex-[0.6]">
           <MoonPhaseInfo data={data[cityName]} />
         </View>
-        <View className="flex-[0.4] ">
-          <MoonPhaseGraph {...MoonPhaseGraphProps} />
+        <View className="flex-[0.4]">
+          <MoonPhaseGraph
+            {...MoonPhaseGraphProps}
+            graphHeight={250}
+            scaleDown={moonHeight}
+          />
         </View>
       </View>
     );

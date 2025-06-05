@@ -26,6 +26,7 @@ import CustomStepMarker from "./utils/CustomStepMarker";
 import { getDayBoundaryIndex } from "./utils/getDayBoundaryIndex";
 import { useIncrementSlider } from "./utils/useIncrementSlider";
 import { FontAwesome } from "@expo/vector-icons";
+import { useIs12Hr } from "@/hooks/useIs12Hr";
 
 interface MapModalProps {
   currentCardIndex: number;
@@ -44,6 +45,7 @@ const MapModal = ({
 }: MapModalProps) => {
   console.log(cityName);
   const data = useWeatherData();
+
   const { location } = data[cityName];
 
   const [activeIndex, setActiveIndex] = useState(currentCardIndex);

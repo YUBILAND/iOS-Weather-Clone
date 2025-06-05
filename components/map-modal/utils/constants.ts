@@ -24,9 +24,13 @@ export const getSliderMins = (startingMinute: number, index: number) => {
 export const getSliderHr = (
   startingMinute: number,
   currentHour: number,
-  index: number
+  index: number,
+  is12Hr: boolean
 ) => {
-  const hour =
+  const subtractFromHour =
     currentHour - (2 - Math.floor((startingMinute + 10 * index) / 60));
+
+  const hour = subtractFromHour % 12;
+
   return hour;
 };

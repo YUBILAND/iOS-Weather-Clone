@@ -53,7 +53,7 @@ const SunPhaseCard = ({
   const nextSunPhase = data[cityName].current.is_day ? "Sunset" : "Sunrise";
   const nextNextSunPhase = data[cityName].current.is_day ? "Sunrise" : "Sunset";
 
-  const domain = useMemo(() => ({ top: 1000, bottom: -800 }), []);
+  const domain = useMemo(() => ({ top: 1400, bottom: -800 }), []);
   return (
     <OpacityCard className="h-full">
       <Pressable onPress={showModal}>
@@ -69,7 +69,6 @@ const SunPhaseCard = ({
             <View className="px-4">
               <CardStat stat={stringToTime(is12Hr, nextPhaseTime)} />
             </View>
-
             <SunPhaseGraph
               cityName={cityName}
               state={state}
