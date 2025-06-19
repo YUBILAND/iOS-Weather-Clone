@@ -38,6 +38,13 @@ A front-end clone of the iOS Weather App, built to mirror its polished UI and se
 <video src="https://github.com/user-attachments/assets/a81d80fd-1c81-4b3a-96a2-af840d960af7" width="100%" controls />
 </details>
 
+### 🌧️ Urgent Rain Forecast
+<details>
+   <summary></summary>
+<br>
+<video src="https://github.com/user-attachments/assets/cc3ba312-c2c2-4a6e-9033-3333043e37b4" width="100%" controls />
+</details>
+
 ### 🌤️ Weather Card Transitions
 <details>
 <!--   <summary>Weather Card Transition Demo ▶️</summary> -->
@@ -46,12 +53,40 @@ A front-end clone of the iOS Weather App, built to mirror its polished UI and se
 <video src="https://github.com/user-attachments/assets/7aff5554-6c8f-43be-bb3f-50714fc167ed" width="100%" controls />
 </details>
 
-### ⚙️ Unit Selection (Metric vs. Imperial)
+### ↕️ Drag and Drop / Delete
 <details>
-<!--   <summary>Unit Selection Demo ▶️</summary> -->
+<!--   <summary>Drag and Drop Demo ▶️</summary> -->
    <summary></summary>
 <br>
-<video src="https://github.com/user-attachments/assets/7aff5554-6c8f-43be-bb3f-50714fc167ed" width="100%" controls />
+
+<video src="https://github.com/user-attachments/assets/6a4a1289-aeec-4164-88dd-e7f9ae735891" width="100%" controls />
+</details>
+
+
+### ⚙️ Unit Selection (Metric vs. Imperial)
+<details>
+<!--   <summary>Unit Selection Demos ▶️ </summary> -->
+  <summary></summary>
+
+<table>
+  <thead>
+    <tr>
+      <th>Temp</th>
+      <th>Pressure</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        <video src="https://github.com/user-attachments/assets/2824e6b4-a2df-4d52-a345-eff17239dd62" width="300" controls />
+      </td>
+      <td>
+        <video src="https://github.com/user-attachments/assets/a660dc8f-26f0-4cd3-ae7d-388c6fed85ca" width="300" controls />
+      </td>
+    </tr>
+  </tbody>
+</table>
+
 </details>
    
 ### 🌦️ Weather Cards
@@ -65,8 +100,6 @@ A front-end clone of the iOS Weather App, built to mirror its polished UI and se
 | 👁️ Visibility         |                      |                      |
 | 🌧️ Precipitation      |                      |                      |
 
-
-- Edit Weather Screens. Drag/Drop/Delete
 - Seamless Background Transitions
 
 
